@@ -21,9 +21,15 @@
     <ClCompile Include="MMU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Gameboy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MMU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
