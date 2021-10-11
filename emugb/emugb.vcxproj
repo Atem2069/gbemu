@@ -139,11 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Gameboy.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MMU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CPU.h" />
     <ClInclude Include="Gameboy.h" />
     <ClInclude Include="MMU.h" />
   </ItemGroup>
