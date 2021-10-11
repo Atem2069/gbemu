@@ -26,6 +26,7 @@ GameBoy::GameBoy()
 
 	//initialize MMU now
 	m_mmu = new MMU(m_bios, m_ROM);
+	m_cpu = new CPU(m_mmu);
 }
 
 GameBoy::~GameBoy()
@@ -39,6 +40,7 @@ void GameBoy::run()
 	while (m_shouldRun)
 	{
 		//step CPU
+		m_cpu->step();
 		//step PPU
 
 		//if necessary, update display
