@@ -43,4 +43,16 @@ private:
 	uint8_t S = 0, P = 0;	//SP
 	uint16_t PC = 0;		//PC (Program Counter)
 	bool m_halted = false;
+
+	//Instructions (all prefixed with _)
+	void _loadImmPairRegister(uint8_t& regHigh, uint8_t& regLow);
+
+	void _storeRegisterAtPairRegister(uint8_t& regHigh, uint8_t& regLow, uint8_t& reg);
+
+	void _incrementPairRegister(uint8_t& regHigh, uint8_t& regLow);
+	void _incrementRegister(uint8_t& reg);
+
+
+	void _decrementRegister(uint8_t& reg);
+
 };
