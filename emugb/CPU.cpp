@@ -3,7 +3,8 @@
 CPU::CPU(MMU* mmu)
 {
 	m_mmu = mmu;
-
+	AF = {}; BC = {}; DE = {}; HL = {};
+	PC = 0;
 }
 
 CPU::~CPU()
@@ -555,40 +556,40 @@ void CPU::m_executePrefixedInstruction()
 
 int CPU::getCycleCount() { return m_cycleCount; }
 
-bool CPU::m_getZeroFlag() { return (F & 0b10000000) >> 7; }
+bool CPU::m_getZeroFlag() { return (AF.low & 0b10000000) >> 7; }
 void CPU::m_setZeroFlag(bool value)
 {
 	if (!value)
-		F &= 0b01111111;
+		AF.low &= 0b01111111;
 	else
-		F |= 0b10000000;
+		AF.low |= 0b10000000;
 }
 
-bool CPU::m_getCarryFlag() { return (F & 0b00010000) >> 4; }
+bool CPU::m_getCarryFlag() { return (AF.low & 0b00010000) >> 4; }
 void CPU::m_setCarryFlag(bool value)
 {
 	if (!value)
-		F &= 0b11101111;
+		AF.low &= 0b11101111;
 	else
-		F |= 0b00010000;
+		AF.low |= 0b00010000;
 }
 
-bool CPU::m_getHalfCarryFlag() { return (F & 0b00100000) >> 5; }
+bool CPU::m_getHalfCarryFlag() { return (AF.low & 0b00100000) >> 5; }
 void CPU::m_setHalfCarryFlag(bool value)
 {
 	if (!value)
-		F &= 0b11011111;
+		AF.low &= 0b11011111;
 	else
-		F |= 0b00100000;
+		AF.low |= 0b00100000;
 }
 
-bool CPU::m_getSubtractFlag() { return (F & 0b01000000) >> 6; }
+bool CPU::m_getSubtractFlag() { return (AF.low & 0b01000000) >> 6; }
 void CPU::m_setSubtractFlag(bool value)
 {
 	if (!value)
-		F &= 0b10111111;
+		AF.low &= 0b10111111;
 	else
-		F |= 0b01000000;
+		AF.low |= 0b01000000;
 }
 
 uint8_t CPU::m_fetch()
@@ -598,26 +599,39 @@ uint8_t CPU::m_fetch()
 	return val;
 }
 
-void CPU::_loadImmPairRegister(uint8_t& regHigh, uint8_t& regLow)
+void CPU::_loadImmPairRegister(Register& reg)
 {
-	regLow = m_fetch();
-	regHigh = m_fetch();
+	reg.low = m_fetch();
+	reg.high = m_fetch();
 	m_cycleCount += 3;
 }
 
-void CPU::_storeRegisterAtPairRegister(uint8_t& regHigh, uint8_t& regLow, uint8_t& reg)
+void CPU::_loadImmRegister(uint8_t& reg)
 {
-	uint16_t addr = (regHigh << 8) | regLow;
-	m_mmu->write(addr, reg);
+	reg = m_fetch();
+	m_cycleCount += 3;
+}
+
+void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
+{
+	m_mmu->write(regA.reg, regB);
 	m_cycleCount += 2;
 }
 
-void CPU::_incrementPairRegister(uint8_t& regHigh, uint8_t& regLow)
+void CPU::_storePairRegisterAtAddress(Register& reg)
 {
-	uint16_t pairReg = (regHigh << 8) | regLow;
-	pairReg += 1;
-	regHigh = (pairReg & 0xFF00) >> 8;
-	regLow = pairReg & 0x00FF;
+	uint8_t memLow = m_fetch();
+	uint8_t memHigh = m_fetch();
+	uint16_t addr = (memHigh << 8) | memLow;
+
+	m_mmu->write(addr, reg.low);
+	m_mmu->write(addr + 1, reg.high);
+	m_cycleCount += 5;
+}
+
+void CPU::_incrementPairRegister(Register& reg)
+{
+	reg.reg++;
 	m_cycleCount += 2;
 }
 void CPU::_incrementRegister(uint8_t& reg)

@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Gameboy.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="MMU.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

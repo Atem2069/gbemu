@@ -2,6 +2,16 @@
 
 #include"MMU.h"
 
+union Register
+{
+	uint16_t reg;
+	struct
+	{
+		uint8_t low;
+		uint8_t high;
+	};
+};
+
 class CPU
 {
 public:
@@ -36,20 +46,24 @@ private:
 	MMU* m_mmu;
 	int m_cycleCount = 0;
 
-	uint8_t A = 0, F = 0;	//AF
+	/*uint8_t A = 0, F = 0;	//AF
 	uint8_t B = 0, C = 0;	//BC
 	uint8_t D = 0, E = 0;	//DE
 	uint8_t H = 0, L = 0;	//HL
-	uint8_t S = 0, P = 0;	//SP
-	uint16_t PC = 0;		//PC (Program Counter)
+	uint8_t S = 0, P = 0;	//SP*/
+
+	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer
+	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.
 	bool m_halted = false;
 
 	//Instructions (all prefixed with _)
-	void _loadImmPairRegister(uint8_t& regHigh, uint8_t& regLow);
+	void _loadImmPairRegister(Register& reg);
+	void _loadImmRegister(uint8_t& reg);
 
-	void _storeRegisterAtPairRegister(uint8_t& regHigh, uint8_t& regLow, uint8_t& reg);
+	void _storeRegisterAtPairRegister(Register& regA, uint8_t& regB);
+	void _storePairRegisterAtAddress(Register& reg);
 
-	void _incrementPairRegister(uint8_t& regHigh, uint8_t& regLow);
+	void _incrementPairRegister(Register& reg);
 	void _incrementRegister(uint8_t& reg);
 
 
