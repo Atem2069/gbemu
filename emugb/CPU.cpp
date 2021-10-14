@@ -16,6 +16,7 @@ void CPU::step()
 {
 	if (!m_halted)
 	{
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Fetch instruction PC=" + std::to_string((int)PC));
 		m_executeInstruction();
 	}
 	else

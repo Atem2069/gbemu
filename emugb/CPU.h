@@ -1,5 +1,8 @@
 #pragma once
 
+#include<iostream>
+
+#include"Logger.h"
 #include"MMU.h"
 
 union Register
@@ -45,12 +48,6 @@ private:
 
 	MMU* m_mmu;
 	int m_cycleCount = 0;
-
-	/*uint8_t A = 0, F = 0;	//AF
-	uint8_t B = 0, C = 0;	//BC
-	uint8_t D = 0, E = 0;	//DE
-	uint8_t H = 0, L = 0;	//HL
-	uint8_t S = 0, P = 0;	//SP*/
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.

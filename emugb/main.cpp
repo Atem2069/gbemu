@@ -1,7 +1,10 @@
 #include<iostream>
 
+#include"Logger.h"
+
 int main()
 {
-	std::cout << "Hello world!" << std::endl;
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Hello world!");
+	Logger::getInstance()->dumpToConsole();
 	return 0;
 }

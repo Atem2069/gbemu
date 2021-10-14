@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Gameboy.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MMU.cpp" />
   </ItemGroup>
