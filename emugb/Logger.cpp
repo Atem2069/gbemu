@@ -29,7 +29,11 @@ void Logger::msg(LoggerSeverity severity, std::string msg)
 	m_msgLog.push(prefix);
 	if (m_msgLog.size() > 255)
 		m_msgLog.pop();
-	//std::cout << prefix << std::endl;	//todo add logs to queue which can be output to log file, or in GUI
+	
+
+	if (severity == LoggerSeverity::Warn || severity == LoggerSeverity::Error)
+		std::cout << prefix << std::endl;
+
 }
 
 void Logger::dumpToConsole()
