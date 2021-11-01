@@ -54,11 +54,27 @@ private:
 	bool m_halted = false;
 
 	//Instructions (all prefixed with _)
+
+
+
+	/*All 8-bit unprefixed instructions*/
 	void _loadImmPairRegister(Register& reg);
 	void _loadImmRegister(uint8_t& reg);
+	void _loadImmFromRegister(uint8_t& regA, uint8_t& regB);
+	void _loadDirectFromPairRegister(uint8_t& regA, Register& regB);
+	void _loadDirectFromPairRegisterInc(uint8_t& regA, Register& regB);
+	void _loadDirectFromPairRegisterDec(uint8_t& regA, Register& regB);
 
 	void _storeRegisterAtPairRegister(Register& regA, uint8_t& regB);
+	void _storeRegisterAtPairRegisterInc(Register& regA, uint8_t& regB);
+	void _storeRegisterAtPairRegisterDec(Register& regA, uint8_t& regB);
+
 	void _storePairRegisterAtAddress(Register& reg);
+
+	void _storeOperandAtPairAddress(Register& reg);
+
+	void _storeRegisterInHRAM(uint8_t& regDst, uint8_t& regSrc);	// LD (C), A
+	void _loadFromHRAM(uint8_t& regDst, uint8_t& regSrcIdx);		// LD A, (C)
 
 	void _incrementPairRegister(Register& reg);
 	void _incrementRegister(uint8_t& reg);
@@ -66,4 +82,82 @@ private:
 
 	void _decrementRegister(uint8_t& reg);
 
+	void _addPairRegisters(Register& regA, Register& regB);
+
+	void _jumpRelative();
+	void _jumpRelativeIfZeroNotSet();
+	void _jumpRelativeIfZeroSet();
+	void _jumpRelativeIfCarryNotSet();
+	void _jumpRelativeIfCarrySet();
+
+	void _jumpAbsolute();
+	void _jumpAbsoluteIfZeroNotSet();
+	void _jumpAbsoluteIfZeroSet();
+	void _jumpAbsoluteIfCarryNotSet();
+	void _jumpAbsoluteIfCarrySet();
+
+	void _call();
+	void _callIfZeroNotSet();
+	void _callIfZeroSet();
+	void _callIfCarryNotSet();
+	void _callIfCarrySet();
+
+	void _returnIfZeroNotSet();
+	void _returnIfZeroSet();
+	void _returnIfCarryNotSet();
+	void _returnIfCarrySet();
+
+	void _return();
+	void _returnFromInterrupt();
+
+
+	void _setCarryFlag();
+	void _clearCarryFlag();
+
+
+	void _addRegisters(uint8_t& regA, uint8_t& regB);
+	void _addPairAddress(uint8_t& regA, Register& regB);
+	void _addRegistersCarry(uint8_t& regA, uint8_t& regB);
+	void _addPairAddressCarry(uint8_t& regA, Register& regB);
+	void _addValue(uint8_t& reg);
+	void _addValueCarry(uint8_t& reg);
+
+	void _subRegister(uint8_t& reg);
+	void _subRegisterCarry(uint8_t& reg);
+	void _subPairAddress(Register& reg);
+	void _subPairAddressCarry(Register& reg);
+	void _subValue();
+	void _subValueCarry();
+
+	void _andRegister(uint8_t& reg);
+	void _andPairAddress(Register& reg);
+	void _andValue();
+	void _xorRegister(uint8_t& reg);
+	void _xorPairAddress(Register& reg);
+	void _xorValue();
+	void _orRegister(uint8_t& reg);
+	void _orPairAddress(Register& reg);
+	void _orValue();
+	void _compareRegister(uint8_t& reg);
+	void _comparePairAddress(Register& reg);
+	void _compareValue();
+
+	void _pushPairRegister(Register& reg);
+	void _popToPairRegister(Register& reg);
+
+	//some misc instructions
+	void _disableInterrupts();
+	void _enableInterrupts();
+	void _stop();
+	void _halt();
+	void _resetToVector(uint8_t vectorIdx);
+	void _adjustBCD();
+	void _complement();	//take one's complement
+	void _rotateALeft();	//RLA, RLCA, RRA, RRCA all affect flags differently, so have to be implemented separately
+	void _rotateALeftCarry();
+
+
+
+	/*All 16-bit prefixed instructions*/
+	
 };
