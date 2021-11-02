@@ -613,6 +613,41 @@ void CPU::_loadImmRegister(uint8_t& reg)
 	m_cycleCount += 3;
 }
 
+void CPU::_loadImmFromRegister(uint8_t& regA, uint8_t& regB)
+{
+
+}
+
+void CPU::_loadDirectFromPairRegister(uint8_t& regA, Register& regB)
+{
+
+}
+
+void CPU::_loadDirectFromPairRegisterInc(uint8_t& regA, Register& regB)
+{
+
+}
+
+void CPU::_loadDirectFromPairRegisterDec(uint8_t& regA, Register& regB)
+{
+
+}
+
+void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
+{
+
+}
+
+void CPU::_storeRegisterAtPairRegisterInc(Register& regA, uint8_t& regB)
+{
+
+}
+
+void CPU::_storeRegisterAtPairRegisterDec(Register& regA, uint8_t& regB)
+{
+
+}
+
 void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
 {
 	m_mmu->write(regA.reg, regB);
@@ -628,6 +663,21 @@ void CPU::_storePairRegisterAtAddress(Register& reg)
 	m_mmu->write(addr, reg.low);
 	m_mmu->write(addr + 1, reg.high);
 	m_cycleCount += 5;
+}
+
+void CPU::_storeOperandAtPairAddress(Register& reg)
+{
+
+}
+
+void CPU::_storeRegisterInHRAM(uint8_t& regDst, uint8_t& regSrc)
+{
+
+}
+
+void CPU::_loadFromHRAM(uint8_t& regDst, uint8_t& regSrcIdx)
+{
+
 }
 
 void CPU::_incrementPairRegister(Register& reg)
@@ -652,4 +702,338 @@ void CPU::_decrementRegister(uint8_t& reg)
 	m_setZeroFlag(!reg);
 	m_setSubtractFlag(true);
 	m_cycleCount++;
+}
+
+void CPU::_addPairRegisters(Register& regA, Register& regB)
+{
+	m_setHalfCarryFlag(((regA.reg & 0xfff) + (regB.reg & 0xfff)) > 0xfff);
+	m_setCarryFlag(((int)regA.reg + (int)regB.reg) > 0xffff);
+	m_setSubtractFlag(false);
+	regA.reg += regB.reg;
+	m_cycleCount += 2;
+}
+
+void CPU::_jumpRelative()
+{
+	int8_t disp = (int8_t)m_fetch();	//cast unsigned int value to signed int value as displacement is signed/relative
+	PC += disp;
+	m_cycleCount += 3;
+}
+
+void CPU::_jumpRelativeIfZeroNotSet()	
+{
+	if (!m_getZeroFlag())
+		_jumpRelative();				//if flag isn't set then 3-cycle relative jump takes place (same operation), otherwise cycles += 2
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_jumpRelativeIfZeroSet()
+{
+	if (m_getZeroFlag())
+		_jumpRelative();
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_jumpRelativeIfCarryNotSet()
+{
+	if (!m_getCarryFlag())
+		_jumpRelative();
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_jumpRelativeIfCarrySet()
+{
+	if (m_getCarryFlag())
+		_jumpRelative();
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_jumpAbsolute()
+{
+	uint8_t byteLow = m_fetch();
+	uint8_t byteHigh = m_fetch();
+	uint16_t addr = ((uint16_t)byteHigh << 8) | byteLow;
+
+	PC = addr;
+
+	m_cycleCount += 4;
+}
+
+void CPU::_jumpAbsoluteIfZeroNotSet()
+{
+	if (!m_getZeroFlag())
+		_jumpAbsolute();
+	else
+		m_cycleCount += 3;
+}
+
+void CPU::_jumpAbsoluteIfZeroSet()
+{
+	if (m_getZeroFlag())
+		_jumpAbsolute();
+	else
+		m_cycleCount += 3;
+}
+
+void CPU::_jumpAbsoluteIfCarryNotSet()
+{
+	if (!m_getCarryFlag())
+		_jumpAbsolute();
+	else
+		m_cycleCount += 3;
+}
+
+void CPU::_jumpAbsoluteIfCarrySet()
+{
+	if (m_getCarryFlag())
+		_jumpAbsolute();
+	else
+		m_cycleCount += 3;
+}
+
+void CPU::_call()
+{
+
+}
+
+void CPU::_callIfZeroNotSet()
+{
+
+}
+
+void CPU::_callIfZeroSet()
+{
+
+}
+
+void CPU::_callIfCarryNotSet()
+{
+
+}
+
+void CPU::_callIfCarrySet()
+{
+
+}
+
+void CPU::_returnIfZeroNotSet()
+{
+
+}
+
+void CPU::_returnIfZeroSet()
+{
+
+}
+
+void CPU::_returnIfCarryNotSet()
+{
+
+}
+
+void CPU::_returnIfCarrySet()
+{
+
+}
+
+void CPU::_return()
+{
+
+}
+
+void CPU::_returnFromInterrupt()
+{
+
+}
+
+void CPU::_setCarryFlag()
+{
+
+}
+
+void CPU::_clearCarryFlag()
+{
+
+}
+
+
+
+void CPU::_addRegisters(uint8_t& regA, uint8_t& regB)
+{
+
+}
+
+void CPU::_addPairAddress(uint8_t& regA, Register& regB)
+{
+
+}
+
+void CPU::_addRegistersCarry(uint8_t& regA, uint8_t& regB)
+{
+
+}
+
+void CPU::_addPairAddressCarry(uint8_t& regA, Register& regB)
+{
+
+}
+
+void CPU::_addValue(uint8_t& reg)
+{
+
+}
+
+void CPU::_addValueCarry(uint8_t& reg)
+{
+
+}
+
+void CPU::_subRegister(uint8_t& reg)
+{
+
+}
+
+void CPU::_subRegisterCarry(uint8_t& reg)
+{
+
+}
+
+void CPU::_subPairAddress(Register& reg)
+{
+
+}
+
+void CPU::_subPairAddressCarry(Register& reg)
+{
+
+}
+
+void CPU::_subValue()
+{
+
+}
+
+void CPU::_subValueCarry()
+{
+
+}
+
+void CPU::_andRegister(uint8_t& reg)
+{
+
+}
+
+void CPU::_andPairAddress(Register& reg)
+{
+
+}
+
+void CPU::_andValue()
+{
+
+}
+
+void CPU::_xorRegister(uint8_t& reg)
+{
+
+}
+
+void CPU::_xorPairAddress(Register& reg)
+{
+
+}
+
+void CPU::_xorValue()
+{
+
+}
+
+void CPU::_orRegister(uint8_t& reg)
+{
+
+}
+
+void CPU::_orPairAddress(Register& reg)
+{
+
+}
+
+void CPU::_orValue()
+{
+
+}
+
+void CPU::_compareRegister(uint8_t& reg)
+{
+
+}
+
+void CPU::_comparePairAddress(Register& reg)
+{
+
+}
+
+void CPU::_compareValue()
+{
+
+}
+
+void CPU::_pushPairRegister(Register& reg)
+{
+
+}
+
+void CPU::_popToPairRegister(Register& reg)
+{
+
+}
+
+//some misc instructions
+void CPU::_disableInterrupts()
+{
+
+}
+
+void CPU::_enableInterrupts()
+{
+
+}
+
+void CPU::_stop()
+{
+
+}
+
+void CPU::_halt()
+{
+
+}
+
+void CPU::_resetToVector(uint8_t vectorIdx)
+{
+
+}
+
+void CPU::_adjustBCD()
+{
+
+}
+
+void CPU::_complement()
+{
+
+}
+
+void CPU::_rotateALeft()
+{
+
+}
+
+void CPU::_rotateALeftCarry()
+{
+
 }
