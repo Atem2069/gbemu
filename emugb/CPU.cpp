@@ -3,7 +3,7 @@
 CPU::CPU(MMU* mmu)
 {
 	m_mmu = mmu;
-	AF = {}; BC = {}; DE = {}; HL = {};
+	AF = {}; BC = {}; DE = {}; HL = {}, SP = {};
 	PC = 0;
 }
 
@@ -615,37 +615,48 @@ void CPU::_loadImmRegister(uint8_t& reg)
 
 void CPU::_loadImmFromRegister(uint8_t& regA, uint8_t& regB)
 {
-
+	regA = regB;
+	m_cycleCount += 1;
 }
 
 void CPU::_loadDirectFromPairRegister(uint8_t& regA, Register& regB)
 {
-
+	regA = m_mmu->read(regB.reg);
+	m_cycleCount += 2;
 }
 
 void CPU::_loadDirectFromPairRegisterInc(uint8_t& regA, Register& regB)
 {
-
+	regA = m_mmu->read(regB.reg);
+	regB.reg++;
+	m_cycleCount += 2;
 }
 
 void CPU::_loadDirectFromPairRegisterDec(uint8_t& regA, Register& regB)
 {
-
+	regA = m_mmu->read(regB.reg);
+	regB.reg--;
+	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
 {
-
+	m_mmu->write(regA.reg, regB);
+	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegisterInc(Register& regA, uint8_t& regB)
 {
-
+	m_mmu->write(regA.reg, regB);
+	regA.reg++;
+	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegisterDec(Register& regA, uint8_t& regB)
 {
-
+	m_mmu->write(regA.reg, regB);
+	regA.reg--;
+	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
@@ -667,17 +678,20 @@ void CPU::_storePairRegisterAtAddress(Register& reg)
 
 void CPU::_storeOperandAtPairAddress(Register& reg)
 {
-
+	m_mmu->write(reg.reg, m_fetch());
+	m_cycleCount += 3;
 }
 
 void CPU::_storeRegisterInHRAM(uint8_t& regDst, uint8_t& regSrc)
 {
-
+	m_mmu->write(0xFF00 + regDst, regSrc);	//destination register contains index from 0xFF00 to write to HRAM
+	m_cycleCount += 2;
 }
 
 void CPU::_loadFromHRAM(uint8_t& regDst, uint8_t& regSrcIdx)
 {
-
+	regDst = m_mmu->read(0xFF00 + regSrcIdx);
+	m_cycleCount += 2;
 }
 
 void CPU::_incrementPairRegister(Register& reg)
@@ -852,74 +866,181 @@ void CPU::_returnFromInterrupt()
 
 void CPU::_setCarryFlag()
 {
-
+	m_setCarryFlag(true);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 1;
 }
 
-void CPU::_clearCarryFlag()
+void CPU::_flipCarryFlag()
 {
-
+	m_setCarryFlag(!m_getCarryFlag());
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 1;
 }
 
 
 
 void CPU::_addRegisters(uint8_t& regA, uint8_t& regB)
 {
+	m_setHalfCarryFlag(((regA & 0x0F) + (regB & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)regA + (int)regB) > 0xFF);
+	m_setSubtractFlag(false);
 
+	regA += regB;
+	m_setZeroFlag(regA == 0);
+
+	m_cycleCount += 1;
 }
 
 void CPU::_addPairAddress(uint8_t& regA, Register& regB)
 {
+	uint8_t val = m_mmu->read(regB.reg);
 
+	m_setHalfCarryFlag(((regA & 0x0F) + (val & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)regA + (int)val) > 0xFF);
+	m_setSubtractFlag(false);
+
+	regA += val;
+	m_setZeroFlag(regA == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_addRegistersCarry(uint8_t& regA, uint8_t& regB)
 {
+	uint8_t lastCarryFlag = m_getCarryFlag();	//save carry flag
+	m_setHalfCarryFlag(((regA & 0x0F) + (regB & 0x0F) + (lastCarryFlag & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)regA + (int)regB + (int)lastCarryFlag) > 0xFF);
+	m_setSubtractFlag(false);
 
+	regA += regB + lastCarryFlag;
+	m_setZeroFlag(regA == 0);
+	m_cycleCount += 1;
 }
 
 void CPU::_addPairAddressCarry(uint8_t& regA, Register& regB)
 {
+	uint8_t val = m_mmu->read(regB.reg);
+	uint8_t lastCarryFlag = m_getCarryFlag();
+	m_setHalfCarryFlag(((regA & 0x0F) + (val & 0x0F) + (lastCarryFlag & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)regA + (int)val + (int)lastCarryFlag) > 0xFF);
+	m_setSubtractFlag(false);
 
+	regA += val + lastCarryFlag;
+	m_setZeroFlag(regA == 0);
+	m_cycleCount += 2;
+
+	m_cycleCount += 2;
 }
 
 void CPU::_addValue(uint8_t& reg)
 {
+	uint8_t val = m_fetch();
 
+	m_setHalfCarryFlag(((reg & 0x0F) + (val & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)reg + (int)val) > 0xFF);
+	m_setSubtractFlag(false);
+
+	reg += val;
+	m_setZeroFlag(reg == 0);
+	
+	m_cycleCount += 2;
 }
 
 void CPU::_addValueCarry(uint8_t& reg)
 {
+	uint8_t val = m_fetch();
+	uint8_t lastCarryFlag = m_getCarryFlag();
 
+	m_setHalfCarryFlag(((reg & 0x0F) + (val & 0x0F) + (lastCarryFlag & 0x0F)) > 0x0F);
+	m_setCarryFlag(((int)reg + (int)val + (int)lastCarryFlag) > 0xFF);
+	m_setSubtractFlag(false);
+
+	reg += val;
+	m_setZeroFlag(reg == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_subRegister(uint8_t& reg)
 {
+	m_setCarryFlag(AF.high < reg);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (reg & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= reg;
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 1;
 }
 
 void CPU::_subRegisterCarry(uint8_t& reg)
 {
+	uint8_t lastCarryFlag = m_getCarryFlag();
+	m_setCarryFlag(AF.high < reg);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (reg & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= (reg + lastCarryFlag);
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 1;
 }
 
 void CPU::_subPairAddress(Register& reg)
 {
+	uint8_t val = m_mmu->read(reg.reg);
+	m_setCarryFlag(AF.high < val);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= val;
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_subPairAddressCarry(Register& reg)
 {
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t lastCarryFlag = m_getCarryFlag();
+	m_setCarryFlag(AF.high < val);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= (val + lastCarryFlag);
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_subValue()
 {
+	uint8_t val = m_fetch();
+	m_setCarryFlag(AF.high < val);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= val;
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_subValueCarry()
 {
+	uint8_t val = m_fetch();
+	uint8_t lastCarryFlag = m_getCarryFlag();
+	m_setCarryFlag(AF.high < val);
+	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
+	m_setSubtractFlag(true);
 
+	AF.high -= (val + lastCarryFlag);
+	m_setZeroFlag(AF.high == 0);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_andRegister(uint8_t& reg)
@@ -995,22 +1116,24 @@ void CPU::_popToPairRegister(Register& reg)
 //some misc instructions
 void CPU::_disableInterrupts()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Disable interrupts called, however instruction is not implemented!");
 }
 
 void CPU::_enableInterrupts()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Enable interrupts called, however instruction is not implemented!");
 }
 
 void CPU::_stop()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
 }
 
 void CPU::_halt()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Processor halted temporarily");
+	m_halted = true;
+	m_cycleCount += 1;
 }
 
 void CPU::_resetToVector(uint8_t vectorIdx)
@@ -1020,7 +1143,7 @@ void CPU::_resetToVector(uint8_t vectorIdx)
 
 void CPU::_adjustBCD()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Program attempted to perform BCD adjust which is not implemented!");
 }
 
 void CPU::_complement()

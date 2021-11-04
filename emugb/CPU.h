@@ -112,7 +112,7 @@ private:
 
 
 	void _setCarryFlag();
-	void _clearCarryFlag();
+	void _flipCarryFlag();
 
 
 	void _addRegisters(uint8_t& regA, uint8_t& regB);
