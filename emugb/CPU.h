@@ -53,6 +53,9 @@ private:
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.
 	bool m_halted = false;
 
+	void m_pushToStack(uint16_t val);	//helper functions for pushing/popping items to/from stack
+	uint16_t m_popFromStack();
+
 	//Instructions (all prefixed with _)
 
 
@@ -102,12 +105,11 @@ private:
 	void _callIfCarryNotSet();
 	void _callIfCarrySet();
 
+	void _return();
 	void _returnIfZeroNotSet();
 	void _returnIfZeroSet();
 	void _returnIfCarryNotSet();
 	void _returnIfCarrySet();
-
-	void _return();
 	void _returnFromInterrupt();
 
 
@@ -153,8 +155,10 @@ private:
 	void _resetToVector(uint8_t vectorIdx);
 	void _adjustBCD();
 	void _complement();	//take one's complement
-	void _rotateALeft();	//RLA, RLCA, RRA, RRCA all affect flags differently, so have to be implemented separately
-	void _rotateALeftCarry();
+	void _RLA();	//RLA, RLCA, RRA, RRCA all affect flags differently, so have to be implemented separately
+	void _RLCA();
+	void _RRA();
+	void _RRCA();
 
 
 

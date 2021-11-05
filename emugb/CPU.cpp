@@ -600,6 +600,25 @@ uint8_t CPU::m_fetch()
 	return val;
 }
 
+void CPU::m_pushToStack(uint16_t val)
+{
+	uint8_t highByte = (val & 0xFF00) >> 8;
+	uint8_t lowByte = (val & 0x00FF);
+
+	m_mmu->write(SP.reg - 1, highByte);
+	m_mmu->write(SP.reg - 2, lowByte);
+	SP.reg -= 2;
+}
+
+uint16_t CPU::m_popFromStack()
+{
+	uint8_t lowByte = m_mmu->read(SP.reg);
+	uint8_t highByte = m_mmu->read(SP.reg + 1);
+	SP.reg += 2;
+	uint16_t val = (((uint16_t)highByte) << 8) | (uint16_t)lowByte;
+	return val;
+}
+
 void CPU::_loadImmPairRegister(Register& reg)
 {
 	reg.low = m_fetch();
@@ -811,57 +830,103 @@ void CPU::_jumpAbsoluteIfCarrySet()
 
 void CPU::_call()
 {
+	uint8_t addrLow = m_fetch();
+	uint8_t addrHigh = m_fetch();
+	uint16_t addr = (((uint16_t)addrHigh) << 8) | (uint16_t)addrLow;
 
+	m_pushToStack(PC);
+	PC = addr;
+
+	m_cycleCount += 6;
 }
 
 void CPU::_callIfZeroNotSet()
 {
-
+	if (!m_getZeroFlag())
+		_call();
+	else
+		m_cycleCount += 3;
 }
 
 void CPU::_callIfZeroSet()
 {
-
+	if (m_getZeroFlag())
+		_call();
+	else
+		m_cycleCount += 3;
 }
 
 void CPU::_callIfCarryNotSet()
 {
-
+	if (!m_getCarryFlag())
+		_call();
+	else
+		m_cycleCount += 3;
 }
 
 void CPU::_callIfCarrySet()
 {
-
-}
-
-void CPU::_returnIfZeroNotSet()
-{
-
-}
-
-void CPU::_returnIfZeroSet()
-{
-
-}
-
-void CPU::_returnIfCarryNotSet()
-{
-
-}
-
-void CPU::_returnIfCarrySet()
-{
-
+	if (m_getCarryFlag())
+		_call();
+	else
+		m_cycleCount += 3;
 }
 
 void CPU::_return()
 {
+	uint16_t returnAddress = m_popFromStack();
+	PC = returnAddress;
+	m_cycleCount += 4;
+}
 
+void CPU::_returnIfZeroNotSet()
+{
+	if (!m_getZeroFlag())
+	{
+		_return();
+		m_cycleCount++;	//conditional RET takes one more cycle than unconditional RET
+	}
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_returnIfZeroSet()
+{
+	if (m_getZeroFlag())
+	{
+		_return();
+		m_cycleCount++;	//conditional RET takes one more cycle than unconditional RET
+	}
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_returnIfCarryNotSet()
+{
+	if (!m_getCarryFlag())
+	{
+		_return();
+		m_cycleCount++;	//conditional RET takes one more cycle than unconditional RET
+	}
+	else
+		m_cycleCount += 2;
+}
+
+void CPU::_returnIfCarrySet()
+{
+	if (m_getCarryFlag())
+	{
+		_return();
+		m_cycleCount++;	//conditional RET takes one more cycle than unconditional RET
+	}
+	else
+		m_cycleCount += 2;
 }
 
 void CPU::_returnFromInterrupt()
 {
-
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "RETI not implemented! Interrupts aren't currently supported.");
+	m_cycleCount += 4;
 }
 
 void CPU::_setCarryFlag()
@@ -1045,72 +1110,138 @@ void CPU::_subValueCarry()
 
 void CPU::_andRegister(uint8_t& reg)
 {
-
+	AF.high &= reg;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(true);
+	m_setCarryFlag(false);
+	m_cycleCount += 1;
 }
 
 void CPU::_andPairAddress(Register& reg)
 {
-
+	uint8_t val = m_mmu->read(reg.reg);
+	AF.high &= val;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(true);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_andValue()
 {
-
+	uint8_t val = m_fetch();
+	AF.high &= val;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(true);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_xorRegister(uint8_t& reg)
 {
-
+	AF.high ^= reg;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 1;
 }
 
 void CPU::_xorPairAddress(Register& reg)
 {
-
+	uint8_t val = m_mmu->read(reg.reg);
+	AF.high ^= val;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_xorValue()
 {
-
+	uint8_t val = m_fetch();
+	AF.high ^= val;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_orRegister(uint8_t& reg)
 {
-
+	AF.high |= reg;
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 1;
 }
 
 void CPU::_orPairAddress(Register& reg)
 {
-
+	uint8_t val = m_mmu->read(reg.reg);
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_orValue()
 {
-
+	uint8_t val = m_fetch();
+	m_setZeroFlag(!AF.high);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
 }
 
 void CPU::_compareRegister(uint8_t& reg)
 {
-
+	m_setHalfCarryFlag((AF.high & 0xF) - (reg & 0xF) & 0x10);
+	m_setCarryFlag(AF.high < reg);
+	m_setZeroFlag(AF.high - reg == 0);
+	m_setSubtractFlag(true);
+	m_cycleCount += 1;
 }
 
 void CPU::_comparePairAddress(Register& reg)
 {
-
+	uint8_t val = m_mmu->read(reg.reg);
+	m_setHalfCarryFlag((AF.high & 0xF) - (val & 0xF) & 0x10);
+	m_setCarryFlag(AF.high < val);
+	m_setZeroFlag(AF.high - val == 0);
+	m_setSubtractFlag(true);
+	m_cycleCount += 2;
 }
 
 void CPU::_compareValue()
 {
-
+	uint8_t val = m_fetch();
+	m_setHalfCarryFlag((AF.high & 0xF) - (val & 0xF) & 0x10);
+	m_setCarryFlag(AF.high < val);
+	m_setZeroFlag(AF.high - val == 0);
+	m_setSubtractFlag(true);
+	m_cycleCount += 2;
 }
 
 void CPU::_pushPairRegister(Register& reg)
 {
-
+	m_pushToStack(reg.reg);
+	m_cycleCount += 4;
 }
 
 void CPU::_popToPairRegister(Register& reg)
 {
-
+	uint16_t val = m_popFromStack();
+	reg.reg = val;
+	m_cycleCount += 3;
 }
 
 //some misc instructions
@@ -1138,7 +1269,10 @@ void CPU::_halt()
 
 void CPU::_resetToVector(uint8_t vectorIdx)
 {
-
+	uint16_t resetAddr = vectorIdx * 8;
+	m_pushToStack(PC);
+	PC = resetAddr;
+	m_cycleCount += 4;
 }
 
 void CPU::_adjustBCD()
@@ -1148,15 +1282,46 @@ void CPU::_adjustBCD()
 
 void CPU::_complement()
 {
-
+	m_setSubtractFlag(true);
+	m_setHalfCarryFlag(true);
+	AF.high = ~AF.high;
+	m_cycleCount += 1;
 }
 
-void CPU::_rotateALeft()
+void CPU::_RLA()
 {
-
+	uint8_t msb = (AF.high & 0b10000000) >> 7;
+	AF.high <<= 1;
+	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b00000001 : 0b0;
+	AF.high |= m_lastCarry;
+	m_setCarryFlag(msb);
+	m_cycleCount += 1;
 }
 
-void CPU::_rotateALeftCarry()
+void CPU::_RLCA()
 {
+	uint8_t msb = (AF.high & 0b10000000) >> 7;
+	AF.high <<= 1;
+	m_setCarryFlag(msb);
+	AF.high |= msb;
+	m_cycleCount += 1;
+}
 
+void CPU::_RRA()
+{
+	uint8_t lsb = (AF.high & 0b00000001);
+	AF.high >>= 1;
+	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b10000000 : 0b0;
+	AF.high |= m_lastCarry;
+	m_setCarryFlag(lsb);
+	m_cycleCount += 1;
+}
+
+void CPU::_RRCA()
+{
+	uint8_t lsb = (AF.high & 0b00000001);
+	AF.high >>= 1;
+	m_setCarryFlag(lsb);
+	AF.high |= (lsb << 7);
+	m_cycleCount += 1;
 }
