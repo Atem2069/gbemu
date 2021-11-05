@@ -163,5 +163,21 @@ private:
 
 
 	/*All 16-bit prefixed instructions*/
-	
+	void _RL(uint8_t& reg);
+	void _RLC(uint8_t& reg);
+	void _RL(Register& reg);
+	void _RLC(Register& reg);
+	void _RR(uint8_t& reg);
+	void _RRC(uint8_t& reg);
+	void _RR(Register& reg);
+	void _RRC(Register& reg);
+
+	void _SLA(uint8_t& reg);
+	void _SLA(Register& reg);
+	void _SRA(uint8_t& reg);
+	void _SRA(Register& reg);
+	void _SRL(uint8_t& reg);
+	void _SRL(Register& reg);
+
+
 };

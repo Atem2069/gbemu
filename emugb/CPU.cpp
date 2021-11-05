@@ -1295,6 +1295,9 @@ void CPU::_RLA()
 	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b00000001 : 0b0;
 	AF.high |= m_lastCarry;
 	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setZeroFlag(false);
+	m_setHalfCarryFlag(false);
 	m_cycleCount += 1;
 }
 
@@ -1303,6 +1306,9 @@ void CPU::_RLCA()
 	uint8_t msb = (AF.high & 0b10000000) >> 7;
 	AF.high <<= 1;
 	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setZeroFlag(false);
+	m_setHalfCarryFlag(false);
 	AF.high |= msb;
 	m_cycleCount += 1;
 }
@@ -1314,6 +1320,9 @@ void CPU::_RRA()
 	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b10000000 : 0b0;
 	AF.high |= m_lastCarry;
 	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setZeroFlag(false);
+	m_setHalfCarryFlag(false);
 	m_cycleCount += 1;
 }
 
@@ -1322,6 +1331,204 @@ void CPU::_RRCA()
 	uint8_t lsb = (AF.high & 0b00000001);
 	AF.high >>= 1;
 	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setZeroFlag(false);
+	m_setHalfCarryFlag(false);
 	AF.high |= (lsb << 7);
 	m_cycleCount += 1;
+}
+
+void CPU::_RL(uint8_t& reg)
+{
+	uint8_t msb = (reg & 0b10000000) >> 7;
+	uint8_t lastCarry = (m_getCarryFlag()) ? 0b00000001 : 0b0;
+	reg <<= 1;
+	reg |= lastCarry;
+	m_setZeroFlag(!reg);
+	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_RLC(uint8_t& reg)
+{
+	uint8_t msb = (reg & 0b10000000) >> 7;
+	reg <<= 1;
+	reg |= msb;
+	m_setCarryFlag(msb);
+	m_setZeroFlag(!reg);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_RL(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	
+	uint8_t msb = (val & 0b10000000) >> 7;
+	uint8_t lastCarry = (m_getCarryFlag()) ? 0b00000001 : 0b0;
+	val <<= 1;
+	val |= lastCarry;
+	m_setZeroFlag(!val);
+	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_RLC(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+
+	uint8_t msb = (val & 0b10000000) >> 7;
+	val <<= 1;
+	val |= msb;
+	m_setCarryFlag(msb);
+	m_setZeroFlag(!val);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_RR(uint8_t& reg)
+{
+	uint8_t lsb = (reg & 0b00000001);
+	reg >>= 1;
+	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b10000000 : 0b0;
+	reg |= m_lastCarry;
+	m_setZeroFlag(!reg);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_RRC(uint8_t& reg)
+{
+	uint8_t lsb = (reg & 0b00000001);
+	reg >>= 1;
+	m_setCarryFlag(lsb);
+	reg |= (lsb << 7);
+	m_setZeroFlag(!reg);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_RR(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t lsb = (val & 0b00000001);
+	val >>= 1;
+	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b10000000 : 0b0;
+	val |= m_lastCarry;
+	m_setZeroFlag(!val);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_RRC(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+
+	uint8_t lsb = (val & 0b00000001);
+	val >>= 1;
+	m_setCarryFlag(lsb);
+	val |= (lsb << 7);
+	m_setZeroFlag(!val);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_SLA(uint8_t& reg)
+{
+	uint8_t msb = (reg & 0b10000000) >> 7;
+	reg <<= 1;
+	m_setZeroFlag(!reg);
+	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_SLA(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t msb = (val & 0b10000000) >> 7;
+	val <<= 1;
+	m_setZeroFlag(!val);
+	m_setCarryFlag(msb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_SRA(uint8_t& reg)
+{
+	uint8_t lsb = (reg & 0b00000001);
+	uint8_t msb = (reg & 0b00000001);
+	reg >>= 1;
+	reg |= msb;
+	m_setZeroFlag(!reg);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_SRA(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t lsb = (val & 0b00000001);
+	uint8_t msb = (val & 0b10000000);
+	val >>= 1;
+	val |= msb;
+	m_setZeroFlag(!val);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_SRL(uint8_t& reg)
+{
+	uint8_t lsb = (reg & 0b00000001);
+	reg >>= 1;
+	m_setZeroFlag(!reg);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_SRL(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t lsb = (val & 0b00000001);
+	val >>= 1;
+	m_setZeroFlag(!val);
+	m_setCarryFlag(lsb);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
 }
