@@ -73,19 +73,26 @@ private:
 	void _storeRegisterAtPairRegisterDec(Register& regA, uint8_t& regB);
 
 	void _storePairRegisterAtAddress(Register& reg);
+	void _storeRegisterAtAddress(uint8_t& reg);
+	void _loadRegisterFromAddress(uint8_t& reg);
 
 	void _storeOperandAtPairAddress(Register& reg);
 
 	void _storeRegisterInHRAM(uint8_t& regDst, uint8_t& regSrc);	// LD (C), A
 	void _loadFromHRAM(uint8_t& regDst, uint8_t& regSrcIdx);		// LD A, (C)
+	void _storeRegisterInHRAMImm(uint8_t& reg);
+	void _loadFromHRAMImm(uint8_t& reg);
 
 	void _incrementPairRegister(Register& reg);
+	void _incrementPairAddress(Register& reg);
 	void _incrementRegister(uint8_t& reg);
 
-
+	void _decrementPairRegister(Register& reg);
+	void _decrementPairAddress(Register& reg);
 	void _decrementRegister(uint8_t& reg);
 
 	void _addPairRegisters(Register& regA, Register& regB);
+	void _addSignedValueToPairRegister(Register& reg);
 
 	void _jumpRelative();
 	void _jumpRelativeIfZeroNotSet();
@@ -154,12 +161,12 @@ private:
 	void _halt();
 	void _resetToVector(uint8_t vectorIdx);
 	void _adjustBCD();
+	void _loadHLStackIdx();
 	void _complement();	//take one's complement
 	void _RLA();	//RLA, RLCA, RRA, RRCA all affect flags differently, so have to be implemented separately
 	void _RLCA();
 	void _RRA();
 	void _RRCA();
-
 
 
 	/*All 16-bit prefixed instructions*/
