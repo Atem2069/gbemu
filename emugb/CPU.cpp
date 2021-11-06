@@ -1532,3 +1532,89 @@ void CPU::_SRL(Register& reg)
 	m_mmu->write(reg.reg, val);
 	m_cycleCount += 4;
 }
+
+void CPU::_SWAP(uint8_t& reg)
+{
+	uint8_t low = (reg & 0x0F) << 4;
+	uint8_t high = (reg & 0xF0) >> 4;
+
+	reg = low | high;
+
+	m_setZeroFlag(!reg);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+	m_cycleCount += 2;
+}
+
+void CPU::_SWAP(Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t low = (val & 0x0F) << 4;
+	uint8_t high = (val & 0xF0) >> 4;
+
+	val = low | high;
+
+	m_setZeroFlag(!val);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(false);
+	m_setCarryFlag(false);
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_BIT(int idx, uint8_t& reg)
+{
+	uint8_t bitVal = (reg >> idx) & 0b00000001;
+	m_setZeroFlag(!bitVal);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(true);
+	m_cycleCount += 2;
+}
+
+void CPU::_BIT(int idx, Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t bitVal = (val >> idx) & 0b00000001;
+	m_setZeroFlag(!bitVal);
+	m_setSubtractFlag(false);
+	m_setHalfCarryFlag(true);
+	m_cycleCount += 3;
+}
+
+void CPU::_RES(int idx, uint8_t& reg)
+{
+	uint8_t mask = 0b00000001 << idx;
+	mask ^= 0b11111111;	//invert all bits
+	reg &= mask;
+
+	m_cycleCount += 2;
+}
+
+void CPU::_RES(int idx, Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t mask = 0b00000001 << idx;
+	mask ^= 0b11111111;	//invert all bits
+	val &= mask;
+
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}
+
+void CPU::_SET(int idx, uint8_t& reg)
+{
+	uint8_t mask = 0b00000001 << idx;
+	reg |= mask;
+	m_cycleCount += 2;
+}
+
+void CPU::_SET(int idx, Register& reg)
+{
+	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t mask = 0b00000001 << idx;
+	val |= mask;
+	m_mmu->write(reg.reg, val);
+	m_cycleCount += 4;
+}

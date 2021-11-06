@@ -179,5 +179,17 @@ private:
 	void _SRL(uint8_t& reg);
 	void _SRL(Register& reg);
 
+	void _SWAP(uint8_t& reg);
+	void _SWAP(Register& reg);
+
+	void _BIT(int idx, uint8_t& reg);
+	void _BIT(int idx, Register& reg);
+
+	void _RES(int idx, uint8_t& reg);
+	void _RES(int idx, Register& reg);
+
+	void _SET(int idx, uint8_t& reg);
+	void _SET(int idx, Register& reg);
+
 
 };
