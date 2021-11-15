@@ -33,8 +33,20 @@ uint8_t MMU::read(uint16_t address)
 
 void MMU::write(uint16_t address, uint8_t value)
 {
+
+	if (address <= 0x7FFF)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid memory write to address " + std::to_string((int)address));
+		return;
+	}
+
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
+
+	if (address == 0xFF01)	//weird debug output
+	{
+		std::cout << (char)value;
+	}
 
 	if (address == 0xFF46)
 	{
@@ -42,7 +54,10 @@ void MMU::write(uint16_t address, uint8_t value)
 	}
 
 	if (address == 0xFF50)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Exiting BIOS..");
 		m_isInBIOS = false;	//FF50 is BIOS select register, treat all writes as disabling the BIOS
+	}
 
 	m_memory[address] = value;
 }

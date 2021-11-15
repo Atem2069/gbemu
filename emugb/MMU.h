@@ -3,6 +3,8 @@
 #include<iostream>
 #include<vector>
 
+#include"Logger.h"
+
 class MMU
 {
 public:

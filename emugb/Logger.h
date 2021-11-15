@@ -3,6 +3,7 @@
 #include<iostream>
 #include<string>
 #include<queue>
+#include<fstream>
 enum class LoggerSeverity
 {
 	Error,
@@ -24,5 +25,7 @@ public:
 	void msg(LoggerSeverity severity, std::string msg);
 
 	void dumpToConsole();
+
+	void dumpToFile(std::string filename);
 
 };

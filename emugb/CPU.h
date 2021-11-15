@@ -1,7 +1,7 @@
 #pragma once
 
 #include<iostream>
-
+#include<sstream>
 #include"Logger.h"
 #include"MMU.h"
 
@@ -21,7 +21,7 @@ public:
 	CPU(MMU* mmu);
 	~CPU();
 
-	void step();
+	bool step();
 
 	int getCycleCount();
 

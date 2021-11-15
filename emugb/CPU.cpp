@@ -4,7 +4,9 @@ CPU::CPU(MMU* mmu)
 {
 	m_mmu = mmu;
 	AF = {}; BC = {}; DE = {}; HL = {}, SP = {};
-	PC = 0;
+	SP.reg = 0xFFFE;
+	PC = 0x100;
+	m_mmu->write(0xFF50, 1);
 }
 
 CPU::~CPU()
@@ -12,24 +14,36 @@ CPU::~CPU()
 	//todo
 }
 
-void CPU::step()
+bool CPU::step()
 {
 	if (!m_halted)
 	{
-		Logger::getInstance()->msg(LoggerSeverity::Info, "Fetch instruction PC=" + std::to_string((int)PC));
+		//Logger::getInstance()->msg(LoggerSeverity::Info, "Fetch instruction PC=" + std::to_string((int)PC));
 		m_executeInstruction();
 	}
 	else
 		m_cycleCount++;
 
+	if (PC > 0xfdff)
+		return false;
+
 	//handle interrupts
 	//tick timer
 	//synch timing (todo later)
+
+	return true;
 }
 
 void CPU::m_executeInstruction()
 {
 	uint8_t opcode = m_fetch();
+
+	//Logger::getInstance()->msg(LoggerSeverity::Info, "Decode opcode " + std::to_string((int)opcode));
+
+	std::stringstream sstrm;
+	sstrm << "PC=" << std::hex << (int)PC-1 << " Opcode: " << std::hex << (int)opcode;
+	Logger::getInstance()->msg(LoggerSeverity::Info, sstrm.str());
+
 	switch (opcode)
 	{
 	case 0x0: m_cycleCount++; break;
@@ -273,7 +287,7 @@ void CPU::m_executeInstruction()
 	case 0xEE: _xorValue(); break;
 	case 0xEF: _resetToVector(5); break;
 	case 0xF0: _loadFromHRAMImm(AF.high); break;
-	case 0xF1: _popToPairRegister(AF); break;
+	case 0xF1: _popToPairRegister(AF); AF.low &= 0b11110000; break;	//Lower 4 bits of F are hard-wired to low.
 	case 0xF2: _loadFromHRAM(AF.high, BC.low); break;
 	case 0xF3: _disableInterrupts(); break;
 //	case 0xF4: break;                                   Invalid opcode decoding F4
@@ -295,6 +309,7 @@ void CPU::m_executeInstruction()
 void CPU::m_executePrefixedInstruction()
 {
 	uint8_t opcode = m_fetch();
+
 	switch (opcode)
 	{
 	case 0x0: _RLC(BC.high); break;
@@ -616,7 +631,7 @@ uint16_t CPU::m_popFromStack()
 	uint8_t lowByte = m_mmu->read(SP.reg);
 	uint8_t highByte = m_mmu->read(SP.reg + 1);
 	SP.reg += 2;
-	uint16_t val = (((uint16_t)highByte) << 8) | (uint16_t)lowByte;
+	uint16_t val = (((uint16_t)highByte) << 8) | lowByte;
 	return val;
 }
 
@@ -828,7 +843,10 @@ void CPU::_jumpRelativeIfZeroNotSet()
 	if (!m_getZeroFlag())
 		_jumpRelative();				//if flag isn't set then 3-cycle relative jump takes place (same operation), otherwise cycles += 2
 	else
+	{
+		PC++;
 		m_cycleCount += 2;
+	}
 }
 
 void CPU::_jumpRelativeIfZeroSet()
@@ -836,7 +854,10 @@ void CPU::_jumpRelativeIfZeroSet()
 	if (m_getZeroFlag())
 		_jumpRelative();
 	else
+	{
+		PC++;
 		m_cycleCount += 2;
+	}
 }
 
 void CPU::_jumpRelativeIfCarryNotSet()
@@ -844,7 +865,10 @@ void CPU::_jumpRelativeIfCarryNotSet()
 	if (!m_getCarryFlag())
 		_jumpRelative();
 	else
+	{
+		PC++;
 		m_cycleCount += 2;
+	}
 }
 
 void CPU::_jumpRelativeIfCarrySet()
@@ -852,15 +876,19 @@ void CPU::_jumpRelativeIfCarrySet()
 	if (m_getCarryFlag())
 		_jumpRelative();
 	else
+	{
+		PC++;
 		m_cycleCount += 2;
+	}
 }
 
 void CPU::_jumpAbsolute()
 {
 	uint8_t byteLow = m_fetch();
 	uint8_t byteHigh = m_fetch();
+	Logger::getInstance()->msg(LoggerSeverity::Info, "JumpAbsolute: Low - " + std::to_string((int)byteLow) + " High - " + std::to_string(byteHigh));
 	uint16_t addr = ((uint16_t)byteHigh << 8) | byteLow;
-
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Jump to " + std::to_string((int)addr));
 	PC = addr;
 
 	m_cycleCount += 4;
@@ -871,7 +899,10 @@ void CPU::_jumpAbsoluteIfZeroNotSet()
 	if (!m_getZeroFlag())
 		_jumpAbsolute();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_jumpAbsoluteIfZeroSet()
@@ -879,7 +910,10 @@ void CPU::_jumpAbsoluteIfZeroSet()
 	if (m_getZeroFlag())
 		_jumpAbsolute();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_jumpAbsoluteIfCarryNotSet()
@@ -887,7 +921,10 @@ void CPU::_jumpAbsoluteIfCarryNotSet()
 	if (!m_getCarryFlag())
 		_jumpAbsolute();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_jumpAbsoluteIfCarrySet()
@@ -895,7 +932,10 @@ void CPU::_jumpAbsoluteIfCarrySet()
 	if (m_getCarryFlag())
 		_jumpAbsolute();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_call()
@@ -915,7 +955,10 @@ void CPU::_callIfZeroNotSet()
 	if (!m_getZeroFlag())
 		_call();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_callIfZeroSet()
@@ -923,7 +966,10 @@ void CPU::_callIfZeroSet()
 	if (m_getZeroFlag())
 		_call();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_callIfCarryNotSet()
@@ -931,7 +977,10 @@ void CPU::_callIfCarryNotSet()
 	if (!m_getCarryFlag())
 		_call();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_callIfCarrySet()
@@ -939,7 +988,10 @@ void CPU::_callIfCarrySet()
 	if (m_getCarryFlag())
 		_call();
 	else
+	{
+		PC += 2;
 		m_cycleCount += 3;
+	}
 }
 
 void CPU::_return()
@@ -1317,12 +1369,12 @@ void CPU::_popToPairRegister(Register& reg)
 //some misc instructions
 void CPU::_disableInterrupts()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Disable interrupts called, however instruction is not implemented!");
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Disable interrupts called, however instruction is not implemented! PC=" + std::to_string((int)PC));
 }
 
 void CPU::_enableInterrupts()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Enable interrupts called, however instruction is not implemented!");
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Enable interrupts called, however instruction is not implemented! PC=" + std::to_string((int)PC));
 }
 
 void CPU::_stop()

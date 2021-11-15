@@ -27,8 +27,8 @@ void Logger::msg(LoggerSeverity severity, std::string msg)
 	prefix += msg;
 
 	m_msgLog.push(prefix);
-	if (m_msgLog.size() > 255)
-		m_msgLog.pop();
+	//if (m_msgLog.size() > 10000)
+//		m_msgLog.pop();
 	
 
 	if (severity == LoggerSeverity::Warn || severity == LoggerSeverity::Error)
@@ -43,6 +43,18 @@ void Logger::dumpToConsole()
 		std::cout << m_msgLog.front() << std::endl;
 		m_msgLog.pop();
 	}
+}
+
+void Logger::dumpToFile(std::string fileName)
+{
+	std::ofstream writeHandle(fileName);
+	while (!m_msgLog.empty())
+	{
+		writeHandle << m_msgLog.front() << std::endl;
+		m_msgLog.pop();
+	}
+
+	writeHandle.close();
 }
 
 Logger* Logger::instance = nullptr;	//initialize static instance to null explicitly inside a translation unit
