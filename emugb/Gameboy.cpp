@@ -14,7 +14,7 @@ GameBoy::GameBoy()
 	}
 	biosReadHandle.close();
 	std::vector<uint8_t> m_ROM;
-	std::ifstream romReadHandle("Tests\\01-special.gb", std::ios::in | std::ios::binary);
+	std::ifstream romReadHandle("Tests\\02-interrupts.gb", std::ios::in | std::ios::binary);
 	romReadHandle >> std::noskipws;
 	while (!romReadHandle.eof())
 	{

@@ -47,7 +47,7 @@ private:
 	std::string m_lastInstruction = "";
 
 	MMU* m_mmu;
-	int m_cycleCount = 0;
+	unsigned long m_cycleCount = 0;
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.

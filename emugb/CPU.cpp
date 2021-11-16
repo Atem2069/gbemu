@@ -40,9 +40,9 @@ void CPU::m_executeInstruction()
 
 	//Logger::getInstance()->msg(LoggerSeverity::Info, "Decode opcode " + std::to_string((int)opcode));
 
-	std::stringstream sstrm;
-	sstrm << "PC=" << std::hex << (int)PC-1 << " Opcode: " << std::hex << (int)opcode;
-	Logger::getInstance()->msg(LoggerSeverity::Info, sstrm.str());
+	//std::stringstream sstrm;
+	//sstrm << "PC=" << std::hex << (int)PC-1 << " Opcode: " << std::hex << (int)opcode;
+	//Logger::getInstance()->msg(LoggerSeverity::Info, sstrm.str());
 
 	switch (opcode)
 	{
@@ -1047,7 +1047,10 @@ void CPU::_returnIfCarrySet()
 
 void CPU::_returnFromInterrupt()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "RETI not implemented! Interrupts aren't currently supported.");
+	uint16_t returnAddress = m_popFromStack();
+	PC = returnAddress;
+	//TODO: enable interrupts
+
 	m_cycleCount += 4;
 }
 
@@ -1145,7 +1148,7 @@ void CPU::_addValueCarry(uint8_t& reg)
 	m_setCarryFlag(((int)reg + (int)val + (int)lastCarryFlag) > 0xFF);
 	m_setSubtractFlag(false);
 
-	reg += val;
+	reg += val + lastCarryFlag;
 	m_setZeroFlag(reg == 0);
 
 	m_cycleCount += 2;
@@ -1166,7 +1169,7 @@ void CPU::_subRegister(uint8_t& reg)
 void CPU::_subRegisterCarry(uint8_t& reg)
 {
 	uint8_t lastCarryFlag = m_getCarryFlag();
-	m_setCarryFlag(AF.high < reg);
+	m_setCarryFlag(AF.high < (reg+lastCarryFlag));
 	m_setHalfCarryFlag(((AF.high & 0xf) - (reg & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
 	m_setSubtractFlag(true);
 
@@ -1193,12 +1196,12 @@ void CPU::_subPairAddressCarry(Register& reg)
 {
 	uint8_t val = m_mmu->read(reg.reg);
 	uint8_t lastCarryFlag = m_getCarryFlag();
-	m_setCarryFlag(AF.high < val);
+	m_setCarryFlag(AF.high < (val+lastCarryFlag));
 	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
 	m_setSubtractFlag(true);
 
 	AF.high -= (val + lastCarryFlag);
-	m_setZeroFlag(AF.high == 0);
+	m_setZeroFlag(!AF.high);
 
 	m_cycleCount += 2;
 }
@@ -1220,7 +1223,7 @@ void CPU::_subValueCarry()
 {
 	uint8_t val = m_fetch();
 	uint8_t lastCarryFlag = m_getCarryFlag();
-	m_setCarryFlag(AF.high < val);
+	m_setCarryFlag(AF.high < (val+lastCarryFlag));
 	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
 	m_setSubtractFlag(true);
 
@@ -1307,6 +1310,7 @@ void CPU::_orRegister(uint8_t& reg)
 void CPU::_orPairAddress(Register& reg)
 {
 	uint8_t val = m_mmu->read(reg.reg);
+	AF.high |= val;
 	m_setZeroFlag(!AF.high);
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
@@ -1317,6 +1321,7 @@ void CPU::_orPairAddress(Register& reg)
 void CPU::_orValue()
 {
 	uint8_t val = m_fetch();
+	AF.high |= val;
 	m_setZeroFlag(!AF.high);
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
@@ -1399,7 +1404,24 @@ void CPU::_resetToVector(uint8_t vectorIdx)
 
 void CPU::_adjustBCD()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Program attempted to perform BCD adjust which is not implemented!");
+	//copypasted because this instruction makes no sense
+	uint8_t correction = m_getCarryFlag() ? 0x60 : 0x00;
+
+	if (m_getHalfCarryFlag() || (!m_getSubtractFlag() && ((AF.high & 0xF) > 9)))
+		correction |= 0x06;
+	if (m_getCarryFlag() || (!m_getSubtractFlag() && (AF.high > 0x99)))
+		correction |= 0x60;
+	if (m_getSubtractFlag())
+		AF.high -= correction;
+	else
+		AF.high += correction;
+	if (((correction << 2) & 0x100) != 0)
+		m_setCarryFlag(true);
+
+	m_setHalfCarryFlag(false);
+	m_setZeroFlag(!AF.high);
+
+	m_cycleCount += 2;
 }
 
 void CPU::_loadHLStackIdx()
@@ -1609,7 +1631,7 @@ void CPU::_SLA(Register& reg)
 void CPU::_SRA(uint8_t& reg)
 {
 	uint8_t lsb = (reg & 0b00000001);
-	uint8_t msb = (reg & 0b00000001);
+	uint8_t msb = (reg & 0b10000000);
 	reg >>= 1;
 	reg |= msb;
 	m_setZeroFlag(!reg);
