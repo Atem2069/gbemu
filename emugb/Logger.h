@@ -4,6 +4,7 @@
 #include<string>
 #include<queue>
 #include<fstream>
+#include<source_location>
 enum class LoggerSeverity
 {
 	Error,
@@ -22,7 +23,7 @@ private:
 public:
 	static Logger* getInstance();
 
-	void msg(LoggerSeverity severity, std::string msg);
+	void msg(LoggerSeverity severity, std::string msg, const std::source_location location = std::source_location::current());
 
 	void dumpToConsole();
 
