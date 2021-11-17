@@ -14,7 +14,7 @@ GameBoy::GameBoy()
 	}
 	biosReadHandle.close();
 	std::vector<uint8_t> m_ROM;
-	std::ifstream romReadHandle("Tests\\02-interrupts.gb", std::ios::in | std::ios::binary);
+	std::ifstream romReadHandle("Tests\\05.gb", std::ios::in | std::ios::binary);
 	romReadHandle >> std::noskipws;
 	while (!romReadHandle.eof())
 	{
@@ -26,11 +26,14 @@ GameBoy::GameBoy()
 	//initialize MMU now
 	m_mmu = new MMU(m_bios, m_ROM);
 	m_cpu = new CPU(m_mmu);
+	m_ppu = new PPU(m_mmu);
 }
 
 GameBoy::~GameBoy()
 {
 	delete m_mmu;	//Objects are heap allocated, so ideally should be specifically deleted (to prevent mem leak)
+	delete m_cpu;
+	delete m_ppu;
 }
 
 void GameBoy::run()
@@ -41,10 +44,10 @@ void GameBoy::run()
 		//step CPU
 		if (!m_cpu->step())
 		{
-			Logger::getInstance()->msg(LoggerSeverity::Error, "Critical error occurred while stepping CPU. dumping logs");
+			Logger::getInstance()->msg(LoggerSeverity::Error, "CPU attempted to execute invalid address. dumping logs");
 			return;
 		}
-		//step PPU
+		m_ppu->step(m_cpu->getCycleCount());
 
 		//if necessary, update display
 	}

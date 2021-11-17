@@ -23,7 +23,7 @@ public:
 
 	bool step();
 
-	int getCycleCount();
+	unsigned long getCycleCount();
 
 	bool m_getZeroFlag();
 	void m_setZeroFlag(bool value);

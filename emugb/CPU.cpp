@@ -4,9 +4,9 @@ CPU::CPU(MMU* mmu)
 {
 	m_mmu = mmu;
 	AF = {}; BC = {}; DE = {}; HL = {}, SP = {};
-	SP.reg = 0xFFFE;
-	PC = 0x100;
-	m_mmu->write(0xFF50, 1);
+	//SP.reg = 0xFFFE;
+	PC = 0x0;
+	//m_mmu->write(0xFF50, 1);
 }
 
 CPU::~CPU()
@@ -18,7 +18,7 @@ bool CPU::step()
 {
 	if (!m_halted)
 	{
-		//Logger::getInstance()->msg(LoggerSeverity::Info, "Fetch instruction PC=" + std::to_string((int)PC));
+		//Logger::getInstance()->msg(LoggerSeverity::Warn, "Fetch instruction PC=" + std::to_string((int)PC));
 		m_executeInstruction();
 	}
 	else
@@ -571,7 +571,7 @@ void CPU::m_executePrefixedInstruction()
 	}
 }
 
-int CPU::getCycleCount() { return m_cycleCount; }
+unsigned long CPU::getCycleCount() { return m_cycleCount; }
 
 bool CPU::m_getZeroFlag() { return (AF.low & 0b10000000) >> 7; }
 void CPU::m_setZeroFlag(bool value)
@@ -886,9 +886,7 @@ void CPU::_jumpAbsolute()
 {
 	uint8_t byteLow = m_fetch();
 	uint8_t byteHigh = m_fetch();
-	Logger::getInstance()->msg(LoggerSeverity::Info, "JumpAbsolute: Low - " + std::to_string((int)byteLow) + " High - " + std::to_string(byteHigh));
 	uint16_t addr = ((uint16_t)byteHigh << 8) | byteLow;
-	Logger::getInstance()->msg(LoggerSeverity::Info, "Jump to " + std::to_string((int)addr));
 	PC = addr;
 
 	m_cycleCount += 4;

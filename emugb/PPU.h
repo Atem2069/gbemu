@@ -28,8 +28,8 @@ private:
 	MMU* m_mmu;
 	unsigned long m_lastCycleCount = 0;
 
-	vec3 m_backBuffer[160 * 144] = {};	//scratchpad buffer used while rendering frame
-	vec3 m_dispBuffer[160 * 144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
+	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
+	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
 	void m_renderScanline(uint8_t line);
 

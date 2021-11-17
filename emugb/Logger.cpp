@@ -31,8 +31,8 @@ void Logger::msg(LoggerSeverity severity, std::string msg)
 //		m_msgLog.pop();
 	
 
-	if (severity == LoggerSeverity::Warn || severity == LoggerSeverity::Error)
-		std::cout << prefix << std::endl;
+	//if (severity == LoggerSeverity::Warn || severity == LoggerSeverity::Error)
+		std::cout << prefix << '\n';
 
 }
 

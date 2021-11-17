@@ -4,6 +4,7 @@
 #include<fstream>
 #include"MMU.h"
 #include"CPU.h"
+#include"PPU.h"
 class GameBoy
 {
 public:
@@ -14,6 +15,7 @@ public:
 private:
 	MMU* m_mmu;
 	CPU* m_cpu;
+	PPU* m_ppu;
 
 	bool m_shouldRun = true;
 };
