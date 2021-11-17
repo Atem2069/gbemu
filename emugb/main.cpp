@@ -11,6 +11,7 @@ int main()
 
 	m_gameBoy.run();
 
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Emulator instance has ended. Dumping logs.. ");
 	Logger::getInstance()->dumpToFile("cpu.log");
 	return 0;
 }

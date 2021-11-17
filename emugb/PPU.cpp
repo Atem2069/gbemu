@@ -80,7 +80,7 @@ void PPU::step(unsigned long cycleCount)
 	m_mmu->write(REG_LY, curLine);
 }
 
-void PPU::m_renderScanline(uint8_t line)
+void PPU::m_renderScanline(uint8_t line)	//difficult function but still more straightforward than pixel fifo ....
 {
 	if (line < 0 || line > 143)
 		return;

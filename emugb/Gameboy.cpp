@@ -38,7 +38,7 @@ GameBoy::~GameBoy()
 
 void GameBoy::run()
 {
-	//spawn render thread here (initializes Renderer object, then runs indefinitely)
+	std::thread m_dispWorkerThread(&GameBoy::displayWorker, this);
 	while (m_shouldRun)
 	{
 		//step CPU
@@ -51,5 +51,22 @@ void GameBoy::run()
 
 		//if necessary, update display
 	}
-	//join render thread, then exit
+	m_dispWorkerThread.join();
+}
+
+void GameBoy::displayWorker()
+{
+
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Display worker: starting. .");
+	Display m_disp(160 * 3, 144 * 3);
+
+	while (!m_disp.shouldClose() && m_disp.getInitialized())
+	{
+		//upload data
+		m_disp.draw();
+	}
+
+	m_shouldRun = false;
+
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Display worker: ending. .");
 }

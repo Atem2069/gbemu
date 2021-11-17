@@ -1,10 +1,12 @@
 #pragma once
 
 #include<iostream>
+#include<thread>
 #include<fstream>
 #include"MMU.h"
 #include"CPU.h"
 #include"PPU.h"
+#include"Display.h"
 class GameBoy
 {
 public:
@@ -18,4 +20,6 @@ private:
 	PPU* m_ppu;
 
 	bool m_shouldRun = true;
+
+	void displayWorker();
 };
