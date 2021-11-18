@@ -6,6 +6,7 @@
 #include<GLFW/glfw3.h>
 
 #include"Logger.h"
+#include"common/vec3.h"
 
 
 
@@ -24,5 +25,8 @@ public:
 
 private:
 	GLFWwindow* m_window;
+
+	GLuint m_VBO=0, m_VAO=0, m_program=0;
+
 	bool m_initialized = false;
 };

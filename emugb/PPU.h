@@ -2,13 +2,8 @@
 
 #include"MMU.h"
 #include"Logger.h"
+#include"Common/vec3.h"
 
-struct vec3
-{
-	float x;
-	float y;
-	float z;
-};
 
 const uint16_t REG_LCDC = 0xFF40;	//LCD control register
 const uint16_t REG_STAT = 0xFF41;	//LCD status register

@@ -156,12 +156,15 @@
     <ClCompile Include="PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\vec3.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="Gameboy.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MMU.h" />
     <ClInclude Include="PPU.h" />
+    <ClInclude Include="Shaders\fragment.h" />
+    <ClInclude Include="Shaders\vertex.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
