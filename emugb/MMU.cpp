@@ -51,9 +51,7 @@ void MMU::write(uint16_t address, uint8_t value)
 	if (address == 0xFF46)
 	{
 		if (!m_OAMLock)
-		{
-			//do dma
-		}
+			return m_DMATransfer(value);
 		else
 			Logger::getInstance()->msg(LoggerSeverity::Warn, "DMA attempted while OAM is locked for reading. Ignoring...");
 	}
@@ -70,4 +68,13 @@ void MMU::write(uint16_t address, uint8_t value)
 void MMU::setOAMLocked(bool locked)
 {
 	m_OAMLock = locked;
+}
+
+void MMU::m_DMATransfer(uint8_t base)
+{
+	uint16_t newAddr = ((unsigned int)base << 8);
+	for (unsigned int i = 0; i < 0xA0; i++)
+	{
+		write(0xFE00 + i, read(newAddr + i));
+	}
 }

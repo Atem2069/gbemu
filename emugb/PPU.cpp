@@ -76,7 +76,7 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
-				//render sprites
+				m_renderSprites();
 				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(vec3));	//copy over backbuffer to display buffer
 			}
 		}
@@ -110,29 +110,65 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult func
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-
-		//now extract the bit we're after
-
-		uint8_t bitIndex = (column + scrollX) % 8;
-		uint8_t higher = (tileData1 >> (7 - bitIndex)) & 0b1;
-		uint8_t lower = (tileData2 >> (7 - bitIndex)) & 0b1;
-		uint8_t colorId = (higher << 1) | lower;
-
-		//todo: implement programmable palette maybe?
-		vec3 color = {};
-		switch (colorId)
-		{
-		case 0b00: color = { 1.f,1.f,1.f }; break;
-		case 0b01:color = { 0.75f,0.75f,0.75f }; break;
-		case 0b10:color = { 0.37f,0.37f,0.37f }; break;
-		case 0b11:color = { 0.0f,0.0f,0.0f }; break;
-		}
-
-		//now get coordinate that we are writing to (simple pointer arithmetic)
-		int pixelIdx = (line * 160) + column;
-		m_backBuffer[pixelIdx] = color;
+		m_plotPixel(column, line, tileData1, tileData2);
 	}
 
+}
+
+void PPU::m_renderSprites()
+{
+	//return if sprites not enabled otherwise we'll read garbage from OAM
+
+	for (unsigned int i = 0; i < 40; i++)
+	{
+		uint16_t spriteAttribAddress = 0xFE00 + (i * 4);
+		auto y = m_mmu->read(spriteAttribAddress) - 16;
+		auto x = m_mmu->read(spriteAttribAddress + 1) - 8;
+		auto patternIdx = m_mmu->read(spriteAttribAddress + 2);
+		auto attributes = m_mmu->read(spriteAttribAddress + 3);
+		auto spriteIsVisible = (attributes & 0b10000000) >> 7;
+		auto yFlip = (attributes & 0b01000000) >> 6;
+		auto xFlip = (attributes & 0b00100000) >> 5;
+		auto paletteIdx = (attributes & 0b00010000) >> 4;
+
+		if (x == 0 && y == 0)	//sprite not visible
+			return;
+
+		for (int j = 0; j < 8; j++)
+		{
+			uint16_t addr = 0x8000 + (patternIdx * 16 + j * 2);
+			uint8_t byte1 = m_mmu->read(addr);
+			uint8_t byte2 = m_mmu->read(addr + 1);
+			//process bytes and draw to screen
+			for (int k = 0; k < 8; k++)
+				m_plotPixel(x + k, y + j, byte1, byte2);
+		}
+	}
+}
+
+void PPU::m_plotPixel(int x, int y, uint8_t byteHigh, uint8_t byteLow)
+{
+	int pixelIdx = (y * 160) + x;
+
+	uint8_t colHigher = (byteHigh >> (7 - (x%8))) & 0b1;
+	uint8_t colLower = (byteLow >> (7 - (x % 8))) & 0b1;
+	uint8_t colIdx = (colHigher << 1) | colLower;
+	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+}
+
+vec3 PPU::m_getColourFromPaletteIdx(uint8_t idx)
+{
+	vec3 color = {};
+	switch (idx)
+	{
+	case 0b00: color = { 1.f,1.f,1.f }; break;
+	case 0b01:color = { 0.75f,0.75f,0.75f }; break;
+	case 0b10:color = { 0.37f,0.37f,0.37f }; break;
+	case 0b11:color = { 0.0f,0.0f,0.0f }; break;
+	default:Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid colour index " + std::to_string((int)idx) + " passed.");
+	}
+
+	return color;
 }
 
 vec3* PPU::getDisplay()

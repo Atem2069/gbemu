@@ -31,6 +31,9 @@ private:
 	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
 	void m_renderScanline(uint16_t tileDataBase, uint8_t line);
+	void m_renderSprites();
+	void m_plotPixel(int x, int y, uint8_t byteHigh, uint8_t byteLow);
+	vec3 m_getColourFromPaletteIdx(uint8_t idx);
 
 	bool m_getDisplayEnabled();
 	bool m_getTileDataSelect();
