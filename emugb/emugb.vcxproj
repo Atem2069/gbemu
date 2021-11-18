@@ -156,6 +156,7 @@
     <ClCompile Include="PPU.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\vec2.h" />
     <ClInclude Include="Common\vec3.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Display.h" />

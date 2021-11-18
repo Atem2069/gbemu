@@ -14,7 +14,7 @@ GameBoy::GameBoy()
 	}
 	biosReadHandle.close();
 	std::vector<uint8_t> m_ROM;
-	std::ifstream romReadHandle("Tests\\05.gb", std::ios::in | std::ios::binary);
+	std::ifstream romReadHandle("Games\\tetris.gb", std::ios::in | std::ios::binary);
 	romReadHandle >> std::noskipws;
 	while (!romReadHandle.eof())
 	{
@@ -62,7 +62,7 @@ void GameBoy::displayWorker()
 
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
-		//upload data
+		m_disp.upload((void*)m_ppu->getDisplay());
 		m_disp.draw();
 	}
 

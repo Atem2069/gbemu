@@ -7,8 +7,13 @@
 
 #include"Logger.h"
 #include"common/vec3.h"
+#include"common/vec2.h"
 
-
+struct Vertex
+{
+	vec3 position;
+	vec2 uv;
+};
 
 class Display
 {
@@ -27,6 +32,6 @@ private:
 	GLFWwindow* m_window;
 
 	GLuint m_VBO=0, m_VAO=0, m_program=0;
-
+	GLuint m_texHandle = 0;
 	bool m_initialized = false;
 };

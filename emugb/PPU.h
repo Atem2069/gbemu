@@ -18,6 +18,8 @@ public:
 	~PPU();
 
 	void step(unsigned long cycleCount);
+
+	vec3* getDisplay();
 private:
 	int m_displayMode = 0;
 	MMU* m_mmu;

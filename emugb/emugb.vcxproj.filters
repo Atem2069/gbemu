@@ -71,5 +71,8 @@
     <ClInclude Include="Common\vec3.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="Common\vec2.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -31,26 +31,29 @@ Display::Display(int width, int height)
 		return;
 	}
 
-	vec3 vertices[6] =
+	Vertex vertices[6] =
 	{
-		{1.0f,-1.0f,0.0f},
-		{1.0f,1.0f,0.0f},
-		{-1.0f,1.0f,0.0f},
-		{-1.0f,1.0f,0.0f},
-		{-1.0f,-1.0f,0.0f},
-		{1.0f,-1.0f,0.0f}
+		{{1.0f,-1.0f,0.0f},{1.0f,1.0f} },
+		{{1.0f,1.0f,0.0f}, {1.0f,0.0f}},
+		{{-1.0f,1.0f,0.0f}, {0.0f,0.0f}},
+		{{-1.0f,1.0f,0.0f}, {0.0f,0.0f}},
+		{{-1.0f,-1.0f,0.0f}, {0.0f,1.0f} },
+		{{ 1.0f,-1.0f,0.0f}, {1.0f,1.0f} }
 	};
 
 	glGenBuffers(1, &m_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vec3), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	GLuint m_vs = 0, m_fs = 0;
 
@@ -79,6 +82,14 @@ Display::Display(int width, int height)
 	glLinkProgram(m_program);
 	glUseProgram(m_program);
 
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures(1, &m_texHandle);
+	glBindTexture(GL_TEXTURE_2D, m_texHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGB, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	m_initialized = true;
 }
@@ -102,6 +113,9 @@ void Display::draw()
 
 	glUseProgram(m_program);
 	glBindVertexArray(m_VAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_texHandle);	//redundant?
+
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
@@ -110,7 +124,8 @@ void Display::draw()
 
 void Display::upload(void* data)
 {
-	//todo
+	glBindTexture(GL_TEXTURE_2D, m_texHandle);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGB, GL_FLOAT, data);
 }
 
 bool Display::getInitialized() { return m_initialized; }

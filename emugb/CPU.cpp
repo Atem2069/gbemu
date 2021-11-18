@@ -18,7 +18,8 @@ bool CPU::step()
 {
 	if (!m_halted)
 	{
-		//Logger::getInstance()->msg(LoggerSeverity::Warn, "Fetch instruction PC=" + std::to_string((int)PC));
+		//temp hack to pull all joypad buttons high
+		m_mmu->write(0xFF00, 0xFF);
 		m_executeInstruction();
 	}
 	else

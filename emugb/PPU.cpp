@@ -85,8 +85,10 @@ void PPU::m_renderScanline(uint8_t line)	//difficult function but still more str
 	if (line < 0 || line > 143)
 		return;
 
-	uint8_t scrollY = 0; //(m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
-	uint8_t scrollX = 0;// (m_mmu->read(REG_SCX)) % 256;
+	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
+	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
+
+	//Logger::getInstance()->msg(LoggerSeverity::Info, std::to_string((int)scrollY));
 
 	uint16_t m_backgroundBase = (m_getTileMapDisplaySelect()) ? 0x9C00 : 0x9800;
 
@@ -117,10 +119,10 @@ void PPU::m_renderScanline(uint8_t line)	//difficult function but still more str
 		vec3 color = {};
 		switch (colorId)
 		{
-		case 0b00: color = { 0.f,0.f,0.f }; break;
-		case 0b01:color = { 0.37f,0.37f,0.37f }; break;
-		case 0b10:color = { 0.75f,0.75f,0.75f }; break;
-		case 0b11:color = { 1.0f,1.0f,1.0f }; break;
+		case 0b00: color = { 1.f,1.f,1.f }; break;
+		case 0b01:color = { 0.75f,0.75f,0.75f }; break;
+		case 0b10:color = { 0.37f,0.37f,0.37f }; break;
+		case 0b11:color = { 0.0f,0.0f,0.0f }; break;
 		}
 
 		//now get coordinate that we are writing to (simple pointer arithmetic)
@@ -128,6 +130,11 @@ void PPU::m_renderScanline(uint8_t line)	//difficult function but still more str
 		m_backBuffer[pixelIdx] = color;
 	}
 
+}
+
+vec3* PPU::getDisplay()
+{
+	return m_dispBuffer;
 }
 
 bool PPU::m_getDisplayEnabled()
