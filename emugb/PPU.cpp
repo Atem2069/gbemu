@@ -24,6 +24,7 @@ void PPU::step(unsigned long cycleCount)
 	switch (m_displayMode)
 	{
 	case 2:
+		m_mmu->setOAMLocked(true);
 		if (cycleDiff >= 20)
 		{
 			m_lastCycleCount = cycleCount;
@@ -40,11 +41,16 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 0:
+		m_mmu->setOAMLocked(false);
 		if (cycleDiff >= 51)
 		{
 			m_lastCycleCount = cycleCount;
 			curLine++;
-			m_renderScanline(curLine);
+
+			//get tilemap base addr
+			uint16_t tileDataBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
+
+			m_renderScanline(tileDataBase, curLine);
 			if (curLine == 144)
 			{
 				//enter vblank
@@ -81,18 +87,14 @@ void PPU::step(unsigned long cycleCount)
 	m_mmu->write(REG_LY, curLine);
 }
 
-void PPU::m_renderScanline(uint8_t line)	//difficult function but still more straightforward than pixel fifo ....
+void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult function but still more straightforward than pixel fifo ....
 {
 	if (line < 0 || line > 143)
 		return;
 
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
-
-	//Logger::getInstance()->msg(LoggerSeverity::Info, std::to_string((int)scrollY));
-
-	uint16_t m_backgroundBase = (m_getTileMapDisplaySelect()) ? 0x9C00 : 0x9800;
-
+	uint16_t m_backgroundBase = tileDataBase;
 	m_backgroundBase += ((line + scrollY) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
 	for (uint16_t column = 0; column < 160; column++)
@@ -148,7 +150,12 @@ bool PPU::m_getTileDataSelect()
 	return ((m_mmu->read(REG_LCDC)) >> 4) & 0b00000001;
 }
 
-bool PPU::m_getTileMapDisplaySelect()
+bool PPU::m_getBackgroundTileMapDisplaySelect()
 {
 	return ((m_mmu->read(REG_LCDC)) >> 3) & 0b00000001;
+}
+
+bool PPU::m_getWindowTileMapDisplaySelect()
+{
+	return ((m_mmu->read(REG_LCDC)) >> 6) & 0b00000001;
 }

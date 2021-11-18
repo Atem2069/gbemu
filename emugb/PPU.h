@@ -30,10 +30,11 @@ private:
 	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
 	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
-	void m_renderScanline(uint8_t line);
+	void m_renderScanline(uint16_t tileDataBase, uint8_t line);
 
 	bool m_getDisplayEnabled();
 	bool m_getTileDataSelect();
-	bool m_getTileMapDisplaySelect();
+	bool m_getBackgroundTileMapDisplaySelect();
+	bool m_getWindowTileMapDisplaySelect();
 
 };

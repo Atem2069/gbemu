@@ -50,7 +50,12 @@ void MMU::write(uint16_t address, uint8_t value)
 
 	if (address == 0xFF46)
 	{
-		//todo: DMA transfer
+		if (!m_OAMLock)
+		{
+			//do dma
+		}
+		else
+			Logger::getInstance()->msg(LoggerSeverity::Warn, "DMA attempted while OAM is locked for reading. Ignoring...");
 	}
 
 	if (address == 0xFF50)
@@ -60,4 +65,9 @@ void MMU::write(uint16_t address, uint8_t value)
 	}
 
 	m_memory[address] = value;
+}
+
+void MMU::setOAMLocked(bool locked)
+{
+	m_OAMLock = locked;
 }
