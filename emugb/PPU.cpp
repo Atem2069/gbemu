@@ -1,8 +1,9 @@
 #include"PPU.h"
 
-PPU::PPU(MMU* mmu)
+PPU::PPU(MMU* mmu, InterruptManager* interruptManager)
 {
 	m_mmu = mmu;
+	m_interruptManager = interruptManager;
 
 }
 
@@ -49,7 +50,7 @@ void PPU::step(unsigned long cycleCount)
 				//enter vblank
 				m_displayMode = 1;
 				status &= 0b11111100; status |= 0b00000001;
-				//todo: request vblank interrupt
+				m_interruptManager->requestInterrupt(InterruptType::VBlank);
 			}
 			else
 			{

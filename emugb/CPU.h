@@ -4,6 +4,7 @@
 #include<sstream>
 #include"Logger.h"
 #include"MMU.h"
+#include"InterruptManager.h"
 
 union Register
 {
@@ -18,7 +19,7 @@ union Register
 class CPU
 {
 public:
-	CPU(MMU* mmu);
+	CPU(MMU* mmu, InterruptManager* interruptManager);
 	~CPU();
 
 	bool step();
@@ -47,6 +48,7 @@ private:
 	std::string m_lastInstruction = "";
 
 	MMU* m_mmu;
+	InterruptManager* m_interruptManager;
 	unsigned long m_cycleCount = 0;
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer

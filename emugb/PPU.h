@@ -1,6 +1,7 @@
 #pragma once
 
 #include"MMU.h"
+#include"InterruptManager.h"
 #include"Logger.h"
 #include"Common/vec3.h"
 
@@ -14,7 +15,7 @@ const uint16_t REG_LY = 0xFF44;		//Holds current scanline being rendered (critic
 class PPU
 {
 public:
-	PPU(MMU* mmu);
+	PPU(MMU* mmu, InterruptManager* interruptManager);
 	~PPU();
 
 	void step(unsigned long cycleCount);
@@ -23,6 +24,7 @@ public:
 private:
 	int m_displayMode = 0;
 	MMU* m_mmu;
+	InterruptManager* m_interruptManager;
 	unsigned long m_lastCycleCount = 0;
 
 	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame

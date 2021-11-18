@@ -45,7 +45,7 @@ void MMU::write(uint16_t address, uint8_t value)
 
 	if (address == 0xFF01)	//weird debug output
 	{
-		std::cout << (char)value;
+		//std::cout << (char)value;
 	}
 
 	if (address == 0xFF46)

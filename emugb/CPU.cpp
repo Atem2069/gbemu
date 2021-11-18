@@ -1,8 +1,9 @@
 #include"CPU.h"
 
-CPU::CPU(MMU* mmu)
+CPU::CPU(MMU* mmu, InterruptManager* interruptManager)
 {
 	m_mmu = mmu;
+	m_interruptManager = interruptManager;
 	AF = {}; BC = {}; DE = {}; HL = {}, SP = {};
 	//SP.reg = 0xFFFE;
 	PC = 0x0;
@@ -25,10 +26,20 @@ bool CPU::step()
 	else
 		m_cycleCount++;
 
-	if (PC > 0xfdff)
-		return false;
+	//if (PC > 0xfdff)
+	//	return false;
 
-	//handle interrupts
+	InterruptType queuedInt = m_interruptManager->getActiveInterrupt();
+	if (queuedInt != InterruptType::None)
+	{
+		if (!m_halted)
+		{
+			m_interruptManager->disableInterrupts();
+			m_pushToStack(PC);
+			PC = (uint16_t)queuedInt;
+		}
+		m_halted = false;
+	}
 	//tick timer
 	//synch timing (todo later)
 
@@ -1046,6 +1057,7 @@ void CPU::_returnIfCarrySet()
 
 void CPU::_returnFromInterrupt()
 {
+	m_interruptManager->enableInterrupts();
 	uint16_t returnAddress = m_popFromStack();
 	PC = returnAddress;
 	//TODO: enable interrupts
@@ -1373,12 +1385,14 @@ void CPU::_popToPairRegister(Register& reg)
 //some misc instructions
 void CPU::_disableInterrupts()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Disable interrupts called, however instruction is not implemented! PC=" + std::to_string((int)PC));
+	m_interruptManager->disableInterrupts();
+	m_cycleCount += 1;
 }
 
 void CPU::_enableInterrupts()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Enable interrupts called, however instruction is not implemented! PC=" + std::to_string((int)PC));
+	m_interruptManager->enableInterrupts();
+	m_cycleCount += 1;
 }
 
 void CPU::_stop()

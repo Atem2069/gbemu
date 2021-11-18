@@ -25,8 +25,9 @@ GameBoy::GameBoy()
 
 	//initialize MMU now
 	m_mmu = new MMU(m_bios, m_ROM);
-	m_cpu = new CPU(m_mmu);
-	m_ppu = new PPU(m_mmu);
+	m_interruptManager = new InterruptManager(m_mmu);
+	m_cpu = new CPU(m_mmu,m_interruptManager);
+	m_ppu = new PPU(m_mmu, m_interruptManager);
 }
 
 GameBoy::~GameBoy()
@@ -34,6 +35,7 @@ GameBoy::~GameBoy()
 	delete m_mmu;	//Objects are heap allocated, so ideally should be specifically deleted (to prevent mem leak)
 	delete m_cpu;
 	delete m_ppu;
+	delete m_interruptManager;
 }
 
 void GameBoy::run()

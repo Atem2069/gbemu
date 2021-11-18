@@ -7,6 +7,7 @@
 #include"CPU.h"
 #include"PPU.h"
 #include"Display.h"
+#include"InterruptManager.h"
 class GameBoy
 {
 public:
@@ -18,6 +19,7 @@ private:
 	MMU* m_mmu;
 	CPU* m_cpu;
 	PPU* m_ppu;
+	InterruptManager* m_interruptManager;
 
 	bool m_shouldRun = true;
 
