@@ -44,6 +44,11 @@ InterruptType InterruptManager::getActiveInterrupt()
 		intFlags &= 0b11111101;
 		chosenInterruptType = InterruptType::STAT;
 	}
+	else if ((activeInterrupts >> 2) & 0b1)
+	{
+		intFlags &= 0b11111011;
+		chosenInterruptType = InterruptType::Timer;
+	}
 
 	if (interruptsEnabled)				//only turn down flags if interrupts enabled
 		m_mmu->write(REG_IFLAGS, intFlags);
