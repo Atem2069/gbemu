@@ -82,7 +82,7 @@ Display::Display(int width, int height)
 	glLinkProgram(m_program);
 	glUseProgram(m_program);
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);	//override driver's default 4-byte unpack stride, maybe reudndant
 	glGenTextures(1, &m_texHandle);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGB, GL_FLOAT, nullptr);
@@ -107,7 +107,7 @@ bool Display::shouldClose()
 
 void Display::draw()
 {
-	glfwPollEvents();
+	glfwPollEvents();	//poll window event messages
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -116,7 +116,7 @@ void Display::draw()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);	//redundant?
 
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, 6);	//draw quad made up of 6 vertices (3 tris)
 
 
 	glfwSwapBuffers(m_window);
@@ -129,3 +129,5 @@ void Display::upload(void* data)
 }
 
 bool Display::getInitialized() { return m_initialized; }
+
+bool Display::getKeyPressed(int key) { return (glfwGetKey(m_window,key) == GLFW_PRESS); }

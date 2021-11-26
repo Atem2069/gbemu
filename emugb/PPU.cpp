@@ -21,10 +21,11 @@ void PPU::step(unsigned long cycleCount)
 	uint8_t curLine = m_mmu->read(REG_LY);
 	uint8_t status = m_mmu->read(REG_STAT);
 
+	m_mmu->setOAMLocked(true);
+
 	switch (m_displayMode)
 	{
 	case 2:
-		m_mmu->setOAMLocked(true);
 		if (cycleDiff >= 20)
 		{
 			m_lastCycleCount = cycleCount;
@@ -51,6 +52,7 @@ void PPU::step(unsigned long cycleCount)
 			uint16_t tileDataBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 
 			m_renderScanline(tileDataBase, curLine);
+			m_renderSprites(curLine);
 			if (curLine == 144)
 			{
 				//enter vblank
@@ -67,6 +69,7 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 1:
+		m_mmu->setOAMLocked(false);
 		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
@@ -76,7 +79,7 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
-				m_renderSprites();
+				//m_renderSprites();
 				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(vec3));	//copy over backbuffer to display buffer
 			}
 		}
@@ -92,6 +95,11 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult func
 	if (line < 0 || line > 143)
 		return;
 
+	if (!m_getBackgroundEnabled())
+	{
+		return;
+	}
+
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
 	uint16_t m_backgroundBase = tileDataBase;
@@ -101,9 +109,11 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult func
 	{
 		uint8_t m_tileMapXCoord = (column + scrollX) % 256;
 		uint16_t m_curBackgroundAddress = m_backgroundBase + (m_tileMapXCoord / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
-		uint16_t m_tileIndex = m_mmu->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
+		uint8_t m_tileIndex = m_mmu->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
+		if (!m_getTileDataSelect())
+			m_tileIndex += 128;
 		tileMemLocation += (m_tileIndex * 16);
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
 		tileMemLocation += ((line + scrollY) % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
@@ -115,13 +125,18 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult func
 
 }
 
-void PPU::m_renderSprites()
+void PPU::m_renderSprites(uint8_t line)
 {
 	//return if sprites not enabled otherwise we'll read garbage from OAM
+	if (!m_getSpritesEnabled())
+		return;
 
-	for (unsigned int i = 0; i < 40; i++)
+	int spriteCount = 0;
+
+	int renderedSpriteCount = 0, i = 0;
+	while (i < 40 && renderedSpriteCount < 10)
 	{
-		uint16_t spriteAttribAddress = 0xFE00 + (i * 4);
+		uint16_t spriteAttribAddress = 0xFE00 + (i++ * 4);
 		auto y = m_mmu->read(spriteAttribAddress) - 16;
 		auto x = m_mmu->read(spriteAttribAddress + 1) - 8;
 		auto patternIdx = m_mmu->read(spriteAttribAddress + 2);
@@ -131,18 +146,16 @@ void PPU::m_renderSprites()
 		auto xFlip = (attributes & 0b00100000) >> 5;
 		auto paletteIdx = (attributes & 0b00010000) >> 4;
 
-		if (x == 0 && y == 0)	//sprite not visible
-			return;
+		if (!(line >= y && line < (y + 8)))	//check if line is in the bounds of tile being considered
+			continue;
+		uint16_t addr = 0x8000 + (patternIdx * 16 + (line - y) * 2);
+		uint8_t byte1 = m_mmu->read(addr);
+		uint8_t byte2 = m_mmu->read(addr + 1);
+		//process bytes and draw to screen
+		for (int k = 0; k < 8; k++)
+			m_plotPixel(x + k, line, byte1, byte2);
 
-		for (int j = 0; j < 8; j++)
-		{
-			uint16_t addr = 0x8000 + (patternIdx * 16 + j * 2);
-			uint8_t byte1 = m_mmu->read(addr);
-			uint8_t byte2 = m_mmu->read(addr + 1);
-			//process bytes and draw to screen
-			for (int k = 0; k < 8; k++)
-				m_plotPixel(x + k, y + j, byte1, byte2);
-		}
+		renderedSpriteCount++;
 	}
 }
 
@@ -194,4 +207,14 @@ bool PPU::m_getBackgroundTileMapDisplaySelect()
 bool PPU::m_getWindowTileMapDisplaySelect()
 {
 	return ((m_mmu->read(REG_LCDC)) >> 6) & 0b00000001;
+}
+
+bool PPU::m_getBackgroundEnabled()
+{
+	return ((m_mmu->read(REG_LCDC))) & 0b1;
+}
+
+bool PPU::m_getSpritesEnabled()
+{
+	return ((m_mmu->read(REG_LCDC)) >> 1) & 0b1;
 }

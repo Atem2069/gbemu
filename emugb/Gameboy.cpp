@@ -28,6 +28,7 @@ GameBoy::GameBoy()
 	m_interruptManager = new InterruptManager(m_mmu);
 	m_cpu = new CPU(m_mmu,m_interruptManager);
 	m_ppu = new PPU(m_mmu, m_interruptManager);
+	m_inputManager = new InputManager(m_mmu);
 }
 
 GameBoy::~GameBoy()
@@ -36,6 +37,7 @@ GameBoy::~GameBoy()
 	delete m_cpu;
 	delete m_ppu;
 	delete m_interruptManager;
+	delete m_inputManager;
 }
 
 void GameBoy::run()
@@ -50,8 +52,7 @@ void GameBoy::run()
 			return;
 		}
 		m_ppu->step(m_cpu->getCycleCount());
-
-		//if necessary, update display
+		m_inputManager->tick(m_inputState);
 	}
 	m_dispWorkerThread.join();
 }
@@ -66,6 +67,12 @@ void GameBoy::displayWorker()
 	{
 		m_disp.upload((void*)m_ppu->getDisplay());
 		m_disp.draw();
+
+		m_inputState = { m_disp.getKeyPressed(GLFW_KEY_UP),m_disp.getKeyPressed(GLFW_KEY_DOWN),
+			m_disp.getKeyPressed(GLFW_KEY_LEFT),m_disp.getKeyPressed(GLFW_KEY_RIGHT),
+			m_disp.getKeyPressed(GLFW_KEY_Z),m_disp.getKeyPressed(GLFW_KEY_X),
+			m_disp.getKeyPressed(GLFW_KEY_ENTER),false };
+
 	}
 
 	m_shouldRun = false;

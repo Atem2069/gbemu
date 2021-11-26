@@ -45,6 +45,9 @@
     <ClCompile Include="InterruptManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MMU.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="InterruptManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -48,13 +48,11 @@ void MMU::write(uint16_t address, uint8_t value)
 		//std::cout << (char)value;
 	}
 
+	if (address >= 0xFE00 && address <= 0xFE9F && m_OAMLock)
+		return;
+
 	if (address == 0xFF46)
-	{
-		if (!m_OAMLock)
-			return m_DMATransfer(value);
-		else
-			Logger::getInstance()->msg(LoggerSeverity::Warn, "DMA attempted while OAM is locked for reading. Ignoring...");
-	}
+		return m_DMATransfer(value);
 
 	if (address == 0xFF50)
 	{

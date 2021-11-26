@@ -18,11 +18,7 @@ CPU::~CPU()
 bool CPU::step()
 {
 	if (!m_halted)
-	{
-		//temp hack to pull all joypad buttons high
-		m_mmu->write(0xFF00, 0xFF);
 		m_executeInstruction();
-	}
 	else
 		m_cycleCount++;
 
@@ -32,7 +28,7 @@ bool CPU::step()
 	InterruptType queuedInt = m_interruptManager->getActiveInterrupt();
 	if (queuedInt != InterruptType::None)
 	{
-		if (!m_halted)
+		if (!m_halted && m_interruptManager->getInterruptsEnabled())
 		{
 			m_interruptManager->disableInterrupts();
 			m_pushToStack(PC);
@@ -1402,7 +1398,6 @@ void CPU::_stop()
 
 void CPU::_halt()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Info, "Processor halted temporarily");
 	m_halted = true;
 	m_cycleCount += 1;
 }

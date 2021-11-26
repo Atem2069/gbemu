@@ -6,7 +6,8 @@
 enum class InterruptType
 {
 	None=0,
-	VBlank=0x40				//VBlank interrupt goes to vector 0x40
+	VBlank=0x40,				//VBlank interrupt goes to vector 0x40
+	STAT=0x48					//LCD STAT interrupt
 };
 
 const uint16_t REG_IE = 0xFFFF;
@@ -23,6 +24,7 @@ public:
 
 	void enableInterrupts();
 	void disableInterrupts();
+	bool getInterruptsEnabled();
 
 private:
 	MMU* m_mmu;

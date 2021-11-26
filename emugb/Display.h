@@ -27,6 +27,7 @@ public:
 	void upload(void* newData);
 
 	bool getInitialized();
+	bool getKeyPressed(int key);
 
 private:
 	GLFWwindow* m_window;
