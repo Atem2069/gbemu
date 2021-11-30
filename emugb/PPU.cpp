@@ -113,7 +113,7 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, tileData1, tileData2);
+		m_plotPixel(column+(scrollX%8), line, tileData1, tileData2);
 	}
 
 }
