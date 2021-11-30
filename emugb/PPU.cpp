@@ -26,24 +26,18 @@ void PPU::step(unsigned long cycleCount)
 	switch (m_displayMode)
 	{
 	case 2:
-		if (cycleDiff >= 20)
-		{
-			m_lastCycleCount = cycleCount;
-			m_displayMode = 3;
-			status |= 0b00000011;	//set lower two bits to 3 (11)
-		}
+		m_lastCycleCount = cycleCount;
+		m_displayMode = 3;
+		status |= 0b00000011;	//set lower two bits to 3 (11)
 		break;
 	case 3:
-		if (cycleDiff >= 43)
-		{
-			m_lastCycleCount = cycleCount;
-			m_displayMode = 0;
-			status &= 0b11111100;	//set lower two bits to 0 (00)
-		}
+		m_lastCycleCount = cycleCount;
+		m_displayMode = 0;
+		status &= 0b11111100;	//set lower two bits to 0 (00)
 		break;
 	case 0:  //hblank
 		m_mmu->setOAMLocked(false);
-		if (cycleDiff >= 51)
+		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
 			curLine++;

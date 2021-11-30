@@ -3,6 +3,7 @@
 #include<iostream>
 #include<thread>
 #include<fstream>
+#include<chrono>
 #include"MMU.h"
 #include"CPU.h"
 #include"PPU.h"

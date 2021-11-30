@@ -45,6 +45,8 @@ void GameBoy::run()
 	std::thread m_dispWorkerThread(&GameBoy::displayWorker, this);
 	while (m_shouldRun)
 	{
+		auto lastTime = std::chrono::high_resolution_clock::now();
+		unsigned long lastCycleCount = m_cpu->getCycleCount();
 		//step CPU
 		if (!m_cpu->step())
 		{
@@ -53,6 +55,14 @@ void GameBoy::run()
 		}
 		m_ppu->step(m_cpu->getCycleCount());
 		m_inputManager->tick(m_inputState);
+
+		auto curTime = std::chrono::high_resolution_clock::now();
+		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;
+		double timePeriod = 0.000952 * (double)cycleCountDiff;	//cpu clocks are measured in machine cycles (1.05MHz). 1 m-cycle is 0.000952 milliseconds
+		auto timeDiff = std::chrono::duration<double, std::milli>(curTime - lastTime).count();
+		while (timeDiff < timePeriod)
+			timeDiff = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastTime).count();
+
 	}
 	m_dispWorkerThread.join();
 }
