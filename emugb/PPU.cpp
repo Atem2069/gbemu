@@ -41,7 +41,7 @@ void PPU::step(unsigned long cycleCount)
 			status &= 0b11111100;	//set lower two bits to 0 (00)
 		}
 		break;
-	case 0:
+	case 0:  //hblank
 		m_mmu->setOAMLocked(false);
 		if (cycleDiff >= 51)
 		{
@@ -79,7 +79,6 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
-				//m_renderSprites();
 				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(vec3));	//copy over backbuffer to display buffer
 			}
 		}
@@ -90,7 +89,7 @@ void PPU::step(unsigned long cycleCount)
 	m_mmu->write(REG_LY, curLine);
 }
 
-void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	//difficult function but still more straightforward than pixel fifo ....
+void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	
 {
 	if (line < 0 || line > 143)
 		return;

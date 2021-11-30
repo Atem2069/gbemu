@@ -22,9 +22,6 @@ bool CPU::step()
 	else
 		m_cycleCount++;
 
-	//if (PC > 0xfdff)
-	//	return false;
-
 	InterruptType queuedInt = m_interruptManager->getActiveInterrupt();
 	if (queuedInt != InterruptType::None)
 	{
