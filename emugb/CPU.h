@@ -22,7 +22,7 @@ public:
 	CPU(MMU* mmu, InterruptManager* interruptManager);
 	~CPU();
 
-	bool step();
+	void step();
 
 	unsigned long getCycleCount();
 

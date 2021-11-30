@@ -15,7 +15,7 @@ CPU::~CPU()
 	//todo
 }
 
-bool CPU::step()
+void CPU::step()
 {
 	if (!m_halted)
 		m_executeInstruction();
@@ -36,7 +36,6 @@ bool CPU::step()
 	//tick timer
 	//synch timing (todo later)
 
-	return true;
 }
 
 void CPU::m_executeInstruction()

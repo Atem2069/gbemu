@@ -48,11 +48,7 @@ void GameBoy::run()
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		unsigned long lastCycleCount = m_cpu->getCycleCount();
 		//step CPU
-		if (!m_cpu->step())
-		{
-			Logger::getInstance()->msg(LoggerSeverity::Error, "CPU attempted to execute invalid address. dumping logs");
-			return;
-		}
+		m_cpu->step();
 		m_ppu->step(m_cpu->getCycleCount());
 		m_inputManager->tick(m_inputState);
 
