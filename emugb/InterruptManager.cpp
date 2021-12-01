@@ -22,6 +22,9 @@ void InterruptManager::requestInterrupt(InterruptType interrupt)
 	case InterruptType::STAT:
 		intFlags |= 0b00000010;
 		break;
+	case InterruptType::Timer:
+		intFlags |= 0b00000100;
+		break;
 	}
 
 	m_mmu->write(REG_IFLAGS, intFlags);
