@@ -1430,7 +1430,20 @@ void CPU::_adjustBCD()
 
 void CPU::_loadHLStackIdx()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Opcode 0xF8 is not implemented!");
+	uint8_t val = m_fetch();
+	int8_t offs = *(int8_t*)&val;
+
+	int16_t SPbefore = SP.reg;
+	SP.reg += offs;
+
+	m_setZeroFlag(false);
+	m_setSubtractFlag(false);
+
+	m_setHalfCarryFlag(((SPbefore ^ offs ^ (SP.reg & 0xFFFF)) & 0x10) == 0x10);
+	m_setCarryFlag(((SPbefore ^ offs ^ (SP.reg & 0xFFFF)) & 0x100) == 0x100);
+
+	HL.reg = SP.reg;
+	m_cycleCount += 3;
 }
 
 void CPU::_complement()
