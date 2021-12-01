@@ -11,6 +11,7 @@ const uint16_t REG_STAT = 0xFF41;	//LCD status register
 const uint16_t REG_SCY = 0xFF42;	//Y scroll offset
 const uint16_t REG_SCX = 0xFF43;	//X scroll offset
 const uint16_t REG_LY = 0xFF44;		//Holds current scanline being rendered (critical for game boy bootrom to do anything)
+const uint16_t REG_LYC = 0xFF45;	//Holds value that LY is compared against
 
 class PPU
 {
