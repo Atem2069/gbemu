@@ -14,6 +14,7 @@ Display::Display(int width, int height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	m_window = glfwCreateWindow(width, height, "GBEmu", nullptr, nullptr);
 	if (!m_window)
 	{
@@ -30,6 +31,11 @@ Display::Display(int width, int height)
 		MessageBoxA(NULL, "Could not load necessary OpenGL function pointers. This is likely a GPU driver issue.", "Error", MB_OK | MB_ICONERROR);
 		return;
 	}
+
+	const char* glVersionString = (const char*)glGetString(GL_VERSION);
+	std::string loggerVersionString = "Created GL Context ";
+	loggerVersionString+=glVersionString;
+	Logger::getInstance()->msg(LoggerSeverity::Info, loggerVersionString);
 
 	Vertex vertices[6] =
 	{

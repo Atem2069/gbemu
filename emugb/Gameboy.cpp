@@ -64,6 +64,11 @@ void GameBoy::m_initialise()
 
 	std::vector<uint8_t> m_ROM;
 	std::ifstream romReadHandle("Games\\tetris.gb", std::ios::in | std::ios::binary);
+	if (!romReadHandle)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Error, "ROM file specified does not exist! Fatal error");
+		return;
+	}
 	romReadHandle >> std::noskipws;
 	while (!romReadHandle.eof())
 	{
@@ -79,11 +84,14 @@ void GameBoy::m_initialise()
 	m_ppu = new PPU(m_mmu, m_interruptManager);
 	m_inputManager = new InputManager(m_mmu);
 	m_timer = new Timer(m_mmu, m_interruptManager);
+
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
 }
 
 void GameBoy::m_destroy()
 {
-	delete m_mmu;	//Objects are heap allocated, so ideally should be specifically deleted (to prevent mem leak)
+	Logger::getInstance()->msg(LoggerSeverity::Info, "De-initing current Game Boy instance.");
+	delete m_mmu;	
 	delete m_cpu;
 	delete m_ppu;
 	delete m_interruptManager;
