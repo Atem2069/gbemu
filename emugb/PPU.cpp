@@ -42,10 +42,8 @@ void PPU::step(unsigned long cycleCount)
 			m_lastCycleCount = cycleCount;
 			curLine++;
 
-			//get tilemap base addr
-			uint16_t tileDataBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
-
-			m_renderScanline(tileDataBase, curLine);
+			m_renderBackgroundScanline(curLine);
+			m_renderWindowScanline(curLine);
 			m_renderSprites(curLine);
 			if (curLine == 144)
 			{
@@ -83,19 +81,15 @@ void PPU::step(unsigned long cycleCount)
 	m_mmu->write(REG_LY, curLine);
 }
 
-void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)	
+void PPU::m_renderBackgroundScanline(uint8_t line)	
 {
-	if (line < 0 || line > 143)
+	if (line < 0 || line > 143 || !m_getBackgroundEnabled())
 		return;
-
-	if (!m_getBackgroundEnabled())
-	{
-		return;
-	}
 
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
-	uint16_t m_backgroundBase = tileDataBase;
+	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
+	//get tilemap base addr
 	m_backgroundBase += ((line + scrollY) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
 	for (uint16_t column = 0; column < 160; column++)
@@ -113,9 +107,36 @@ void PPU::m_renderScanline(uint16_t tileDataBase, uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column+(scrollX%8), line, tileData1, tileData2);
+		m_plotPixel(column + (scrollX % 8), line, tileData1, tileData2);
 	}
 
+}
+
+void PPU::m_renderWindowScanline(uint8_t line)
+{
+	if (line < 0 || line > 143 || !m_getWindowEnabled())
+		return;
+
+	uint16_t m_windowBase = (m_getWindowTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
+	//get tilemap base addr
+	m_windowBase += ((line) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
+
+	for (uint16_t column = 0; column < 160; column++)
+	{
+		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
+		uint8_t m_tileIndex = m_mmu->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
+
+		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
+		if (!m_getTileDataSelect())
+			m_tileIndex += 128;
+		tileMemLocation += (m_tileIndex * 16);
+		//tile is 16 bytes long. each 2 bytes specifies a specific row.
+		tileMemLocation += (line % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
+
+		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
+		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
+		m_plotPixel(column, line, tileData1, tileData2);
+	}
 }
 
 void PPU::m_renderSprites(uint8_t line)
@@ -205,6 +226,11 @@ bool PPU::m_getWindowTileMapDisplaySelect()
 bool PPU::m_getBackgroundEnabled()
 {
 	return ((m_mmu->read(REG_LCDC))) & 0b1;
+}
+
+bool PPU::m_getWindowEnabled()
+{
+	return ((m_mmu->read(REG_LCDC)) >> 5) & 0b1;
 }
 
 bool PPU::m_getSpritesEnabled()
