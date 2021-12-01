@@ -11,6 +11,7 @@
 #include"InterruptManager.h"
 #include"Input.h"
 #include"Timer.h"
+#include"BIOS/biosdump.h"
 class GameBoy
 {
 public:
@@ -19,6 +20,10 @@ public:
 
 	void run();
 private:
+
+	void m_initialise();
+	void m_destroy();
+
 	MMU* m_mmu;
 	CPU* m_cpu;
 	PPU* m_ppu;

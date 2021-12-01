@@ -2,44 +2,12 @@
 
 GameBoy::GameBoy()
 {
-	//for now, we hardcode a game and BIOS in. MUST BE FIXED LATER
-	std::vector<uint8_t> m_bios;
-	std::ifstream biosReadHandle("BIOS\\gb_bios.bin", std::ios::in | std::ios::binary);
-	biosReadHandle >> std::noskipws;
-	while (!biosReadHandle.eof())
-	{
-		char curchar;
-		biosReadHandle.read((char*)&curchar, sizeof(char));
-		m_bios.push_back(curchar);
-	}
-	biosReadHandle.close();
-	std::vector<uint8_t> m_ROM;
-	std::ifstream romReadHandle("Games\\tetris.gb", std::ios::in | std::ios::binary);
-	romReadHandle >> std::noskipws;
-	while (!romReadHandle.eof())
-	{
-		unsigned char curchar;
-		romReadHandle.read((char*)&curchar, sizeof(uint8_t));
-		m_ROM.push_back((uint8_t)curchar);
-	}
-
-	//initialize MMU now
-	m_mmu = new MMU(m_bios, m_ROM);
-	m_interruptManager = new InterruptManager(m_mmu);
-	m_cpu = new CPU(m_mmu,m_interruptManager);
-	m_ppu = new PPU(m_mmu, m_interruptManager);
-	m_inputManager = new InputManager(m_mmu);
-	m_timer = new Timer(m_mmu, m_interruptManager);
+	m_initialise();
 }
 
 GameBoy::~GameBoy()
 {
-	delete m_mmu;	//Objects are heap allocated, so ideally should be specifically deleted (to prevent mem leak)
-	delete m_cpu;
-	delete m_ppu;
-	delete m_interruptManager;
-	delete m_inputManager;
-	delete m_timer;
+	m_destroy();
 }
 
 void GameBoy::run()
@@ -87,4 +55,38 @@ void GameBoy::displayWorker()
 	m_shouldRun = false;
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Display worker: ending. .");
+}
+
+void GameBoy::m_initialise()
+{
+	std::vector<uint8_t> m_bios;
+	m_bios.assign(BIOS::rawData, BIOS::rawData + 256);	//256 byte BIOS.
+
+	std::vector<uint8_t> m_ROM;
+	std::ifstream romReadHandle("Games\\tetris.gb", std::ios::in | std::ios::binary);
+	romReadHandle >> std::noskipws;
+	while (!romReadHandle.eof())
+	{
+		unsigned char curchar;
+		romReadHandle.read((char*)&curchar, sizeof(uint8_t));
+		m_ROM.push_back((uint8_t)curchar);
+	}
+
+	//initialize MMU now
+	m_mmu = new MMU(m_bios, m_ROM);
+	m_interruptManager = new InterruptManager(m_mmu);
+	m_cpu = new CPU(m_mmu, m_interruptManager);
+	m_ppu = new PPU(m_mmu, m_interruptManager);
+	m_inputManager = new InputManager(m_mmu);
+	m_timer = new Timer(m_mmu, m_interruptManager);
+}
+
+void GameBoy::m_destroy()
+{
+	delete m_mmu;	//Objects are heap allocated, so ideally should be specifically deleted (to prevent mem leak)
+	delete m_cpu;
+	delete m_ppu;
+	delete m_interruptManager;
+	delete m_inputManager;
+	delete m_timer;
 }

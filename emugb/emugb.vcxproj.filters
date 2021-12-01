@@ -19,6 +19,9 @@
     <Filter Include="Header Files\Common">
       <UniqueIdentifier>{aba9a953-1095-4877-9493-6374be7f52a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\BIOS">
+      <UniqueIdentifier>{c8f1e08e-67d1-4adf-b8c9-fa5f8c171eb6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -91,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BIOS\biosdump.h">
+      <Filter>Header Files\BIOS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
