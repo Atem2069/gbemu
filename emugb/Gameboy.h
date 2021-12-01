@@ -10,6 +10,7 @@
 #include"Display.h"
 #include"InterruptManager.h"
 #include"Input.h"
+#include"Timer.h"
 class GameBoy
 {
 public:
@@ -23,6 +24,7 @@ private:
 	PPU* m_ppu;
 	InterruptManager* m_interruptManager;
 	InputManager* m_inputManager;
+	Timer* m_timer;
 
 	InputState m_inputState = {};
 

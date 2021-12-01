@@ -29,6 +29,7 @@ GameBoy::GameBoy()
 	m_cpu = new CPU(m_mmu,m_interruptManager);
 	m_ppu = new PPU(m_mmu, m_interruptManager);
 	m_inputManager = new InputManager(m_mmu);
+	m_timer = new Timer(m_mmu, m_interruptManager);
 }
 
 GameBoy::~GameBoy()
@@ -38,6 +39,7 @@ GameBoy::~GameBoy()
 	delete m_ppu;
 	delete m_interruptManager;
 	delete m_inputManager;
+	delete m_timer;
 }
 
 void GameBoy::run()
@@ -51,6 +53,7 @@ void GameBoy::run()
 		m_cpu->step();
 		m_ppu->step(m_cpu->getCycleCount());
 		m_inputManager->tick(m_inputState);
+		m_timer->tick();
 
 		auto curTime = std::chrono::high_resolution_clock::now();
 		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;
