@@ -20,6 +20,6 @@ public:
 	}
 private:
 	static Config* instance;
-	Config() {}
+	Config();
 	std::map<std::string, std::any> m_config;
 };

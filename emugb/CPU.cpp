@@ -25,7 +25,7 @@ void CPU::step()
 	InterruptType queuedInt = m_interruptManager->getActiveInterrupt();
 	if (queuedInt != InterruptType::None)
 	{
-		if (!m_halted && m_interruptManager->getInterruptsEnabled())
+		if (m_interruptManager->getInterruptsEnabled())
 		{
 			m_interruptManager->disableInterrupts();
 			m_pushToStack(PC);
