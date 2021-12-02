@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Gameboy.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="BIOS\biosdump.h" />
     <ClInclude Include="Common\vec2.h" />
     <ClInclude Include="Common\vec3.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="Gameboy.h" />
