@@ -1,26 +1,20 @@
 #include"MMU.h"
 
-MMU::MMU(std::vector<uint8_t> m_firmware, std::vector<uint8_t> m_ROM)
+MBC1::MBC1(std::vector<uint8_t> m_firmware, std::vector<uint8_t> ROM)
 {
 	m_BIOS = m_firmware;
+	m_ROM.insert(m_ROM.begin(), ROM.begin(), ROM.end());
 	m_memory.resize(0xFFFF);
-	m_memory.insert(m_memory.begin(), m_ROM.begin(), m_ROM.begin() + 0x7FFF);	//ROM is mapped 0-7fff (first 2 banks).
+	m_memory.insert(m_memory.begin(), ROM.begin(), ROM.begin() + 0x7FFF);	//ROM is mapped 0-7fff (first 2 banks).
 	m_isInBIOS = true;
 }
 
-MMU::~MMU()
+MBC1::~MBC1()
 {
-	//todo
+
 }
 
-void MMU::updateROM(std::vector<uint8_t> newROM)
-{
-	//machine is going to be reset, so re-enable BIOS
-	m_isInBIOS = true;
-	m_memory.insert(m_memory.begin(), newROM.begin(), newROM.begin() + 0x7FFF);
-}
-
-uint8_t MMU::read(uint16_t address)
+uint8_t MBC1::read(uint16_t address)
 {
 	if (m_isInBIOS && address < 0x100)
 		return m_BIOS[address];	//return boot code if still in BIOS 
@@ -31,14 +25,29 @@ uint8_t MMU::read(uint16_t address)
 	return m_memory[address];
 }
 
-void MMU::write(uint16_t address, uint8_t value)
+void MBC1::write(uint16_t address, uint8_t value)
 {
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
+	if (address >= 0x2000 && address <= 0x3FFF)
+	{
+		value = value & 0b00011111;
+		//Logger::getInstance()->msg(LoggerSeverity::Info, "MBC1: Bank switch index=" + std::to_string((int)value));
+		for (int i = 0x4000; i < 0x8000; i++)
+		{
+			int bank = value * 16384;	//the cur bank
+			bank += (i - 0x4000);
+			int romPTR = bank;
+			m_memory[i] = m_ROM[romPTR];
+
+		}
+		return;
+	}
+
 	if (address == 0xFF01)	//weird debug output
 	{
-		//std::cout << (char)value;
+		std::cout << (char)value;
 	}
 
 
@@ -54,7 +63,7 @@ void MMU::write(uint16_t address, uint8_t value)
 	m_memory[address] = value;
 }
 
-void MMU::m_DMATransfer(uint8_t base)
+void MBC1::m_DMATransfer(uint8_t base)
 {
 	uint16_t newAddr = ((unsigned int)base << 8);
 	for (unsigned int i = 0; i < 0xA0; i++)

@@ -12,6 +12,13 @@
 #include"Input.h"
 #include"Timer.h"
 #include"BIOS/biosdump.h"
+
+//cartridge header constants
+static uint16_t CART_TITLE = 0x0134;
+static uint16_t CART_TYPE = 0x0147;
+
+
+
 class GameBoy
 {
 public:
@@ -23,6 +30,7 @@ private:
 
 	void m_initialise();
 	void m_destroy();
+	bool m_loadCartridge(std::string name, MMU** mmu);
 
 	MMU* m_mmu;
 	CPU* m_cpu;

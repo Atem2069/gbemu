@@ -1,8 +1,9 @@
 #include"Input.h"
 
-InputManager::InputManager(MMU* mmu)
+InputManager::InputManager(MMU* mmu, InterruptManager* interruptManager)
 {
 	m_mmu = mmu;
+	m_interruptManager = interruptManager;
 }
 
 InputManager::~InputManager()
@@ -13,7 +14,6 @@ InputManager::~InputManager()
 void InputManager::tick(InputState curInputState)
 {
 	uint8_t joypad = m_mmu->read(REG_JOYPAD) & 0b11110000;
-
 	bool buttonKeys = (joypad >> 5) & 0b1;
 	if (buttonKeys)
 	{
@@ -34,5 +34,9 @@ void InputManager::tick(InputState curInputState)
 
 	}
 	joypad = ~joypad;	//flip bits (high=off, low=on for some reason)
+
+	if (joypad != m_mmu->read(REG_JOYPAD))
+		m_interruptManager->requestInterrupt(InterruptType::Joypad);
+
 	m_mmu->write(REG_JOYPAD, joypad);
 }

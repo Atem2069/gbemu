@@ -25,6 +25,9 @@ void InterruptManager::requestInterrupt(InterruptType interrupt)
 	case InterruptType::Timer:
 		intFlags |= 0b00000100;
 		break;
+	case InterruptType::Joypad:
+		intFlags |= 0b00010000;
+		break;
 	}
 
 	m_mmu->write(REG_IFLAGS, intFlags);
@@ -51,6 +54,11 @@ InterruptType InterruptManager::getActiveInterrupt()
 	{
 		intFlags &= 0b11111011;
 		chosenInterruptType = InterruptType::Timer;
+	}
+	else if ((activeInterrupts >> 4) & 0b1)
+	{
+		intFlags &= 0b11101111;
+		chosenInterruptType = InterruptType::Joypad;
 	}
 
 	if (interruptsEnabled)				//only turn down flags if interrupts enabled

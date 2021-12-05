@@ -33,8 +33,6 @@ void CPU::step()
 		}
 		m_halted = false;
 	}
-	//tick timer
-	//synch timing (todo later)
 
 }
 
@@ -1052,7 +1050,6 @@ void CPU::_returnFromInterrupt()
 	m_interruptManager->enableInterrupts();
 	uint16_t returnAddress = m_popFromStack();
 	PC = returnAddress;
-	//TODO: enable interrupts
 
 	m_cycleCount += 4;
 }
@@ -1430,11 +1427,12 @@ void CPU::_adjustBCD()
 
 void CPU::_loadHLStackIdx()
 {
+	std::cout << "test" << std::endl;
 	uint8_t val = m_fetch();
 	int8_t offs = *(int8_t*)&val;
 
 	int16_t SPbefore = SP.reg;
-	SP.reg += offs;
+	SP.reg = (SPbefore + (int16_t)offs);
 
 	m_setZeroFlag(false);
 	m_setSubtractFlag(false);
@@ -1443,6 +1441,8 @@ void CPU::_loadHLStackIdx()
 	m_setCarryFlag(((SPbefore ^ offs ^ (SP.reg & 0xFFFF)) & 0x100) == 0x100);
 
 	HL.reg = SP.reg;
+	//SP.reg = SPbefore;
+
 	m_cycleCount += 3;
 }
 

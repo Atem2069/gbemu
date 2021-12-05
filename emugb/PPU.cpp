@@ -22,12 +22,10 @@ void PPU::step(unsigned long cycleCount)
 	uint8_t status = m_mmu->read(REG_STAT);
 
 	//reading out flags which can trigger STAT interrupt
-	bool HBLankSTAT = (status >> 3) & 0b1;	//Triggered when entering hblank
-	bool VBlankSTAT = (status >> 4) & 0b1;	//Triggered when entering vblank
+	bool HBLankSTAT = false;// (status >> 3) & 0b1;	//Triggered when entering hblank
+	bool VBlankSTAT = false;// (status >> 4) & 0b1;	//Triggered when entering vblank
 	bool LYCSTAT = (status >> 6) & 0b1;		//Triggered due to some comparison between LY and LYC
-	bool LYCMode = (status >> 2) & 0b1;		//False: Triggered when LYC != LY. True: Triggered when LYC == LY
 
-	m_mmu->setOAMLocked(true);
 
 	switch (m_displayMode)
 	{
@@ -44,7 +42,6 @@ void PPU::step(unsigned long cycleCount)
 		status &= 0b11111100;	//set lower two bits to 0 (00)
 		break;
 	case 0:  //hblank
-		m_mmu->setOAMLocked(false);
 		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
@@ -71,7 +68,6 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 1:
-		m_mmu->setOAMLocked(false);
 		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
@@ -90,10 +86,11 @@ void PPU::step(unsigned long cycleCount)
 	if (LYCSTAT)
 	{
 		uint8_t LYC = m_mmu->read(REG_LYC);
-		if (LYCMode && curLine == LYC)
+		if (curLine == LYC)
+		{
+			status |= 0b00000100;	//set LYC coincidence flag
 			m_interruptManager->requestInterrupt(InterruptType::STAT);
-		else if (!LYCMode && curLine != LYC)
-			m_interruptManager->requestInterrupt(InterruptType::STAT);
+		}
 	}
 
 
@@ -108,6 +105,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
+	if (scrollX)
+		std::cout << (int)scrollX << '\n';
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
 	m_backgroundBase += ((line + scrollY) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
