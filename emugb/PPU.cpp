@@ -105,15 +105,13 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
-	if (scrollX)
-		std::cout << (int)scrollX << '\n';
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
 	m_backgroundBase += ((line + scrollY) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
 	for (uint16_t column = 0; column < 160; column++)
 	{
-		uint8_t m_tileMapXCoord = (column + scrollX) % 256;
+		uint8_t m_tileMapXCoord = (column + (scrollX)) % 256;
 		uint16_t m_curBackgroundAddress = m_backgroundBase + (m_tileMapXCoord / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
 		uint8_t m_tileIndex = m_mmu->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
 
@@ -126,7 +124,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column + (scrollX % 8), line, tileData1, tileData2);
+		m_plotPixel(column, line, tileData1, tileData2);
 	}
 
 }
@@ -194,8 +192,9 @@ void PPU::m_renderSprites(uint8_t line)
 
 void PPU::m_plotPixel(int x, int y, uint8_t byteHigh, uint8_t byteLow)
 {
+	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
 	int pixelIdx = (y * 160) + x;
-
+	x += (scrollX % 8);
 	uint8_t colHigher = (byteHigh >> (7 - (x%8))) & 0b1;
 	uint8_t colLower = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;

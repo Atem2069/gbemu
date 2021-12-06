@@ -60,7 +60,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Tests\\cpu_instrs.gb", &m_mmu);
+	m_loadCartridge("Games\\mario.gb", &m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = new InterruptManager(m_mmu);
