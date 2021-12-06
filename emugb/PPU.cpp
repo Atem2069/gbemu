@@ -185,11 +185,27 @@ void PPU::m_renderSprites(uint8_t line)
 		auto xFlip = (attributes & 0b00100000) >> 5;
 		auto paletteIdx = (attributes & 0b00010000) >> 4;
 
-		if (!(line >= y && line < (y + 8)))	//check if line is in the bounds of tile being considered
+		uint8_t lowerBound = (m_spriteIs8x8() ? 8 : 16);
+
+		if (!(line >= y && line < (y + lowerBound)))	//check if line is in the bounds of tile being considered
 			continue;
 		if (x > 160 || x < -1)
 			continue;
-		uint16_t addr = 0x8000 + (patternIdx * 16 + ((line - y) * 2));
+
+		if (!m_spriteIs8x8())
+		{
+			if ((line - y) < 8)
+				patternIdx &= 0xFE;
+			else
+				patternIdx |= 0x01;
+		
+		}
+
+		uint8_t lineOffset = line - y;
+		if (yFlip)
+			lineOffset = 7 - lineOffset;
+
+		uint16_t addr = 0x8000 + (patternIdx * 16 + (lineOffset * 2));
 		uint8_t byte1 = m_mmu->read(addr);
 		uint8_t byte2 = m_mmu->read(addr + 1);
 		//process bytes and draw to screen
@@ -288,4 +304,9 @@ bool PPU::m_getWindowEnabled()
 bool PPU::m_getSpritesEnabled()
 {
 	return ((m_mmu->read(REG_LCDC)) >> 1) & 0b1;
+}
+
+bool PPU::m_spriteIs8x8()
+{
+	return !(((m_mmu->read(REG_LCDC)) >> 2) & 0b1);
 }

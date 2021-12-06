@@ -46,5 +46,6 @@ private:
 	bool m_getBackgroundEnabled();
 	bool m_getWindowEnabled();
 	bool m_getSpritesEnabled();
+	bool m_spriteIs8x8();
 
 };

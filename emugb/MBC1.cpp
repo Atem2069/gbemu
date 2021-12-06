@@ -16,6 +16,11 @@ MBC1::~MBC1()
 
 uint8_t MBC1::read(uint16_t address)
 {
+	if (m_bankSwitchRequired)
+	{
+		std::copy(m_ROM.begin() + (m_bankNumber * 0x4000), m_ROM.begin() + (m_bankNumber * 0x4000) + 0x4000, m_memory.begin() + 0x4000);
+		m_bankSwitchRequired = false;
+	}
 	if (m_isInBIOS && address < 0x100)
 		return m_BIOS[address];	//return boot code if still in BIOS 
 
@@ -27,28 +32,39 @@ uint8_t MBC1::read(uint16_t address)
 
 void MBC1::write(uint16_t address, uint8_t value)
 {
+	if (m_bankSwitchRequired)
+	{
+		std::copy(m_ROM.begin() + (m_bankNumber * 0x4000), m_ROM.begin() + (m_bankNumber * 0x4000) + 0x4000, m_memory.begin() + 0x4000);
+		m_bankSwitchRequired = false;
+	}
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
+	if (address >= 0x0000 && address <= 0x1fff)
+	{
+		//Logger::getInstance()->msg(LoggerSeverity::Error, "Attempt to enable RAM in MBC. Unsupported");
+		return;
+	}
+
 	if (address >= 0x4000 && address <= 0x5fff)
-		m_bankUpperBits = (value << 5);
+	{
+		m_higherBankBits = value;
+		m_bankNumber = (m_bankNumber & 0b00011111) | (value << 5);
+		m_bankSwitchRequired = true;
+		return;
+	}
 
 	if (address >= 0x6000 && address <= 0x7fff)
+	{
 		std::cout << (int)value << '\n';
+		return;
+	}
 
 	if (address >= 0x2000 && address <= 0x3FFF)
 	{
 		value = value & 0b00011111;
-		//std::cout << (int)m_bankUpperBits << '\n';
-		//Logger::getInstance()->msg(LoggerSeverity::Info, "MBC1: Bank switch index=" + std::to_string((int)value));
-		for (int i = 0x4000; i < 0x7fff; i++)
-		{
-			int bank = (value | m_bankUpperBits) * 16384;	//the cur bank
-			bank += (i - 0x4000);
-			int romPTR = bank;
-			m_memory[i] = m_ROM[romPTR];
-
-		}
+		m_bankNumber = (m_higherBankBits << 5) | value;
+		m_bankSwitchRequired = true;
 		return;
 	}
 
