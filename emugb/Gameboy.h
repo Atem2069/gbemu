@@ -16,6 +16,8 @@
 //cartridge header constants
 static uint16_t CART_TITLE = 0x0134;
 static uint16_t CART_TYPE = 0x0147;
+static uint16_t CART_ROMSIZE = 0x148;
+static uint16_t CART_RAMSIZE = 0x149;
 
 
 

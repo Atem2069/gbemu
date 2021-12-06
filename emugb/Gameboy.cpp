@@ -60,7 +60,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\mario.gb", &m_mmu);
+	m_loadCartridge("Games\\mario2.gb", &m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = new InterruptManager(m_mmu);
@@ -111,6 +111,18 @@ bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
 
 	uint8_t cartridgeType = cartData[CART_TYPE];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Type: " + std::to_string((int)cartridgeType));
+
+	uint8_t cartridgeRomVal = cartData[CART_ROMSIZE];
+	int cartridgeRomSize = 32768 * (int)pow(2, (double)cartridgeRomVal);
+	int cartridgeBankNo = (int)pow(2, (double)cartridgeRomVal + 1);
+
+	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Size: " + std::to_string(cartridgeRomSize) + " bytes (" + std::to_string(cartridgeBankNo) + " banks)");
+
+	int ramLookup[] = { 0, 2, 8, 32, 128, 64 };	
+	uint8_t ramSizeIdx = cartData[CART_RAMSIZE] % 6;
+	if(ramSizeIdx)
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge contains an additional " + std::to_string(ramLookup[ramSizeIdx]) + " KB of RAM");
+
 	if (!cartridgeType)
 		*mmu = new MMU(m_bios, cartData);
 	else if (cartridgeType >= 1 && cartridgeType <= 3)
