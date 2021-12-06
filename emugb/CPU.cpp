@@ -1428,7 +1428,6 @@ void CPU::_adjustBCD()
 
 void CPU::_loadHLStackIdx()
 {
-	std::cout << "test" << std::endl;
 	uint8_t val = m_fetch();
 	int8_t offs = *(int8_t*)&val;
 
@@ -1442,7 +1441,7 @@ void CPU::_loadHLStackIdx()
 	m_setCarryFlag(((SPbefore ^ offs ^ (SP.reg & 0xFFFF)) & 0x100) == 0x100);
 
 	HL.reg = SP.reg;
-	//SP.reg = SPbefore;
+	SP.reg = SPbefore;
 
 	m_cycleCount += 3;
 }
