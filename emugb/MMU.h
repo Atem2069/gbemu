@@ -34,6 +34,7 @@ public:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
 private:
+	uint8_t m_bankUpperBits = 0;
 	std::vector<uint8_t> m_memory;
 	std::vector<uint8_t> m_ROM;	//ROM in its entirety for bank switching.
 	std::vector<uint8_t> m_BIOS;

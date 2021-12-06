@@ -1386,7 +1386,8 @@ void CPU::_enableInterrupts()
 
 void CPU::_stop()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
+	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
+	_halt();
 }
 
 void CPU::_halt()
