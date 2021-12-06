@@ -124,7 +124,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, tileData1, tileData2);
+		m_plotPixel(column, line, true, tileData1, tileData2);
 	}
 
 }
@@ -152,7 +152,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, tileData1, tileData2);
+		m_plotPixel(column, line, true, tileData1, tileData2);
 	}
 }
 
@@ -167,7 +167,8 @@ void PPU::m_renderSprites(uint8_t line)
 	int renderedSpriteCount = 0, i = 0;
 	while (i < 40 && renderedSpriteCount < 10)
 	{
-		uint16_t spriteAttribAddress = 0xFE00 + (i++ * 4);
+		uint16_t spriteAttribAddress = 0xFE00 + (i * 4);
+		i++;
 		auto y = m_mmu->read(spriteAttribAddress) - 16;
 		auto x = m_mmu->read(spriteAttribAddress + 1) - 8;
 		auto patternIdx = m_mmu->read(spriteAttribAddress + 2);
@@ -179,20 +180,39 @@ void PPU::m_renderSprites(uint8_t line)
 
 		if (!(line >= y && line < (y + 8)))	//check if line is in the bounds of tile being considered
 			continue;
-		uint16_t addr = 0x8000 + (patternIdx * 16 + (line - y) * 2);
+		uint16_t addr = 0x8000 + (patternIdx * 16 + ((line - y) * 2));
 		uint8_t byte1 = m_mmu->read(addr);
 		uint8_t byte2 = m_mmu->read(addr + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
-			m_plotPixel(x + k, line, byte1, byte2);
+		{
+			if (!xFlip)	//bad hack
+			{
+				int pixelIdx = (line * 160) + x + k;
+				uint8_t colHigher = (byte1 >> (7 - ((k) % 8))) & 0b1;
+				uint8_t colLower = (byte2 >> (7 - ((k) % 8))) & 0b1;
+				uint8_t colIdx = (colHigher << 1) | colLower;
+				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+			}
+			else
+			{
+				int pixelIdx = (line * 160) + x + k;
+				uint8_t colHigher = (byte1 >> ((k % 8))) & 0b1;
+				uint8_t colLower = (byte2 >> ((k % 8))) & 0b1;
+				uint8_t colIdx = (colHigher << 1) | colLower;
+				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+			}
+		}
 
 		renderedSpriteCount++;
 	}
 }
 
-void PPU::m_plotPixel(int x, int y, uint8_t byteHigh, uint8_t byteLow)
+void PPU::m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteLow)
 {
-	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
+	uint8_t scrollX = 0;
+	if(scroll)
+		scrollX = (m_mmu->read(REG_SCX)) % 256;
 	int pixelIdx = (y * 160) + x;
 	x += (scrollX % 8);
 	uint8_t colHigher = (byteHigh >> (7 - (x%8))) & 0b1;
