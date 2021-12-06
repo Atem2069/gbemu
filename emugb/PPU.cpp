@@ -45,11 +45,11 @@ void PPU::step(unsigned long cycleCount)
 		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
-			curLine++;
 
 			m_renderBackgroundScanline(curLine);
 			m_renderWindowScanline(curLine);
 			m_renderSprites(curLine);
+			curLine++;
 			if (curLine == 144)
 			{
 				//enter vblank
@@ -103,6 +103,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 	if (line < 0 || line > 143 || !m_getBackgroundEnabled())
 		return;
 
+
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
@@ -134,11 +135,17 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	if (line < 0 || line > 143 || !m_getWindowEnabled())
 		return;
 
+	uint8_t winX = m_mmu->read(REG_WX);
+	uint8_t winY = m_mmu->read(REG_WY);
+
+	if (line < winY)
+		return;
+
 	uint16_t m_windowBase = (m_getWindowTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
 	m_windowBase += ((line) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
-	for (uint16_t column = 0; column < 160; column++)
+	for (uint16_t column = winX; column < 160; column++)
 	{
 		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
 		uint8_t m_tileIndex = m_mmu->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
@@ -152,7 +159,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, true, tileData1, tileData2);
+		m_plotPixel(column, line, false, tileData1, tileData2);
 	}
 }
 
@@ -179,6 +186,8 @@ void PPU::m_renderSprites(uint8_t line)
 		auto paletteIdx = (attributes & 0b00010000) >> 4;
 
 		if (!(line >= y && line < (y + 8)))	//check if line is in the bounds of tile being considered
+			continue;
+		if (x > 160 || x < -1)
 			continue;
 		uint16_t addr = 0x8000 + (patternIdx * 16 + ((line - y) * 2));
 		uint8_t byte1 = m_mmu->read(addr);

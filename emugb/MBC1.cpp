@@ -30,13 +30,20 @@ void MBC1::write(uint16_t address, uint8_t value)
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
+	if (address >= 0x4000 && address <= 0x5fff)
+		m_bankUpperBits = (value << 5);
+
+	if (address >= 0x6000 && address <= 0x7fff)
+		std::cout << (int)value << '\n';
+
 	if (address >= 0x2000 && address <= 0x3FFF)
 	{
 		value = value & 0b00011111;
+		//std::cout << (int)m_bankUpperBits << '\n';
 		//Logger::getInstance()->msg(LoggerSeverity::Info, "MBC1: Bank switch index=" + std::to_string((int)value));
-		for (int i = 0x4000; i < 0x8000; i++)
+		for (int i = 0x4000; i < 0x7fff; i++)
 		{
-			int bank = value * 16384;	//the cur bank
+			int bank = (value | m_bankUpperBits) * 16384;	//the cur bank
 			bank += (i - 0x4000);
 			int romPTR = bank;
 			m_memory[i] = m_ROM[romPTR];
