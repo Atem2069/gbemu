@@ -22,8 +22,8 @@ void PPU::step(unsigned long cycleCount)
 	uint8_t status = m_mmu->read(REG_STAT);
 
 	//reading out flags which can trigger STAT interrupt
-	bool HBLankSTAT = false;// (status >> 3) & 0b1;	//Triggered when entering hblank
-	bool VBlankSTAT = false;// (status >> 4) & 0b1;	//Triggered when entering vblank
+	bool HBLankSTAT = (status >> 3) & 0b1;	//Triggered when entering hblank
+	bool VBlankSTAT = (status >> 4) & 0b1;	//Triggered when entering vblank
 	bool LYCSTAT = (status >> 6) & 0b1;		//Triggered due to some comparison between LY and LYC
 
 
