@@ -173,7 +173,7 @@ void PPU::m_renderSprites(uint8_t line)
 		auto x = m_mmu->read(spriteAttribAddress + 1) - 8;
 		auto patternIdx = m_mmu->read(spriteAttribAddress + 2);
 		auto attributes = m_mmu->read(spriteAttribAddress + 3);
-		auto spriteIsVisible = (attributes & 0b10000000) >> 7;
+		auto spritePriority = (attributes & 0b10000000) >> 7;
 		auto yFlip = (attributes & 0b01000000) >> 6;
 		auto xFlip = (attributes & 0b00100000) >> 5;
 		auto paletteIdx = (attributes & 0b00010000) >> 4;
@@ -186,9 +186,11 @@ void PPU::m_renderSprites(uint8_t line)
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
+			int pixelIdx = (line * 160) + x + k;
+			if (spritePriority && m_backBuffer[pixelIdx].x != 1)
+				continue;
 			if (!xFlip)	//bad hack
 			{
-				int pixelIdx = (line * 160) + x + k;
 				uint8_t colHigher = (byte1 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;
@@ -198,7 +200,6 @@ void PPU::m_renderSprites(uint8_t line)
 			}
 			else
 			{
-				int pixelIdx = (line * 160) + x + k;
 				uint8_t colHigher = (byte1 >> ((k % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> ((k % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;

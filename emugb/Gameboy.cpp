@@ -101,8 +101,9 @@ bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
 	}
 
 	std::string title = "";
-	for (int i = 0; i < 10; i++)
-		title += (char)cartData[CART_TITLE + i];
+	int i = 0;
+	while(cartData[CART_TITLE + i])					//read until zero terminated
+		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
 	std::vector<uint8_t> m_bios;
