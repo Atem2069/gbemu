@@ -37,7 +37,7 @@ void Timer::tick()
 		{
 		case 0:timePeriod = 1.0 / 4096.0; break;
 		case 1:timePeriod = 1.0 / 262144.0; break;
-		case 2:timePeriod = 1.0 / 65535.0; break;
+		case 2:timePeriod = 1.0 / 65536.0; break;
 		case 3:timePeriod = 1.0 / 16384.0; break;
 		}
 

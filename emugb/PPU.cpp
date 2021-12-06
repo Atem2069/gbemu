@@ -192,6 +192,8 @@ void PPU::m_renderSprites(uint8_t line)
 				uint8_t colHigher = (byte1 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;
+				if (!colIdx)
+					continue;
 				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
 			}
 			else
@@ -200,6 +202,8 @@ void PPU::m_renderSprites(uint8_t line)
 				uint8_t colHigher = (byte1 >> ((k % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> ((k % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;
+				if (!colIdx)
+					continue;
 				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
 			}
 		}
