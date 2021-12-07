@@ -192,12 +192,11 @@ void PPU::m_renderSprites(uint8_t line)
 		if (x > 160 || x < -1)
 			continue;
 
-		if (!m_spriteIs8x8())
+		uint8_t tileOffset = 0;
+
+		if (!m_spriteIs8x8() && (line-y) >= 8)
 		{
-			if ((line - y) < 8)
-				patternIdx &= 0xFE;
-			else
-				patternIdx |= 0x01;
+			tileOffset = 2;
 		
 		}
 
@@ -206,11 +205,14 @@ void PPU::m_renderSprites(uint8_t line)
 			lineOffset = 7 - lineOffset;
 
 		uint16_t addr = 0x8000 + (patternIdx * 16 + (lineOffset * 2));
-		uint8_t byte1 = m_mmu->read(addr);
-		uint8_t byte2 = m_mmu->read(addr + 1);
+		uint8_t byte1 = m_mmu->read(addr+tileOffset);
+		uint8_t byte2 = m_mmu->read(addr + tileOffset + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
+			uint8_t paletteData = m_mmu->read(0xFF48);
+			if (paletteIdx)
+				paletteData = m_mmu->read(0xFF49);
 			int pixelIdx = (line * 160) + x + k;
 			if (spritePriority && m_backBuffer[pixelIdx].x != 1)
 				continue;
@@ -219,18 +221,20 @@ void PPU::m_renderSprites(uint8_t line)
 				uint8_t colHigher = (byte1 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> (7 - ((k) % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;
-				if (!colIdx)
+				vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
+				if (col.x == 1)
 					continue;
-				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+				m_backBuffer[pixelIdx] = col;
 			}
 			else
 			{
 				uint8_t colHigher = (byte1 >> ((k % 8))) & 0b1;
 				uint8_t colLower = (byte2 >> ((k % 8))) & 0b1;
 				uint8_t colIdx = (colHigher << 1) | colLower;
-				if (!colIdx)
+				vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
+				if (col.x == 1)
 					continue;
-				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+				m_backBuffer[pixelIdx] = col;
 			}
 		}
 
@@ -248,13 +252,16 @@ void PPU::m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteL
 	uint8_t colHigher = (byteHigh >> (7 - (x%8))) & 0b1;
 	uint8_t colLower = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;
-	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx);
+	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_mmu->read(0xFF47));
 }
 
-vec3 PPU::m_getColourFromPaletteIdx(uint8_t idx)
+vec3 PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 {
 	vec3 color = {};
-	switch (idx)
+
+	uint8_t colIdx = (palette >> (idx * 2)) & 0b00000011;
+
+	switch (colIdx)
 	{
 	case 0b00: color = { 1.f,1.f,1.f }; break;
 	case 0b01:color = { 0.75f,0.75f,0.75f }; break;

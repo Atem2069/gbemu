@@ -37,7 +37,7 @@ private:
 	void m_renderWindowScanline(uint8_t line);
 	void m_renderSprites(uint8_t line);
 	void m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteLow);
-	vec3 m_getColourFromPaletteIdx(uint8_t idx);
+	vec3 m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette);
 
 	bool m_getDisplayEnabled();
 	bool m_getTileDataSelect();

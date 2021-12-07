@@ -41,4 +41,5 @@ private:
 	std::vector<uint8_t> m_BIOS;
 	bool m_isInBIOS = true;		//initially bios is enabled so 0x0-0xFF is mapped to BIOS rom. When exiting the BIOS 0xFF50 is written to.. explained further in write()
 	void m_DMATransfer(uint8_t base);
+	void m_bankSwitch();
 };

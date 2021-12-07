@@ -16,11 +16,7 @@ MBC1::~MBC1()
 
 uint8_t MBC1::read(uint16_t address)
 {
-	if (m_bankSwitchRequired)
-	{
-		std::copy(m_ROM.begin() + (m_bankNumber * 0x4000), m_ROM.begin() + (m_bankNumber * 0x4000) + 0x4000, m_memory.begin() + 0x4000);
-		m_bankSwitchRequired = false;
-	}
+	m_bankSwitch();
 	if (m_isInBIOS && address < 0x100)
 		return m_BIOS[address];	//return boot code if still in BIOS 
 
@@ -32,11 +28,7 @@ uint8_t MBC1::read(uint16_t address)
 
 void MBC1::write(uint16_t address, uint8_t value)
 {
-	if (m_bankSwitchRequired)
-	{
-		std::copy(m_ROM.begin() + (m_bankNumber * 0x4000), m_ROM.begin() + (m_bankNumber * 0x4000) + 0x4000, m_memory.begin() + 0x4000);
-		m_bankSwitchRequired = false;
-	}
+	m_bankSwitch();
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
@@ -92,5 +84,17 @@ void MBC1::m_DMATransfer(uint8_t base)
 	for (unsigned int i = 0; i < 0xA0; i++)
 	{
 		write(0xFE00 + i, read(newAddr + i));
+	}
+}
+
+void MBC1::m_bankSwitch()
+{
+	if (!m_bankSwitchRequired)
+		return;
+	m_bankSwitchRequired = false;
+	int bankBase = (int)m_bankNumber * 0x4000;
+	for (int i = 0; i < 0x4000; i++)
+	{
+		m_memory[0x4000 + i] = m_ROM[bankBase + i];
 	}
 }

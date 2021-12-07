@@ -60,7 +60,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\mario2.gb", &m_mmu);
+	m_loadCartridge("Games\\tetris.gb", &m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = new InterruptManager(m_mmu);
