@@ -16,19 +16,27 @@ MBC1::~MBC1()
 
 uint8_t MBC1::read(uint16_t address)
 {
-	m_bankSwitch();
+	//m_bankSwitch();
 	if (m_isInBIOS && address < 0x100)
 		return m_BIOS[address];	//return boot code if still in BIOS 
 
 	if (address >= 0xE000 && address <= 0xFDFF)	//handle echo ram - essentially don't read from this range
 		address -= 0x2000;
 
+	if (address >= 0x4000 && address <= 0x8000 && m_bankNumber)
+	{
+		//return m_ROM[(uint16_t)(address + ((uint16_t)m_bankNumber * 0x4000) - 0x4000)];
+		uint16_t offset = address - 0x4000;
+		uint16_t bankBase = (uint16_t)(m_bankNumber) * 0x4000;
+		return m_ROM[bankBase + offset];
+	}
+
 	return m_memory[address];
 }
 
 void MBC1::write(uint16_t address, uint8_t value)
 {
-	m_bankSwitch();
+	//m_bankSwitch();
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
@@ -59,6 +67,16 @@ void MBC1::write(uint16_t address, uint8_t value)
 		m_bankSwitchRequired = true;
 		return;
 	}
+
+	if (address >= 0x4000 && address <= 0x8000 && m_bankNumber)
+	{
+		//return m_ROM[(uint16_t)(address + ((uint16_t)m_bankNumber * 0x4000) - 0x4000)];
+		uint16_t offset = address - 0x4000;
+		uint16_t bankBase = (uint16_t)(m_bankNumber) * 0x4000;
+		m_ROM[bankBase + offset] = value;
+		return;
+	}
+
 
 	if (address == 0xFF01)	//weird debug output
 	{

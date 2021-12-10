@@ -216,26 +216,16 @@ void PPU::m_renderSprites(uint8_t line)
 			int pixelIdx = (line * 160) + x + k;
 			if (spritePriority && m_backBuffer[pixelIdx].x != 1)
 				continue;
-			if (!xFlip)	//bad hack
-			{
-				uint8_t colHigher = (byte1 >> (7 - ((k) % 8))) & 0b1;
-				uint8_t colLower = (byte2 >> (7 - ((k) % 8))) & 0b1;
-				uint8_t colIdx = (colHigher << 1) | colLower;
-				vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
-				if (col.x == 1)
-					continue;
-				m_backBuffer[pixelIdx] = col;
-			}
-			else
-			{
-				uint8_t colHigher = (byte1 >> ((k % 8))) & 0b1;
-				uint8_t colLower = (byte2 >> ((k % 8))) & 0b1;
-				uint8_t colIdx = (colHigher << 1) | colLower;
-				vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
-				if (col.x == 1)
-					continue;
-				m_backBuffer[pixelIdx] = col;
-			}
+			uint8_t byteShift = (7 - (k % 8));
+			if (xFlip)
+				byteShift = (k % 8);
+			uint8_t colHigher = (byte1 >> byteShift) & 0b1;
+			uint8_t colLower = (byte2 >> byteShift) & 0b1;
+			uint8_t colIdx = (colHigher << 1) | colLower;
+			if (colIdx == 0)
+				continue;
+			vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
+			m_backBuffer[pixelIdx] = col;
 		}
 
 		renderedSpriteCount++;

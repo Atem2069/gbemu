@@ -60,7 +60,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\tetris.gb", &m_mmu);
+	m_loadCartridge("Games\\mario.gb", &m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = new InterruptManager(m_mmu);
@@ -101,7 +101,7 @@ bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
 	}
 
 	std::string title = "";
-	int i = 0;
+	uint8_t i = 0;
 	while(cartData[CART_TITLE + i])					//read until zero terminated
 		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
