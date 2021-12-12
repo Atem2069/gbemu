@@ -32,14 +32,14 @@ private:
 
 	void m_initialise();
 	void m_destroy();
-	bool m_loadCartridge(std::string name, MMU** mmu);
+	bool m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu);
 
-	MMU* m_mmu;
-	CPU* m_cpu;
-	PPU* m_ppu;
-	InterruptManager* m_interruptManager;
-	InputManager* m_inputManager;
-	Timer* m_timer;
+	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<CPU> m_cpu;
+	std::shared_ptr<PPU> m_ppu;
+	std::shared_ptr<InterruptManager> m_interruptManager;
+	std::shared_ptr<InputManager> m_inputManager;
+	std::shared_ptr<Timer> m_timer;
 
 	InputState m_inputState = {};
 

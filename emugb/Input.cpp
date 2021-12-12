@@ -1,6 +1,6 @@
 #include"Input.h"
 
-InputManager::InputManager(MMU* mmu, InterruptManager* interruptManager)
+InputManager::InputManager(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
 {
 	m_mmu = mmu;
 	m_interruptManager = interruptManager;

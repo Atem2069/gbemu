@@ -1,6 +1,6 @@
 #include "InterruptManager.h"
 
-InterruptManager::InterruptManager(MMU* mmu)
+InterruptManager::InterruptManager(std::shared_ptr<MMU>& mmu)
 {
 	m_mmu = mmu;
 }

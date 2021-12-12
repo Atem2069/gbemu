@@ -14,13 +14,13 @@ const uint16_t REG_TAC = 0xFF07;	//Control register - sets if timer is enabled, 
 class Timer
 {
 public:
-	Timer(MMU* mmu, InterruptManager* interruptManager);
+	Timer(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
 	~Timer();
 
 	void tick();
 
 private:
-	MMU* m_mmu;
-	InterruptManager* m_interruptManager;
+	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<InterruptManager> m_interruptManager;
 	std::chrono::steady_clock::time_point m_lastTime, m_divLastTime;
 };

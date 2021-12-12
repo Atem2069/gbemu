@@ -1,11 +1,20 @@
 #include"MMU.h"
 
-MBC1::MBC1(std::vector<uint8_t> m_firmware, std::vector<uint8_t> ROM)
+MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
 {
 	m_BIOS = m_firmware;
-	m_ROM.insert(m_ROM.begin(), ROM.begin(), ROM.end());
-	m_memory.resize(0xFFFF);
-	m_memory.insert(m_memory.begin(), ROM.begin(), ROM.begin() + 0x7FFF);	//ROM is mapped 0-7fff (first 2 banks).
+	std::copy(ROM.begin(), ROM.begin() + 32768, m_memory.begin());
+	for (int i = 32768; i < 65536; i++)
+	{
+		m_memory[i] = 0xFF;
+	}
+
+	for (int i = 0; i < ROM.size() - 16384; i += 16384)
+	{
+		std::array<uint8_t, 16384> curROMBank;
+		std::copy(ROM.begin() + i, ROM.begin() + i + 16384, curROMBank.begin());
+		m_ROMBanks.push_back(curROMBank);
+	}
 	m_isInBIOS = true;
 }
 
@@ -16,27 +25,24 @@ MBC1::~MBC1()
 
 uint8_t MBC1::read(uint16_t address)
 {
-	m_bankSwitch();
 	if (m_isInBIOS && address < 0x100)
 		return m_BIOS[address];	//return boot code if still in BIOS 
 
 	if (address >= 0xE000 && address <= 0xFDFF)	//handle echo ram - essentially don't read from this range
 		address -= 0x2000;
 
-	/*/if (address >= 0x4000 && address <= 0x8000 && m_bankNumber)
+	if (address >= 0x4000 && address < 0x8000 && m_bankNumber)
 	{
-		//return m_ROM[(uint16_t)(address + ((uint16_t)m_bankNumber * 0x4000) - 0x4000)];
-		uint16_t offset = address - 0x4000;
-		uint16_t bankBase = (uint16_t)(m_bankNumber) * 0x4000;
-		return m_ROM[bankBase + offset];
-	}*/
+		int offset = ((int)address) - 0x4000;
+		return m_ROMBanks[m_bankNumber][offset];
+	}
+
 
 	return m_memory[address];
 }
 
 void MBC1::write(uint16_t address, uint8_t value)
 {
-	m_bankSwitch();
 	if (address >= 0xE000 && address <= 0xFDFF)	//same as read, don't write to this range
 		address -= 0x2000;
 
@@ -97,17 +103,5 @@ void MBC1::m_DMATransfer(uint8_t base)
 	for (unsigned int i = 0; i < 0xA0; i++)
 	{
 		write(0xFE00 + i, read(newAddr + i));
-	}
-}
-
-void MBC1::m_bankSwitch()
-{
-	if (!m_bankSwitchRequired)
-		return;
-	m_bankSwitchRequired = false;
-	int bankBase = (int)m_bankNumber * 0x4000;
-	for (int i = 0; i < 0x4000; i++)
-	{
-		m_memory[0x4000 + i] = m_ROM[bankBase + i];
 	}
 }

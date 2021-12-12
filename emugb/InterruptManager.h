@@ -18,7 +18,7 @@ const uint16_t REG_IFLAGS = 0xFF0F;
 class InterruptManager
 {
 public:
-	InterruptManager(MMU* mmu);
+	InterruptManager(std::shared_ptr<MMU>& mmu);
 	~InterruptManager();
 
 	void requestInterrupt(InterruptType interrupt);
@@ -29,6 +29,6 @@ public:
 	bool getInterruptsEnabled();
 
 private:
-	MMU* m_mmu;
+	std::shared_ptr<MMU> m_mmu;
 	bool interruptsEnabled = false;
 };

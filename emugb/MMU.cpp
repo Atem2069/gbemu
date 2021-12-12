@@ -1,10 +1,13 @@
 #include"MMU.h"
 
-MMU::MMU(std::vector<uint8_t> m_firmware, std::vector<uint8_t> m_ROM)
+MMU::MMU(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> m_ROM)
 {
 	m_BIOS = m_firmware;
-	m_memory.resize(0xFFFF);
-	m_memory.insert(m_memory.begin(), m_ROM.begin(), m_ROM.begin() + 0x7FFF);	//ROM is mapped 0-7fff (first 2 banks).
+	std::copy(m_ROM.begin(), m_ROM.begin() + 32768, m_memory.begin());
+	for (int i = 32768; i < 65536; i++)
+	{
+		m_memory[i] = 0xFF;
+	}
 	m_isInBIOS = true;
 }
 
@@ -13,12 +16,12 @@ MMU::~MMU()
 	//todo
 }
 
-void MMU::updateROM(std::vector<uint8_t> newROM)
+/*void MMU::updateROM(std::vector<uint8_t> newROM)
 {
 	//machine is going to be reset, so re-enable BIOS
 	m_isInBIOS = true;
 	m_memory.insert(m_memory.begin(), newROM.begin(), newROM.begin() + 0x7FFF);
-}
+}*/
 
 uint8_t MMU::read(uint16_t address)
 {

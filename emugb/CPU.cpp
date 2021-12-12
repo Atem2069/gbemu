@@ -1,6 +1,6 @@
 #include"CPU.h"
 
-CPU::CPU(MMU* mmu, InterruptManager* interruptManager)
+CPU::CPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
 {
 	m_mmu = mmu;
 	m_interruptManager = interruptManager;
@@ -1387,7 +1387,7 @@ void CPU::_enableInterrupts()
 void CPU::_stop()
 {
 	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
-	_halt();
+	//_halt();
 }
 
 void CPU::_halt()

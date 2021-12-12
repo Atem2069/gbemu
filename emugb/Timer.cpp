@@ -1,6 +1,6 @@
 #include"Timer.h"
 
-Timer::Timer(MMU* mmu, InterruptManager* interruptManager)
+Timer::Timer(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
 {
 	m_mmu = mmu;
 	m_interruptManager = interruptManager;

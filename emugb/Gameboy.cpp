@@ -60,14 +60,14 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\zelda.gb", &m_mmu);
+	m_loadCartridge("Games\\mario.gb", m_mmu);
 
 	//initialize MMU now
-	m_interruptManager = new InterruptManager(m_mmu);
-	m_cpu = new CPU(m_mmu, m_interruptManager);
-	m_ppu = new PPU(m_mmu, m_interruptManager);
-	m_inputManager = new InputManager(m_mmu,m_interruptManager);
-	m_timer = new Timer(m_mmu, m_interruptManager);
+	m_interruptManager = std::make_shared<InterruptManager>(m_mmu);
+	m_cpu = std::make_shared<CPU>(m_mmu, m_interruptManager);
+	m_ppu = std::make_shared<PPU>(m_mmu, m_interruptManager);
+	m_inputManager = std::make_shared<InputManager>(m_mmu,m_interruptManager);
+	m_timer = std::make_shared<Timer>(m_mmu, m_interruptManager);
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
 }
@@ -75,15 +75,15 @@ void GameBoy::m_initialise()
 void GameBoy::m_destroy()
 {
 	Logger::getInstance()->msg(LoggerSeverity::Info, "De-initing current Game Boy instance.");
-	delete m_mmu;	
-	delete m_cpu;
-	delete m_ppu;
-	delete m_interruptManager;
-	delete m_inputManager;
-	delete m_timer;
+	//delete m_mmu;	
+	//delete m_cpu;
+	//delete m_ppu;
+	//delete m_interruptManager;
+	//delete m_inputManager;
+	//delete m_timer;
 }
 
-bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
+bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 {
 	std::vector<uint8_t> cartData;
 	std::ifstream romReadHandle(name, std::ios::in | std::ios::binary);
@@ -106,9 +106,9 @@ bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
 		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
-	std::vector<uint8_t> m_bios;
-	m_bios.assign(BIOS::rawData, BIOS::rawData + 256);	//256 byte BIOS.
-
+	std::array<uint8_t,256> m_bios;
+	//m_bios.assign(BIOS::rawData, BIOS::rawData + 256);	//256 byte BIOS.
+	std::copy(std::begin(BIOS::rawData), std::end(BIOS::rawData), m_bios.begin());
 	uint8_t cartridgeType = cartData[CART_TYPE];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Type: " + std::to_string((int)cartridgeType));
 
@@ -124,9 +124,9 @@ bool GameBoy::m_loadCartridge(std::string name, MMU** mmu)
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge contains an additional " + std::to_string(ramLookup[ramSizeIdx]) + " KB of RAM");
 
 	if (!cartridgeType)
-		*mmu = new MMU(m_bios, cartData);
+		mmu = std::make_shared<MMU>(m_bios, cartData);
 	else if (cartridgeType >= 1 && cartridgeType <= 3)
-		*mmu = new MBC1(m_bios, cartData);
+		mmu = std::make_shared<MBC1>(m_bios, cartData);
 	else
 		Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid cartridge specified. The Bank Switcher chip is not supported.");
 

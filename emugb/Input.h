@@ -23,12 +23,12 @@ const uint16_t REG_JOYPAD = 0xFF00;
 class InputManager
 {
 public:
-	InputManager(MMU* mmu, InterruptManager* interruptManager);
+	InputManager(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
 	~InputManager();
 
 	void tick(InputState curInputState);
 
 private:
-	MMU* m_mmu;
-	InterruptManager* m_interruptManager;
+	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<InterruptManager> m_interruptManager;
 };

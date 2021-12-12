@@ -19,7 +19,7 @@ union Register
 class CPU
 {
 public:
-	CPU(MMU* mmu, InterruptManager* interruptManager);
+	CPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
 	~CPU();
 
 	void step();
@@ -47,8 +47,8 @@ private:
 
 	std::string m_lastInstruction = "";
 
-	MMU* m_mmu;
-	InterruptManager* m_interruptManager;
+	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<InterruptManager> m_interruptManager;
 	unsigned long m_cycleCount = 0;
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer

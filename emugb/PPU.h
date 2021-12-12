@@ -18,7 +18,7 @@ const uint16_t REG_LYC = 0xFF45;	//Holds value that LY is compared against
 class PPU
 {
 public:
-	PPU(MMU* mmu, InterruptManager* interruptManager);
+	PPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
 	~PPU();
 
 	void step(unsigned long cycleCount);
@@ -26,8 +26,10 @@ public:
 	vec3* getDisplay();
 private:
 	int m_displayMode = 0;
-	MMU* m_mmu;
-	InterruptManager* m_interruptManager;
+	//MMU* m_mmu;
+	//InterruptManager* m_interruptManager;
+	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<InterruptManager> m_interruptManager;
 	unsigned long m_lastCycleCount = 0;
 
 	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame

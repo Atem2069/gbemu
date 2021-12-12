@@ -1,6 +1,6 @@
 #include"PPU.h"
 
-PPU::PPU(MMU* mmu, InterruptManager* interruptManager)
+PPU::PPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
 {
 	m_mmu = mmu;
 	m_interruptManager = interruptManager;
@@ -108,7 +108,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
-	m_backgroundBase += ((line + scrollY) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
+	m_backgroundBase += (((line + scrollY) % 256) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
 	for (uint16_t column = 0; column < 160; column++)
 	{
