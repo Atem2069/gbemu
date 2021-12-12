@@ -38,7 +38,7 @@ void GameBoy::displayWorker()
 {
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Display worker: starting. .");
-	Display m_disp(160 * 3, 144 * 3);
+	Display m_disp(160 * 5, 144 * 5);
 
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
@@ -60,7 +60,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\mario.gb", &m_mmu);
+	m_loadCartridge("Games\\zelda.gb", &m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = new InterruptManager(m_mmu);

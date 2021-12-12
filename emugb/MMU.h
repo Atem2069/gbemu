@@ -36,6 +36,7 @@ public:
 private:
 	uint8_t m_bankNumber = 0, m_higherBankBits = 0;
 	bool m_bankSwitchRequired = false;
+	bool m_RAMBanking = false;
 	std::vector<uint8_t> m_memory;
 	std::vector<uint8_t> m_ROM;	//ROM in its entirety for bank switching.
 	std::vector<uint8_t> m_BIOS;

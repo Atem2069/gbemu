@@ -135,8 +135,8 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	if (line < 0 || line > 143 || !m_getWindowEnabled())
 		return;
 
-	uint8_t winX = m_mmu->read(REG_WX);
-	uint8_t winY = m_mmu->read(REG_WY);
+	uint8_t winX = m_mmu->read(REG_WX) % 256;
+	uint8_t winY = m_mmu->read(REG_WY) % 256;
 
 	if (line < winY)
 		return;
