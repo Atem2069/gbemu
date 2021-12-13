@@ -135,11 +135,15 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	if (line < 0 || line > 143 || !m_getWindowEnabled())
 		return;
 
-	uint8_t winX = m_mmu->read(REG_WX) % 256;
-	uint8_t winY = m_mmu->read(REG_WY) % 256;
+	uint8_t winX = m_mmu->read(REG_WX)-7;	//winx register starts at 7
+	uint8_t winY = m_mmu->read(REG_WY);
 
 	if (line < winY)
 		return;
+
+	
+	uint8_t plotLine = line;
+	line -= winY;
 
 	uint16_t m_windowBase = (m_getWindowTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
@@ -159,7 +163,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, false, tileData1, tileData2);
+		m_plotPixel(column, plotLine, false, tileData1, tileData2);
 	}
 }
 
