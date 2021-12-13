@@ -1428,7 +1428,7 @@ void CPU::_adjustBCD()
 
 void CPU::_loadHLStackIdx()
 {
-	uint8_t val = m_fetch();
+	/*uint8_t val = m_fetch();
 	int8_t offs = *(int8_t*)&val;
 
 	int16_t SPbefore = SP.reg;
@@ -1442,6 +1442,22 @@ void CPU::_loadHLStackIdx()
 
 	HL.reg = SP.reg;
 	//SP.reg = SPbefore;
+
+	m_cycleCount += 3;*/
+
+	uint8_t val = m_fetch();
+	int8_t offs = (int8_t)val;
+
+	uint16_t SP_temp = SP.reg;
+	SP_temp += offs;
+
+	m_setZeroFlag(false);
+	m_setSubtractFlag(false);
+
+	m_setHalfCarryFlag(((SP.reg ^ offs ^ (SP_temp & 0xFFFF)) & 0x10) == 0x10);	//black magic 16-bit half carry
+	m_setCarryFlag(((SP.reg ^ offs ^ (SP_temp & 0xFFFF)) & 0x100) == 0x100);
+
+	HL.reg = SP_temp;
 
 	m_cycleCount += 3;
 }

@@ -47,7 +47,7 @@ void Timer::tick()
 			if (curTimerValue == 255)
 			{
 				m_interruptManager->requestInterrupt(InterruptType::Timer);
-				m_mmu->write(REG_TIMA, m_mmu->read(REG_TMA));
+				m_mmu->write(REG_TIMA, 0);
 			}
 			else
 				m_mmu->write(REG_TIMA, curTimerValue + 1);
