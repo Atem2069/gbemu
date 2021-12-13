@@ -7,6 +7,7 @@
 #include<GLFW/glfw3.h>
 
 #include"Logger.h"
+#include"guiRenderer.h"
 #include"common/vec3.h"
 #include"common/vec2.h"
 

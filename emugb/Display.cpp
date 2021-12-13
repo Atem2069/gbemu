@@ -97,6 +97,8 @@ Display::Display(int width, int height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	GuiRenderer::init(m_window);
+
 	m_initialized = true;
 }
 
@@ -114,7 +116,7 @@ bool Display::shouldClose()
 void Display::draw()
 {
 	glfwPollEvents();	//poll window event messages
-
+	GuiRenderer::prepareFrame();
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(m_program);
@@ -123,6 +125,8 @@ void Display::draw()
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);	//redundant?
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);	//draw quad made up of 6 vertices (3 tris)
+
+	GuiRenderer::render();
 
 
 	glfwSwapBuffers(m_window);
