@@ -2,9 +2,11 @@
 
 #include<iostream>
 #include<sstream>
+#include<format>
 #include"Logger.h"
 #include"MMU.h"
 #include"InterruptManager.h"
+#include"Config.h"
 
 union Register
 {

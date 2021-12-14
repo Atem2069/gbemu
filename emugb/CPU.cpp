@@ -17,6 +17,7 @@ CPU::~CPU()
 
 void CPU::step()
 {
+	int lastPC = (int)PC;
 	if (!m_halted)
 		m_executeInstruction();
 	else
@@ -34,6 +35,14 @@ void CPU::step()
 		m_halted = false;
 	}
 
+	//output debug info
+	Config::getInstance()->setValue<int>("PC", lastPC);
+	Config::getInstance()->setValue<int>("AF", AF.reg);
+	Config::getInstance()->setValue<int>("BC", BC.reg);
+	Config::getInstance()->setValue<int>("DE", DE.reg);
+	Config::getInstance()->setValue<int>("HL", HL.reg);
+	Config::getInstance()->setValue<int>("SP", SP.reg);
+	Config::getInstance()->setValue<bool>("IE", m_interruptManager->getInterruptsEnabled());
 }
 
 void CPU::m_executeInstruction()

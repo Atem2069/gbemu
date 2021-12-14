@@ -75,7 +75,7 @@ void GameBoy::displayWorker()
 void GameBoy::m_initialise()
 {
 
-	m_loadCartridge("Games\\mario2.gb", m_mmu);
+	m_loadCartridge("Games\\zelda.gb", m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = std::make_shared<InterruptManager>(m_mmu);
