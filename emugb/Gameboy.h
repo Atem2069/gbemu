@@ -4,6 +4,7 @@
 #include<thread>
 #include<fstream>
 #include<chrono>
+#include<mutex>
 #include"MMU.h"
 #include"CPU.h"
 #include"PPU.h"
@@ -30,8 +31,7 @@ public:
 
 	void run();
 private:
-	bool reset = false;
-	bool inited = false;
+	std::mutex m_bufAccessLock;	//thread accesses shared ptrs that can be deleted, so lock when reading or deleting
 	void m_initialise();
 	void m_destroy();
 	bool m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu);

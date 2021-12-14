@@ -14,7 +14,7 @@ public:
 		T value = T();
 		if (m_config.find(key) == m_config.end())	//if doesn't exist return default value
 			return value;
-		return std::any_cast<T>(m_config.find(key)->second);
+		return std::any_cast<T>(m_config[key]);
 	}
 	template<typename T>
 	void setValue(const std::string& key, T value)
