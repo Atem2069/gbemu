@@ -21,7 +21,7 @@ void GuiRenderer::render()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			ImGui::MenuItem("Open...", nullptr, nullptr);
+			ImGui::MenuItem("Open...", nullptr, &m_openFileDialog);
 			ImGui::MenuItem("Exit", nullptr, nullptr);
 			ImGui::EndMenu();
 		}
@@ -29,7 +29,10 @@ void GuiRenderer::render()
 		{
 			ImGui::MenuItem("CPU State",nullptr,&m_showCPUDialog);
 			ImGui::MenuItem("Pause emulation",nullptr,nullptr);
-			ImGui::MenuItem("Reset", nullptr, nullptr);
+			bool reset = false;
+			ImGui::MenuItem("Reset", nullptr, &reset);
+			if (reset)
+				Config::getInstance()->setValue<bool>("reset", true);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View"))
@@ -69,9 +72,36 @@ void GuiRenderer::render()
 		ImGui::End();
 	}
 
+	if (m_openFileDialog)
+	{
+		OPENFILENAMEA ofn = {};
+		CHAR szFile[255] = { 0 };
+
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = NULL;
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = "Game Boy ROM Files\0*.gb\0";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		if (GetOpenFileNameA(&ofn) == TRUE)
+		{
+			std::string filename = szFile;
+			Config::getInstance()->setValue<std::string>("RomName", filename);
+			Config::getInstance()->setValue<bool>("reset", true);
+		}
+
+		m_openFileDialog = false;
+	}
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 bool GuiRenderer::m_showAboutDialog = false;
 bool GuiRenderer::m_showCPUDialog = false;
+bool GuiRenderer::m_openFileDialog = false;

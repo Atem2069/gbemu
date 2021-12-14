@@ -46,6 +46,7 @@ private:
 	InputState m_inputState = {};
 
 	bool m_shouldRun = true;
+	bool m_initialized = false;
 
 	void displayWorker();
 };

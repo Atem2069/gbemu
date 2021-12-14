@@ -13,6 +13,17 @@ GameBoy::~GameBoy()
 void GameBoy::run()
 {
 	std::thread m_dispWorkerThread(&GameBoy::displayWorker, this);
+	while (!m_initialized)
+	{
+		Sleep(500);	//sleep periodically until user specifies ROM
+		m_initialise();
+		if (!m_shouldRun)
+		{
+			m_dispWorkerThread.join();
+			return;
+		}
+	}
+
 	while (m_shouldRun)
 	{
 
@@ -21,7 +32,6 @@ void GameBoy::run()
 			m_bufAccessLock.lock();
 			m_destroy();
 			m_initialise();
-			Config::getInstance()->setValue<bool>("reset", false);
 			m_bufAccessLock.unlock();
 		}
 
@@ -53,7 +63,8 @@ void GameBoy::displayWorker()
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
 		m_bufAccessLock.lock();
-		m_disp.upload((void*)m_ppu->getDisplay());
+		if(m_ppu.get())
+			m_disp.upload((void*)m_ppu->getDisplay());
 		m_bufAccessLock.unlock();
 		m_disp.draw();
 
@@ -61,9 +72,6 @@ void GameBoy::displayWorker()
 			m_disp.getKeyPressed(GLFW_KEY_LEFT),m_disp.getKeyPressed(GLFW_KEY_RIGHT),
 			m_disp.getKeyPressed(GLFW_KEY_Z),m_disp.getKeyPressed(GLFW_KEY_X),
 			m_disp.getKeyPressed(GLFW_KEY_ENTER),m_disp.getKeyPressed(GLFW_KEY_RIGHT_SHIFT) };
-
-		if (m_disp.getKeyPressed(GLFW_KEY_R))
-			Config::getInstance()->setValue<bool>("reset", true);
 
 	}
 
@@ -74,8 +82,11 @@ void GameBoy::displayWorker()
 
 void GameBoy::m_initialise()
 {
+	std::string cart = Config::getInstance()->getValue<std::string>("RomName");
+	if (cart.empty())
+		return;
 
-	m_loadCartridge("Games\\mario.gb", m_mmu);
+	m_loadCartridge(cart, m_mmu);
 
 	//initialize MMU now
 	m_interruptManager = std::make_shared<InterruptManager>(m_mmu);
@@ -85,6 +96,8 @@ void GameBoy::m_initialise()
 	m_timer = std::make_shared<Timer>(m_mmu, m_interruptManager);
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
+	Config::getInstance()->setValue<bool>("reset", false);
+	m_initialized = true;
 
 }
 
