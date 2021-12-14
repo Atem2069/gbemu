@@ -12,6 +12,7 @@
 #include"Input.h"
 #include"Timer.h"
 #include"BIOS/biosdump.h"
+#include"Config.h"
 
 //cartridge header constants
 static uint16_t CART_TITLE = 0x0134;
@@ -29,7 +30,8 @@ public:
 
 	void run();
 private:
-
+	bool reset = false;
+	bool inited = false;
 	void m_initialise();
 	void m_destroy();
 	bool m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu);

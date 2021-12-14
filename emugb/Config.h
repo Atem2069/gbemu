@@ -11,6 +11,9 @@ public:
 	template<typename T>				//template methods have to be implemented in class body
 	T getValue(const std::string& key)
 	{
+		T value = T();
+		if (m_config.find(key) == m_config.end())	//if doesn't exist return default value
+			return value;
 		return std::any_cast<T>(m_config.find(key)->second);
 	}
 	template<typename T>

@@ -15,6 +15,14 @@ void GameBoy::run()
 	std::thread m_dispWorkerThread(&GameBoy::displayWorker, this);
 	while (m_shouldRun)
 	{
+
+		if (reset==true)
+		{
+			m_destroy();
+			m_initialise();
+			reset = false;
+		}
+
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		unsigned long lastCycleCount = m_cpu->getCycleCount();
 		//step CPU
@@ -42,13 +50,18 @@ void GameBoy::displayWorker()
 
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
-		m_disp.upload((void*)m_ppu->getDisplay());
-		m_disp.draw();
+		if (inited)
+		{
+			m_disp.upload((void*)m_ppu->getDisplay());
+			m_disp.draw();
+		}
 
 		m_inputState = { m_disp.getKeyPressed(GLFW_KEY_UP),m_disp.getKeyPressed(GLFW_KEY_DOWN),
 			m_disp.getKeyPressed(GLFW_KEY_LEFT),m_disp.getKeyPressed(GLFW_KEY_RIGHT),
 			m_disp.getKeyPressed(GLFW_KEY_Z),m_disp.getKeyPressed(GLFW_KEY_X),
 			m_disp.getKeyPressed(GLFW_KEY_ENTER),m_disp.getKeyPressed(GLFW_KEY_RIGHT_SHIFT) };
+
+		reset=m_disp.getKeyPressed(GLFW_KEY_R);
 
 	}
 
@@ -69,18 +82,20 @@ void GameBoy::m_initialise()
 	m_inputManager = std::make_shared<InputManager>(m_mmu,m_interruptManager);
 	m_timer = std::make_shared<Timer>(m_mmu, m_interruptManager);
 
+	inited = true;
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
 }
 
 void GameBoy::m_destroy()
 {
 	Logger::getInstance()->msg(LoggerSeverity::Info, "De-initing current Game Boy instance.");
-	//delete m_mmu;	
-	//delete m_cpu;
-	//delete m_ppu;
-	//delete m_interruptManager;
-	//delete m_inputManager;
-	//delete m_timer;
+	m_timer.reset();
+	m_inputManager.reset();
+	m_ppu.reset();
+	m_cpu.reset();
+	m_interruptManager.reset();
+	m_mmu.reset();
+	inited = false;
 }
 
 bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
