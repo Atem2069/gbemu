@@ -77,7 +77,7 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
-				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(vec3));	//copy over backbuffer to display buffer
+				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(unsigned int));	//copy over backbuffer to display buffer
 			}
 		}
 		break;
@@ -218,7 +218,7 @@ void PPU::m_renderSprites(uint8_t line)
 			if (paletteIdx)
 				paletteData = m_mmu->read(0xFF49);
 			int pixelIdx = (line * 160) + x + k;
-			if (spritePriority && m_backBuffer[pixelIdx].x != 1)
+			if (spritePriority && m_backBuffer[pixelIdx] != 0)
 				continue;
 			uint8_t byteShift = (7 - (k % 8));
 			if (xFlip)
@@ -228,7 +228,7 @@ void PPU::m_renderSprites(uint8_t line)
 			uint8_t colIdx = (colHigher << 1) | colLower;
 			if (colIdx == 0)
 				continue;
-			vec3 col = m_getColourFromPaletteIdx(colIdx, paletteData);
+			unsigned int col = m_getColourFromPaletteIdx(colIdx, paletteData);
 			m_backBuffer[pixelIdx] = col;
 		}
 
@@ -249,7 +249,7 @@ void PPU::m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteL
 	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_mmu->read(0xFF47));
 }
 
-vec3 PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
+unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 {
 	vec3 color = {};
 
@@ -264,10 +264,10 @@ vec3 PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 	default:Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid colour index " + std::to_string((int)idx) + " passed.");
 	}
 
-	return color;
+	return colIdx;
 }
 
-vec3* PPU::getDisplay()
+unsigned int* PPU::getDisplay()
 {
 	return m_dispBuffer;
 }

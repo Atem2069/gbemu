@@ -88,10 +88,11 @@ Display::Display(int width, int height)
 	glLinkProgram(m_program);
 	glUseProgram(m_program);
 
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);	//override driver's default 4-byte unpack stride, maybe reudndant
 	glGenTextures(1, &m_texHandle);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGB, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 160, 144, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -135,7 +136,7 @@ void Display::draw()
 void Display::upload(void* data)
 {
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGB, GL_FLOAT, data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
 }
 
 bool Display::getInitialized() { return m_initialized; }
