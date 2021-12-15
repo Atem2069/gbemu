@@ -258,15 +258,6 @@ unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 
 	uint8_t colIdx = (palette >> (idx * 2)) & 0b00000011;
 
-	switch (colIdx)
-	{
-	case 0b00: color = { 1.f,1.f,1.f }; break;
-	case 0b01:color = { 0.75f,0.75f,0.75f }; break;
-	case 0b10:color = { 0.37f,0.37f,0.37f }; break;
-	case 0b11:color = { 0.0f,0.0f,0.0f }; break;
-	default:Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid colour index " + std::to_string((int)idx) + " passed.");
-	}
-
 	return colIdx;
 }
 
