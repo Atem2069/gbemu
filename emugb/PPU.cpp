@@ -195,7 +195,7 @@ void PPU::m_renderSprites(uint8_t line)
 
 		if (!(line >= y && line < (y + lowerBound)))	//check if line is in the bounds of tile being considered
 			continue;
-		if (x > 160 || x < -1)
+		if (x > 160 || x < -8)
 			continue;
 
 		uint8_t tileOffset = 0;
@@ -217,6 +217,8 @@ void PPU::m_renderSprites(uint8_t line)
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
+			if (x + k < 0)
+				continue;
 			uint8_t paletteData = m_mmu->read(0xFF48);
 			if (paletteIdx)
 				paletteData = m_mmu->read(0xFF49);
