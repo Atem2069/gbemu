@@ -44,10 +44,10 @@ void Timer::tick()
 		if (timerDiff >= (timePeriod * 1000.0))
 		{
 			uint8_t curTimerValue = m_mmu->read(REG_TIMA);
-			if (curTimerValue == 255)
+			if (curTimerValue == 0)
 			{
-				m_interruptManager->requestInterrupt(InterruptType::Timer);
-				m_mmu->write(REG_TIMA, 0);
+				//m_interruptManager->requestInterrupt(InterruptType::Timer);
+				m_mmu->write(REG_TIMA, m_mmu->read(REG_TMA));
 			}
 			else
 				m_mmu->write(REG_TIMA, curTimerValue + 1);

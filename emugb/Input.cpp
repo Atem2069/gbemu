@@ -14,8 +14,8 @@ InputManager::~InputManager()
 void InputManager::tick(InputState curInputState)
 {
 	uint8_t joypad = m_mmu->read(REG_JOYPAD) & 0b11110000;
-	bool buttonKeys = (joypad >> 5) & 0b1;
-	if (buttonKeys)
+	bool dirKeys = (joypad >> 5) & 0b1;
+	if (!dirKeys)
 	{
 		//button keys are being checked
 		joypad |= (curInputState.a ? 0b00000001 : 0b0);
@@ -33,10 +33,10 @@ void InputManager::tick(InputState curInputState)
 		joypad |= (curInputState.down ? 0b00001000 : 0b0);
 
 	}
-	joypad = ~joypad;	//flip bits (high=off, low=on for some reason)
-
-	if (joypad != m_mmu->read(REG_JOYPAD))
-		m_interruptManager->requestInterrupt(InterruptType::Joypad);
+	//joypad = ~joypad;	//flip bits (high=off, low=on for some reason)
+	joypad ^= 0b00001111;
+	//if (joypad != m_mmu->read(REG_JOYPAD))
+	//	m_interruptManager->requestInterrupt(InterruptType::Joypad);
 
 	m_mmu->write(REG_JOYPAD, joypad);
 }
