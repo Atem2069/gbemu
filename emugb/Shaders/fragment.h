@@ -5,6 +5,7 @@ R"(
 layout(location=0)in vec2 texcoord;
 layout(location=0)out vec4 fragColor;
 
+layout(location=0)uniform int paletteIdx;
 layout(binding=0)uniform usampler2D texSampler;
 
 
@@ -25,7 +26,10 @@ void main()
 		vec4(31.0/255.0,31.0/255.0,31.0/255.0,1)
 	};
 	uint idx = texture(texSampler,texcoord).x;
-	fragColor = pocketCols[idx];
+	if(paletteIdx==0)
+		fragColor = dmgCols[idx];
+	else
+		fragColor = pocketCols[idx];
 }
 
 

@@ -37,6 +37,7 @@ void GuiRenderer::render()
 		}
 		if (ImGui::BeginMenu("View"))
 		{
+			ImGui::MenuItem("PPU Settings", nullptr, &m_showPPUDialog);
 			ImGui::MenuItem("Hide Menubar", nullptr, nullptr);
 			ImGui::EndMenu();
 		}
@@ -69,6 +70,39 @@ void GuiRenderer::render()
 		int SP = Config::getInstance()->getValue<int>("SP");
 		std::string cpuDebug = std::format("SHARP LR35902\nPC={:#x}\nStack pointer={:#x}\nAF={:#x} BC={:#x}\nDE={:#x} HL={:#x}\nInterrupts are enabled? {}", PC, AF, BC, DE, HL, SP, interruptsEnabled);
 		ImGui::Text(cpuDebug.c_str());
+		ImGui::End();
+	}
+
+	if (m_showPPUDialog)
+	{
+		ImGui::Begin("PPU", &m_showPPUDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+
+		ImGui::Text("Display palette");
+		int paletteIdx = Config::getInstance()->getValue<int>("paletteIdx");
+		ImGui::RadioButton("Classic", &paletteIdx, 0);
+		ImGui::RadioButton("Pocket", &paletteIdx, 1);
+		Config::getInstance()->setValue<int>("paletteIdx", paletteIdx);
+
+		ImGui::Separator();
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Debug settings");
+		bool ppuOverride = Config::getInstance()->getValue<bool>("ppuDebugOverride");
+		ImGui::Checkbox("Override default behaviour", &ppuOverride);
+		Config::getInstance()->setValue<bool>("ppuDebugOverride", ppuOverride);
+
+		if (ppuOverride)
+		{
+			bool showSprites = Config::getInstance()->getValue<bool>("sprites");
+			bool showBackground = Config::getInstance()->getValue<bool>("background");
+			bool showWindow = Config::getInstance()->getValue<bool>("window");
+
+			ImGui::Checkbox("Draw background layer", &showBackground);
+			ImGui::Checkbox("Draw window layer", &showWindow);
+			ImGui::Checkbox("Show sprites", &showSprites);
+
+			Config::getInstance()->setValue<bool>("sprites", showSprites);
+			Config::getInstance()->setValue<bool>("background", showBackground);
+			Config::getInstance()->setValue<bool>("window", showWindow);
+		}
 		ImGui::End();
 	}
 
@@ -105,3 +139,4 @@ void GuiRenderer::render()
 bool GuiRenderer::m_showAboutDialog = false;
 bool GuiRenderer::m_showCPUDialog = false;
 bool GuiRenderer::m_openFileDialog = false;
+bool GuiRenderer::m_showPPUDialog = false;

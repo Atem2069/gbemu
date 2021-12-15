@@ -19,4 +19,5 @@ private:
 	static bool m_showAboutDialog;
 	static bool m_showCPUDialog;
 	static bool m_openFileDialog;
+	static bool m_showPPUDialog;
 };

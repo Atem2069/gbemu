@@ -102,8 +102,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 {
 	if (line < 0 || line > 143 || !m_getBackgroundEnabled())
 		return;
-
-
+	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("background"))
+		return;
 	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
@@ -134,7 +134,8 @@ void PPU::m_renderWindowScanline(uint8_t line)
 {
 	if (line < 0 || line > 143 || !m_getWindowEnabled())
 		return;
-
+	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("window"))
+		return;
 	uint8_t winX = m_mmu->read(REG_WX)-7;	//winx register starts at 7
 	uint8_t winY = m_mmu->read(REG_WY);
 
@@ -172,7 +173,8 @@ void PPU::m_renderSprites(uint8_t line)
 	//return if sprites not enabled otherwise we'll read garbage from OAM
 	if (!m_getSpritesEnabled())
 		return;
-
+	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("sprites"))
+		return;
 	int spriteCount = 0;
 
 	int renderedSpriteCount = 0, i = 0;

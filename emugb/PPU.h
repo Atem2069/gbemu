@@ -4,6 +4,7 @@
 #include"InterruptManager.h"
 #include"Logger.h"
 #include"Common/vec3.h"
+#include"Config.h"
 
 
 const uint16_t REG_LCDC = 0xFF40;	//LCD control register
