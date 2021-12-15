@@ -26,6 +26,10 @@ void GameBoy::run()
 
 	while (m_shouldRun)
 	{
+		LARGE_INTEGER freq;
+		QueryPerformanceFrequency(&freq);
+		LARGE_INTEGER start;
+		QueryPerformanceCounter(&start);
 
 		if (Config::getInstance()->getValue<bool>("reset"))
 		{
@@ -43,12 +47,19 @@ void GameBoy::run()
 		m_inputManager->tick(m_inputState);
 		m_timer->tick();
 
-		auto curTime = std::chrono::high_resolution_clock::now();
+		//auto curTime = std::chrono::high_resolution_clock::now();
 		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;
 		double timePeriod = 0.000952 * (double)cycleCountDiff;	//cpu clocks are measured in machine cycles (1.05MHz). 1 m-cycle is 0.000952 milliseconds
-		auto timeDiff = std::chrono::duration<double, std::milli>(curTime - lastTime).count();
+
+		LARGE_INTEGER stop;
+		QueryPerformanceCounter(&stop);
+
+		double timeDiff = ((double)(stop.QuadPart - start.QuadPart) * 1000.0) / (double)freq.QuadPart;
 		while (timeDiff < timePeriod)
-			timeDiff = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastTime).count();
+		{
+			QueryPerformanceCounter(&stop);
+			timeDiff = ((double)(stop.QuadPart - start.QuadPart) * 1000.0) / (double)freq.QuadPart;
+		}
 
 	}
 	m_dispWorkerThread.join();
