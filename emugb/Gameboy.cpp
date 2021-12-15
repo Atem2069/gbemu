@@ -97,7 +97,13 @@ void GameBoy::m_initialise()
 	if (cart.empty())
 		return;
 
-	m_loadCartridge(cart, m_mmu);
+	if (!m_loadCartridge(cart, m_mmu))
+	{
+		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
+		Config::getInstance()->setValue<std::string>("RomName", "");
+		return;
+	}
+
 
 	//initialize MMU now
 	m_interruptManager = std::make_shared<InterruptManager>(m_mmu);
@@ -169,7 +175,10 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 	else if (cartridgeType >= 1 && cartridgeType <= 3)
 		mmu = std::make_shared<MBC1>(m_bios, cartData);
 	else
+	{
 		Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid cartridge specified. The Bank Switcher chip is not supported.");
+		return false;
+	}
 
 	return true;
 }
