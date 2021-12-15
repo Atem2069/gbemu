@@ -150,7 +150,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	//get tilemap base addr
 	m_windowBase += ((line) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
-	for (uint16_t column = winX; column < 160; column++)
+	for (uint16_t column = 0; (column+winX) < 160; column++)
 	{
 		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
 		uint8_t m_tileIndex = m_mmu->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
@@ -164,7 +164,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, plotLine, false, tileData1, tileData2);
+		m_plotPixel(column+winX, plotLine, false, tileData1, tileData2);
 	}
 }
 
