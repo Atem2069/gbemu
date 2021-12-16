@@ -174,6 +174,8 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 		mmu = std::make_shared<MMU>(m_bios, cartData);
 	else if (cartridgeType >= 1 && cartridgeType <= 3)
 		mmu = std::make_shared<MBC1>(m_bios, cartData);
+	else if (cartridgeType == 19)
+		mmu = std::make_shared<MBC5>(m_bios, cartData);
 	else
 	{
 		Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid cartridge specified. The Bank Switcher chip is not supported.");
