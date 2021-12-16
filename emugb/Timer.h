@@ -3,6 +3,7 @@
 #include"Logger.h"
 #include"MMU.h"
 #include"InterruptManager.h"
+#include"Config.h"
 
 #include<chrono>
 
