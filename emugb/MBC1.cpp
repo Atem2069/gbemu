@@ -79,7 +79,7 @@ void MBC1::write(uint16_t address, uint8_t value)
 		return;
 	}
 
-	if (address == 0xFF01)	//weird debug output
+	if (address == 0xFF01 && Config::getInstance()->getValue<bool>("serialDebug"))
 	{
 		std::cout << (char)value;
 	}

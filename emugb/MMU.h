@@ -5,6 +5,7 @@
 #include<array>
 
 #include"Logger.h"
+#include"Config.h"
 
 class MMU
 {

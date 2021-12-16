@@ -33,6 +33,10 @@ void GuiRenderer::render()
 			ImGui::MenuItem("Reset", nullptr, &reset);
 			if (reset)
 				Config::getInstance()->setValue<bool>("reset", true);
+			bool serial = Config::getInstance()->getValue<bool>("serialDebug");
+			ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
+			Config::getInstance()->setValue<bool>("serialDebug", serial);
+
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View"))
