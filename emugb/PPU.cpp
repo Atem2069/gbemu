@@ -203,30 +203,21 @@ void PPU::m_renderSprites(uint8_t line)
 			continue;
 		if (x > 160 || x < -8)
 			continue;
-
-		uint8_t tileOffset = 0;
-
-		//if (!m_spriteIs8x8() && (line-y) >= 8)
-		//{
-		//	tileOffset = 2;
-	//	
-	//	}
-
 		uint8_t lineOffset = line - y;
 		uint8_t flipOffset = (m_spriteIs8x8()) ? 7 : 15;
 		if (yFlip)
 			lineOffset = flipOffset - lineOffset;
 
 		uint16_t addr = 0x8000 + (patternIdx * 16 + (lineOffset * 2));
-		uint8_t byte1 = m_mmu->read(addr+tileOffset);
-		uint8_t byte2 = m_mmu->read(addr + tileOffset + 1);
+		uint8_t byte1 = m_mmu->read(addr);
+		uint8_t byte2 = m_mmu->read(addr + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
 			if (x + k < 0)
 				continue;
 			uint8_t paletteData = m_mmu->read(0xFF48);
-			if (paletteIdx)
+			if (paletteIdx==1)
 				paletteData = m_mmu->read(0xFF49);
 			int pixelIdx = (line * 160) + x + k;
 			if (spritePriority && m_backBuffer[pixelIdx] != 0)
@@ -234,8 +225,8 @@ void PPU::m_renderSprites(uint8_t line)
 			uint8_t byteShift = (7 - (k % 8));
 			if (xFlip)
 				byteShift = (k % 8);
-			uint8_t colHigher = (byte1 >> byteShift) & 0b1;
-			uint8_t colLower = (byte2 >> byteShift) & 0b1;
+			uint8_t colLower = (byte1 >> byteShift) & 0b1;
+			uint8_t colHigher = (byte2 >> byteShift) & 0b1;
 			uint8_t colIdx = (colHigher << 1) | colLower;
 			if (colIdx == 0)
 				continue;
@@ -254,16 +245,14 @@ void PPU::m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteL
 		scrollX = (m_mmu->read(REG_SCX)) % 256;
 	int pixelIdx = (y * 160) + x;
 	x += (scrollX % 8);
-	uint8_t colHigher = (byteHigh >> (7 - (x%8))) & 0b1;
-	uint8_t colLower = (byteLow >> (7 - (x % 8))) & 0b1;
+	uint8_t colLower = (byteHigh >> (7 - (x%8))) & 0b1;
+	uint8_t colHigher = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;
 	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_mmu->read(0xFF47));
 }
 
 unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 {
-	vec3 color = {};
-
 	uint8_t colIdx = (palette >> (idx * 2)) & 0b00000011;
 
 	return colIdx;
