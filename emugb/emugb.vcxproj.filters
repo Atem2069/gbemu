@@ -25,6 +25,21 @@
     <Filter Include="imgui deps">
       <UniqueIdentifier>{878c0ce1-0058-4cad-9fab-266d479eb650}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\MBC">
+      <UniqueIdentifier>{e0af2d5a-e75e-4a26-bf4a-d2c966cba4cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Display">
+      <UniqueIdentifier>{c2397e18-5504-482c-9780-09d0cd3fe841}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Display">
+      <UniqueIdentifier>{b4f2b45e-ded3-4b29-9599-60f995b54034}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Config/Logging">
+      <UniqueIdentifier>{c9417d3d-d462-41a4-9405-2f956b607864}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Config/Logging">
+      <UniqueIdentifier>{550a98b7-46ad-4f83-bf8a-944ad5aa3a29}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -36,16 +51,10 @@
     <ClCompile Include="Gameboy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PPU.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InterruptManager.cpp">
@@ -55,12 +64,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MBC1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\imgui\imgui.cpp">
@@ -84,14 +87,26 @@
     <ClCompile Include="..\lib\imgui\imgui_widgets.cpp">
       <Filter>imgui deps</Filter>
     </ClCompile>
-    <ClCompile Include="guiRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MBC5.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="MBC1.cpp">
+      <Filter>Source Files\MBC</Filter>
     </ClCompile>
     <ClCompile Include="MBC3.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\MBC</Filter>
+    </ClCompile>
+    <ClCompile Include="MBC5.cpp">
+      <Filter>Source Files\MBC</Filter>
+    </ClCompile>
+    <ClCompile Include="guiRenderer.cpp">
+      <Filter>Source Files\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="Display.cpp">
+      <Filter>Source Files\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Source Files\Config/Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Source Files\Config/Logging</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -104,13 +119,7 @@
     <ClInclude Include="CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PPU.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Display.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\vertex.h">
@@ -137,9 +146,6 @@
     <ClInclude Include="BIOS\biosdump.h">
       <Filter>Header Files\BIOS</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\imgui\imconfig.h">
       <Filter>imgui deps</Filter>
     </ClInclude>
@@ -165,7 +171,16 @@
       <Filter>imgui deps</Filter>
     </ClInclude>
     <ClInclude Include="guiRenderer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="Display.h">
+      <Filter>Header Files\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Header Files\Config/Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Header Files\Config/Logging</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
