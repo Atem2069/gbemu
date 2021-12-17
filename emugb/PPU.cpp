@@ -22,6 +22,7 @@ void PPU::step(unsigned long cycleCount)
 	uint8_t status = m_mmu->read(REG_STAT);
 
 	//reading out flags which can trigger STAT interrupt
+	bool OAMSTAT = (status >> 5) & 0b1;
 	bool HBLankSTAT = (status >> 3) & 0b1;	//Triggered when entering hblank
 	bool VBlankSTAT = (status >> 4) & 0b1;	//Triggered when entering vblank
 	bool LYCSTAT = (status >> 6) & 0b1;		//Triggered due to some comparison between LY and LYC
@@ -34,6 +35,8 @@ void PPU::step(unsigned long cycleCount)
 		{
 			m_lastCycleCount = cycleCount;
 			m_displayMode = 3;
+			if (OAMSTAT)
+				m_interruptManager->requestInterrupt(InterruptType::STAT);
 			status |= 0b00000011;	//set lower two bits to 3 (11)
 		}
 		break;
@@ -92,14 +95,14 @@ void PPU::step(unsigned long cycleCount)
 	if (LYCSTAT)
 	{
 		uint8_t LYC = m_mmu->read(REG_LYC);
-		if (curLine == LYC)
+		if (curLine == LYC && curLine != lastLY)
 		{
 			status |= 0b00000100;	//set LYC coincidence flag
 			m_interruptManager->requestInterrupt(InterruptType::STAT);
 		}
 	}
 
-
+	lastLY = curLine;
 	m_mmu->write(REG_STAT, status);	//update ppu registers (status and cur line)
 	m_mmu->write(REG_LY, curLine);
 }
@@ -110,8 +113,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("background"))
 		return;
-	uint8_t scrollY = (m_mmu->read(REG_SCY)) % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
-	uint8_t scrollX = (m_mmu->read(REG_SCX)) % 256;
+	uint8_t scrollY = (m_mmu->read(REG_SCY));// % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
+	uint8_t scrollX = (m_mmu->read(REG_SCX));// % 256;
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
 	m_backgroundBase += (((line + scrollY) % 256) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
@@ -131,7 +134,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column, line, true, tileData1, tileData2);
+		m_plotPixel(column, line, scrollX, tileData1, tileData2);
 	}
 
 }
@@ -170,7 +173,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column+winX, plotLine, false, tileData1, tileData2);
+		m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
 	}
 }
 
@@ -238,13 +241,10 @@ void PPU::m_renderSprites(uint8_t line)
 	}
 }
 
-void PPU::m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteLow)
+void PPU::m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow)
 {
-	uint8_t scrollX = 0;
-	if(scroll)
-		scrollX = (m_mmu->read(REG_SCX)) % 256;
 	int pixelIdx = (y * 160) + x;
-	x += (scrollX % 8);
+	x += (scroll % 8);
 	uint8_t colLower = (byteHigh >> (7 - (x%8))) & 0b1;
 	uint8_t colHigher = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;

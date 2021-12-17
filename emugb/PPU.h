@@ -33,13 +33,15 @@ private:
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	unsigned long m_lastCycleCount = 0;
 
+	uint8_t lastLY = 0;
+
 	unsigned int m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
 	unsigned int m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
 	void m_renderBackgroundScanline(uint8_t line);
 	void m_renderWindowScanline(uint8_t line);
 	void m_renderSprites(uint8_t line);
-	void m_plotPixel(int x, int y, bool scroll, uint8_t byteHigh, uint8_t byteLow);
+	void m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow);
 	unsigned int m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette);
 
 	bool m_getDisplayEnabled();
