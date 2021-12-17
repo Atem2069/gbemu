@@ -174,7 +174,9 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 		mmu = std::make_shared<MMU>(m_bios, cartData);
 	else if (cartridgeType >= 1 && cartridgeType <= 3)
 		mmu = std::make_shared<MBC1>(m_bios, cartData);
-	else if (cartridgeType == 19)
+	else if (cartridgeType >= 0x0f && cartridgeType <= 0x13)
+		mmu = std::make_shared<MBC3>(m_bios, cartData);
+	else if (cartridgeType >= 0x19 && cartridgeType <= 0x1e)
 		mmu = std::make_shared<MBC5>(m_bios, cartData);
 	else
 	{
