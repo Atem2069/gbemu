@@ -37,9 +37,11 @@ public:
 	void write(uint16_t address, uint8_t value);
 private:
 	uint8_t m_bankNumber = 0, m_higherBankBits = 0;
+	uint8_t m_ramBankNumber = 0;
 	bool m_RAMBanking = false;
 	std::array<uint8_t,65536> m_memory;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
+	std::array<std::array<uint8_t, 8192>,4> m_RAMBanks;
 	std::array<uint8_t,256> m_BIOS;
 	bool m_isInBIOS = true;	
 	void m_DMATransfer(uint8_t base);

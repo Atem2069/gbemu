@@ -37,6 +37,11 @@ uint8_t MBC1::read(uint16_t address)
 		return m_ROMBanks[m_bankNumber][offset];
 	}
 
+	if (address >= 0xa000 && address <= 0xbfff)
+	{
+		int offset = ((int)address - 0xa000);
+		return m_RAMBanks[m_ramBankNumber][offset];
+	}
 
 	return m_memory[address];
 }
@@ -55,11 +60,9 @@ void MBC1::write(uint16_t address, uint8_t value)
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
 		if (!m_RAMBanking)
-		{
 			m_higherBankBits = value;
-			//m_bankNumber = (m_bankNumber & 0b00011111) | (value << 5);
-			//m_bankSwitchRequired = true;
-		}
+		else
+			m_ramBankNumber = value;
 		return;
 	}
 
@@ -75,9 +78,15 @@ void MBC1::write(uint16_t address, uint8_t value)
 		if (!value)
 			value = 1;
 		m_bankNumber = (m_higherBankBits << 5) | value;
-		m_bankSwitchRequired = true;
 		return;
 	}
+
+	if (address >= 0xa000 && address <= 0xbfff)
+	{
+		int offset = ((int)address - 0xa000);
+		m_RAMBanks[m_ramBankNumber][offset] = value;
+	}
+
 
 	if (address == 0xFF01 && Config::getInstance()->getValue<bool>("serialDebug"))
 	{
