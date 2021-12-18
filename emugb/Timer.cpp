@@ -51,7 +51,7 @@ void Timer::tick()
 				m_mmu->write(REG_TIMA, tma+1);
 			}
 			else
-				m_mmu->write(REG_TIMA, curTimerValue + 1);
+				m_mmu->write(REG_TIMA, curTimerValue + ((uint8_t)(timerDiff / (timePeriod*1000.0))));
 
 			m_lastTime = m_curTime;
 		}
