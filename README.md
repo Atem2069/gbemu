@@ -1,5 +1,5 @@
 # gbemu
-Reasonably accurate Game Boy (DMG) emulator, runs most commercial games with minor issues.
+Reasonably accurate Game Boy (DMG) emulator, runs most commercial games with no major issues.
 
 Developed for NEA project
 
