@@ -86,6 +86,7 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
+				m_windowLineCount = 0;
 				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(unsigned int));	//copy over backbuffer to display buffer
 			}
 		}
@@ -151,13 +152,16 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	if (line < winY)
 		return;
 
+	if (winX < 0 || winX > 160)
+		return;
+
 	
 	uint8_t plotLine = line;
 	line -= winY;
 
 	uint16_t m_windowBase = (m_getWindowTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
-	m_windowBase += ((line) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
+	m_windowBase += ((m_windowLineCount) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
 
 	for (uint16_t column = 0; (column+winX) < 160; column++)
 	{
@@ -169,12 +173,18 @@ void PPU::m_renderWindowScanline(uint8_t line)
 			m_tileIndex += 128;
 		tileMemLocation += (m_tileIndex * 16);
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
-		tileMemLocation += (line % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
+		tileMemLocation += (m_windowLineCount % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
 
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
-		m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
+		//m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
+		int pixelIdx = (plotLine * 160) + (column+winX);
+		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
+		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
+		uint8_t colIdx = (colHigher << 1) | colLower;
+		m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx, m_mmu->read(0xFF47));
 	}
+	m_windowLineCount += 1;
 }
 
 void PPU::m_renderSprites(uint8_t line)
