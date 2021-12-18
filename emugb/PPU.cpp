@@ -207,11 +207,19 @@ void PPU::m_renderSprites(uint8_t line)
 		if (x > 160 || x < -8)
 			continue;
 		uint8_t lineOffset = line - y;
-		uint8_t flipOffset = (m_spriteIs8x8()) ? 7 : 15;
+		uint8_t flipOffset = (m_spriteIs8x8()) ? 7 : 7;
 		if (yFlip)
 			lineOffset = flipOffset - lineOffset;
 
-		uint16_t addr = 0x8000 + (patternIdx * 16 + (lineOffset * 2));
+		if (!m_spriteIs8x8())
+		{
+			if ((line - y) < 8)
+				patternIdx &= 0xFE;
+			else
+				patternIdx |= 0x01;
+		}
+
+		uint16_t addr = 0x8000 + (patternIdx * 16 + ((lineOffset%8) * 2));
 		uint8_t byte1 = m_mmu->read(addr);
 		uint8_t byte2 = m_mmu->read(addr + 1);
 		//process bytes and draw to screen
