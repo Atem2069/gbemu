@@ -146,14 +146,16 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("window"))
 		return;
-	uint8_t winX = m_mmu->read(REG_WX)-7;	//winx register starts at 7
+	int8_t winX = m_mmu->read(REG_WX)-7;	//winx register starts at 7
 	uint8_t winY = m_mmu->read(REG_WY);
 
 	if (line < winY)
 		return;
 
-	if (winX < 0 || winX > 160)
+	if (winX > 160 || winX < -7)
 		return;
+	if (winX < 0 && winX >-7)		//std::min doesn't like int8_t, and cast to int feels wrong
+		winX = 0;
 
 	
 	uint8_t plotLine = line;
