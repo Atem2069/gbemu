@@ -178,7 +178,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
 		//m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
-		int pixelIdx = (plotLine * 160) + (column+winX);
+		int pixelIdx = std::min((plotLine * 160) + (column+winX),23039);	//visual studio warns of false buffer overrun warning, idk why
 		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
 		uint8_t colIdx = (colHigher << 1) | colLower;
