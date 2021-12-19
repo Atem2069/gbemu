@@ -15,7 +15,11 @@ PPU::~PPU()
 void PPU::step(unsigned long cycleCount)
 {
 	if (!m_getDisplayEnabled())
+	{
+		m_mmu->write(REG_LY, 0);
+		m_mmu->write(REG_STAT, m_mmu->read(REG_STAT) & 0b11111100);
 		return;
+	}
 
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 	uint8_t curLine = m_mmu->read(REG_LY);

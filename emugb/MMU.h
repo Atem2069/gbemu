@@ -39,6 +39,7 @@ private:
 	uint8_t m_bankNumber = 0, m_higherBankBits = 0;
 	uint8_t m_ramBankNumber = 0;
 	bool m_RAMBanking = false;
+	std::string m_saveName;
 	std::array<uint8_t,65536> m_memory;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
 	std::array<std::array<uint8_t, 8192>,4> m_RAMBanks;
