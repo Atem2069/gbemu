@@ -1397,6 +1397,7 @@ void CPU::_stop()
 {
 	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
 	//_halt();
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
 }
 
 void CPU::_halt()

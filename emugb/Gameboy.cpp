@@ -45,7 +45,7 @@ void GameBoy::run()
 		m_cpu->step();
 		m_ppu->step(m_cpu->getCycleCount());
 		m_inputManager->tick(m_inputState);
-		m_timer->tick();
+		m_timer->tick(m_cpu->getCycleCount());
 
 		//auto curTime = std::chrono::high_resolution_clock::now();
 		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;

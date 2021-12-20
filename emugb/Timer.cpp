@@ -6,6 +6,11 @@ Timer::Timer(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& inter
 	m_interruptManager = interruptManager;
 	m_lastTime = std::chrono::high_resolution_clock::now();
 	m_divLastTime = m_lastTime;
+
+	m_mmu->write(REG_TAC, 0);
+	m_mmu->write(REG_TIMA, 0);
+	m_mmu->write(REG_TMA, 0);
+	m_mmu->write(REG_DIV, 0);
 }
 
 Timer::~Timer()
@@ -13,49 +18,48 @@ Timer::~Timer()
 
 }
 
-void Timer::tick()
+void Timer::tick(unsigned long cycleCount)
 {
-	auto m_curTime = std::chrono::high_resolution_clock::now();
 
-	//first deal with DIV register, then timer register
-	double divTimeDiff = std::chrono::duration<double, std::milli>(m_curTime - m_divLastTime).count();
-	if (divTimeDiff >= ((1.0 / 16384.0) * 1000.0))	//DIV always updates, never disabled. Runs at 16384Hz
+	unsigned long cycleDiff = cycleCount - lastCycleCount;
+	unsigned long divCycleDiff = cycleCount - divLastCycleCount;
+	//for div register:
+	if (divCycleDiff >= 64)
 	{
-		uint8_t curDivTimer = m_mmu->read(REG_DIV);
-		m_mmu->write(0xFF04, curDivTimer + 1);
-
-		m_divLastTime = m_curTime;
+		uint8_t ticks = divCycleDiff / 64;
+		m_mmu->write(0xFF04, m_mmu->read(REG_DIV) + ticks);
+		divLastCycleCount = cycleCount;
 	}
 
 	uint8_t timerControl = m_mmu->read(REG_TAC);
-	if ((timerControl >> 2) & 0b1)	//bit 2: timer enabled
+	if ((timerControl >> 2) & 0b1)
 	{
-		double timerDiff = std::chrono::duration<double, std::milli>(m_curTime - m_lastTime).count();
-
-		double timePeriod = 0.0f;
+		unsigned long tickThreshold = 0;
 		switch (timerControl & 0b11)
 		{
-		case 0:timePeriod = 1.0 / 4096.0; break;
-		case 1:timePeriod = 1.0 / 262144.0; break;
-		case 2:timePeriod = 1.0 / 65536.0; break;
-		case 3:timePeriod = 1.0 / 16384.0; break;
+		case 0b00:tickThreshold = (1024 / 4); break;
+		case 0b01:tickThreshold = (16 / 4); break;
+		case 0b10:tickThreshold = (64 / 4); break;
+		case 0b11:tickThreshold = (256 / 4); break;
 		}
 
-		if (timerDiff >= (timePeriod * 1000.0))
+		while (cycleDiff >= tickThreshold)
 		{
+			uint8_t ticks = 1;
 			uint8_t curTimerValue = m_mmu->read(REG_TIMA);
-			if (curTimerValue == 255)
+			uint8_t newTimerValue = curTimerValue + ticks;
+			if (newTimerValue < curTimerValue)
 			{
 				m_interruptManager->requestInterrupt(InterruptType::Timer);
-				uint8_t tma = m_mmu->read(REG_TMA);
-				m_mmu->write(REG_TIMA, tma+1);
+				m_mmu->write(REG_TIMA, m_mmu->read(REG_TMA));
 			}
 			else
-				m_mmu->write(REG_TIMA, curTimerValue + ((uint8_t)(timerDiff / (timePeriod*1000.0))));
-
-			m_lastTime = m_curTime;
+				m_mmu->write(REG_TIMA, newTimerValue);
+			cycleDiff -= tickThreshold;
+			lastCycleCount = cycleCount;
 		}
-
 	}
+	else
+		lastCycleCount = cycleCount;
 
 }
