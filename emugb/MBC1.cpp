@@ -16,28 +16,36 @@ MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
 		m_ROMBanks.push_back(curROMBank);
 	}
 
-	//load save file into RAM bank 0
-	m_saveName = Config::getInstance()->getValue<std::string>("RomName");
-	m_saveName.resize(m_saveName.size() - 2);
-	m_saveName += "sav";
-	std::ifstream ramReadHandle(m_saveName, std::ios::in | std::ios::binary);
-	if (!ramReadHandle)
-	{
-		Logger::getInstance()->msg(LoggerSeverity::Info, "No save file exists for current ROM - file will be created upon unload!");
-	}
-	else
-	{
-		ramReadHandle >> std::noskipws;
-		int i = 0;
-		while (!ramReadHandle.eof())
-		{
-			unsigned char curByte;
-			ramReadHandle.read((char*)&curByte, sizeof(uint8_t));
-			m_RAMBanks[0][i] = (uint8_t)curByte;
-			i++;
-		}
 
-		ramReadHandle.close();
+	uint8_t cartType = m_memory[CART_TYPE];
+	if (cartType == 3)
+		m_shouldSave = true;
+
+	if (m_shouldSave)
+	{
+		//load save file into RAM bank 0 (only if cart has battery)
+		m_saveName = Config::getInstance()->getValue<std::string>("RomName");
+		m_saveName.resize(m_saveName.size() - 2);
+		m_saveName += "sav";
+		std::ifstream ramReadHandle(m_saveName, std::ios::in | std::ios::binary);
+		if (!ramReadHandle)
+		{
+			Logger::getInstance()->msg(LoggerSeverity::Info, "No save file exists for current ROM - file will be created upon unload!");
+		}
+		else
+		{
+			ramReadHandle >> std::noskipws;
+			int i = 0;
+			while (!ramReadHandle.eof())
+			{
+				unsigned char curByte;
+				ramReadHandle.read((char*)&curByte, sizeof(uint8_t));
+				m_RAMBanks[0][i] = (uint8_t)curByte;
+				i++;
+			}
+
+			ramReadHandle.close();
+		}
 	}
 
 	m_isInBIOS = true;
@@ -45,10 +53,13 @@ MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
 
 MBC1::~MBC1()
 {
-	Logger::getInstance()->msg(LoggerSeverity::Info, "Saving game memory..");
-	std::ofstream ramWriteHandle(m_saveName, std::ios::out | std::ios::binary);
-	ramWriteHandle.write((const char*)m_RAMBanks[0].data(), m_RAMBanks[0].size());
-	ramWriteHandle.close();
+	if (m_shouldSave)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Saving game memory..");
+		std::ofstream ramWriteHandle(m_saveName, std::ios::out | std::ios::binary);
+		ramWriteHandle.write((const char*)m_RAMBanks[0].data(), m_RAMBanks[0].size());
+		ramWriteHandle.close();
+	}
 }
 
 uint8_t MBC1::read(uint16_t address)

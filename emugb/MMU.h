@@ -8,6 +8,12 @@
 #include"Logger.h"
 #include"Config.h"
 
+//cartridge header constants
+static uint16_t CART_TITLE = 0x0134;
+static uint16_t CART_TYPE = 0x0147;
+static uint16_t CART_ROMSIZE = 0x148;
+static uint16_t CART_RAMSIZE = 0x149;
+
 class MMU
 {
 public:
@@ -39,6 +45,7 @@ private:
 	uint8_t m_bankNumber = 0, m_higherBankBits = 0;
 	uint8_t m_ramBankNumber = 0;
 	bool m_RAMBanking = false;
+	bool m_shouldSave = false;
 	std::string m_saveName;
 	std::array<uint8_t,65536> m_memory;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
