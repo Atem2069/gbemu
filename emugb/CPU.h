@@ -29,6 +29,15 @@ public:
 
 	unsigned long getCycleCount();
 
+private:
+
+	uint8_t m_fetch();
+
+	void m_initIO();
+
+	void m_executeInstruction();		//standard opcodes
+	void m_executePrefixedInstruction(); //opcodes prefixed with 0xCB
+
 	bool m_getZeroFlag();
 	void m_setZeroFlag(bool value);
 
@@ -40,13 +49,6 @@ public:
 
 	bool m_getSubtractFlag();
 	void m_setSubtractFlag(bool value);
-
-private:
-
-	uint8_t m_fetch();
-
-	void m_executeInstruction();		//standard opcodes
-	void m_executePrefixedInstruction(); //opcodes prefixed with 0xCB
 
 	std::string m_lastInstruction = "";
 

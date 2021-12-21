@@ -4,10 +4,7 @@ CPU::CPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interrupt
 {
 	m_mmu = mmu;
 	m_interruptManager = interruptManager;
-	AF = {}; BC = {}; DE = {}; HL = {}, SP = {};
-	//SP.reg = 0xFFFE;
-	PC = 0x0;
-	//m_mmu->write(0xFF50, 1);
+	m_initIO();	//init CPU and I/O registers to correct values
 }
 
 CPU::~CPU()
@@ -580,6 +577,33 @@ void CPU::m_executePrefixedInstruction()
 	case 0xFE: _SET(7, HL); break;
 	case 0xFF: _SET(7, AF.high); break;
 	}
+}
+
+void CPU::m_initIO()
+{
+	//https://gbdev.io/pandocs/Power_Up_Sequence.html (Hardware registers)
+	AF.reg = 0x0100;
+	BC.reg = 0xFF13;
+	DE.reg = 0x00C1;
+	HL.reg = 0x8403;
+	SP.reg = 0xFFFE;
+	PC = 0;
+
+	m_mmu->write(REG_JOYPAD, 0xCF);
+	m_mmu->write(REG_DIV, 0xAB);
+	m_mmu->write(REG_TIMA, 0x00);
+	m_mmu->write(REG_TMA, 0x00);
+	m_mmu->write(REG_TAC, 0xF8);
+	m_mmu->write(REG_IFLAGS, 0xE1);
+	m_mmu->write(REG_STAT, 0x85);
+	m_mmu->write(REG_SCX, 0x00);
+	m_mmu->write(REG_SCY, 0x00);
+	m_mmu->write(REG_LY, 0x00);
+	m_mmu->write(REG_LYC, 0x00);
+	m_mmu->write(REG_DMA, 0xFF);
+	m_mmu->write(REG_WX, 0x07);
+	m_mmu->write(REG_WY, 0x00);
+	m_mmu->write(REG_IE, 0x00);
 }
 
 unsigned long CPU::getCycleCount() { return m_cycleCount; }

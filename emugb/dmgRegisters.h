@@ -16,6 +16,7 @@ const uint16_t REG_WY = 0xFF4A;		//Window y origin
 const uint16_t REG_WX = 0xFF4B;		//Window x origin
 const uint16_t REG_LY = 0xFF44;		//Holds current scanline being rendered (critical for game boy bootrom to do anything)
 const uint16_t REG_LYC = 0xFF45;	//Holds value that LY is compared against
+const uint16_t REG_DMA = 0xFF46;
 
 //cartridge header constants
 static uint16_t CART_TITLE = 0x0134;
