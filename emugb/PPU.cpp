@@ -200,7 +200,9 @@ void PPU::m_renderSprites(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("sprites"))
 		return;
-	int spriteCount = 0;
+
+	int m_posAtPixel[160] = {};				//store the x-origin of each sprite at each pixel coord we check
+	std::fill(m_posAtPixel, m_posAtPixel + 160, 255);	//set to impossible value initially
 
 	int renderedSpriteCount = 0, i = 0;
 	while (i < 40 && renderedSpriteCount < 10)
@@ -243,10 +245,14 @@ void PPU::m_renderSprites(uint8_t line)
 		{
 			if (x + k < 0)
 				continue;
+			int column = std::min(x + k, 159);
+			if (m_posAtPixel[column] <= x)		//if a sprite is already drawn, and has a lower than or equal x-origin than current sprite, then the current sprite isn't drawn there.
+				continue;
+			m_posAtPixel[column] = x;			//otherwise update with new x-origin
 			uint8_t paletteData = m_mmu->read(0xFF48);
 			if (paletteIdx==1)
 				paletteData = m_mmu->read(0xFF49);
-			int pixelIdx = (line * 160) + x + k;
+			int pixelIdx = (line * 160) + column;
 			if (spritePriority && m_backBuffer[pixelIdx] != 0)
 				continue;
 			uint8_t byteShift = (7 - (k % 8));
