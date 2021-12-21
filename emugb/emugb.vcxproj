@@ -185,6 +185,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Display.h" />
+    <ClInclude Include="dmgRegisters.h" />
     <ClInclude Include="Gameboy.h" />
     <ClInclude Include="guiRenderer.h" />
     <ClInclude Include="Input.h" />

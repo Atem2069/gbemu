@@ -2,6 +2,7 @@
 
 #include"Logger.h"
 #include"MMU.h"
+#include"dmgRegisters.h"
 
 enum class InterruptType
 {
@@ -12,8 +13,6 @@ enum class InterruptType
 	Joypad=0x60
 };
 
-const uint16_t REG_IE = 0xFFFF;
-const uint16_t REG_IFLAGS = 0xFF0F;
 
 class InterruptManager
 {

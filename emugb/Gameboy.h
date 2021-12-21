@@ -14,7 +14,7 @@
 #include"Timer.h"
 #include"BIOS/biosdump.h"
 #include"Config.h"
-
+#include"dmgRegisters.h"
 
 class GameBoy
 {
