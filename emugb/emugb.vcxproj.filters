@@ -182,5 +182,8 @@
     <ClInclude Include="Logger.h">
       <Filter>Header Files\Config/Logging</Filter>
     </ClInclude>
+    <ClInclude Include="dmgRegisters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

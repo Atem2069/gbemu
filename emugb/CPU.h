@@ -7,6 +7,7 @@
 #include"MMU.h"
 #include"InterruptManager.h"
 #include"Config.h"
+#include"dmgRegisters.h"
 
 union Register
 {

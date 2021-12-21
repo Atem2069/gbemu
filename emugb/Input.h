@@ -4,6 +4,7 @@
 #include"Logger.h"
 #include"MMU.h"
 #include"InterruptManager.h"
+#include"dmgRegisters.h"
 
 struct InputState
 {
@@ -17,8 +18,6 @@ struct InputState
 	bool select;
 };
 
-
-const uint16_t REG_JOYPAD = 0xFF00;
 
 class InputManager
 {
