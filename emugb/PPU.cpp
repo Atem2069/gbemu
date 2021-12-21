@@ -248,7 +248,6 @@ void PPU::m_renderSprites(uint8_t line)
 			int column = std::min(x + k, 159);
 			if (m_posAtPixel[column] <= x)		//if a sprite is already drawn, and has a lower than or equal x-origin than current sprite, then the current sprite isn't drawn there.
 				continue;
-			m_posAtPixel[column] = x;			//otherwise update with new x-origin
 			uint8_t paletteData = m_mmu->read(0xFF48);
 			if (paletteIdx==1)
 				paletteData = m_mmu->read(0xFF49);
@@ -265,6 +264,7 @@ void PPU::m_renderSprites(uint8_t line)
 				continue;
 			unsigned int col = m_getColourFromPaletteIdx(colIdx, paletteData);
 			m_backBuffer[pixelIdx] = col;
+			m_posAtPixel[column] = x;			//if sprite pixel is not blank, update pos data (otherwise transparency breaks in sprite-sprite interactions)
 		}
 
 		renderedSpriteCount++;
