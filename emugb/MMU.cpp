@@ -55,6 +55,9 @@ void MMU::write(uint16_t address, uint8_t value)
 	}
 
 	m_memory[address] = value;
+
+	MMUState curState = { m_isInBIOS,0,0 };
+	Config::getInstance()->setValue<MMUState>("MMUState", curState);
 }
 
 void MMU::m_DMATransfer(uint8_t base)

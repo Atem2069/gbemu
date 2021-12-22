@@ -35,3 +35,10 @@ struct IOState
 	uint8_t WY;
 	uint8_t IE;
 };
+
+struct MMUState
+{
+	bool inBIOS;
+	int romBankNumber;
+	int ramBankNumber;
+};

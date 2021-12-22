@@ -86,6 +86,9 @@ void MBC5::write(uint16_t address, uint8_t value)
 	}
 
 	m_memory[address] = value;
+
+	MMUState curState = { m_isInBIOS,m_bankNumber,m_ramBankNumber };
+	Config::getInstance()->setValue<MMUState>("MMUState", curState);
 }
 
 void MBC5::m_DMATransfer(uint8_t base)

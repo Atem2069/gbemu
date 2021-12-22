@@ -28,7 +28,7 @@ void GuiRenderer::render()
 		if (ImGui::BeginMenu("Debug"))
 		{
 			ImGui::MenuItem("CPU State",nullptr,&m_showCPUDialog);
-			ImGui::MenuItem("IO Register Viewer", nullptr, &m_showIODialog);
+			ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
 			ImGui::MenuItem("Pause emulation",nullptr,nullptr);
 			bool reset = false;
 			ImGui::MenuItem("Reset", nullptr, &reset);
@@ -76,11 +76,22 @@ void GuiRenderer::render()
 
 	if (m_showIODialog)
 	{
-		ImGui::Begin("IO Registers", &m_showIODialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+		ImGui::Begin("IO Registers", &m_showIODialog, ImGuiWindowFlags_NoCollapse);
+		ImGui::Text("Memory Mapped IO/MMU registers");
+		ImGui::Separator();
+		ImGui::Columns(2);
+		ImGui::BeginChild(1,ImVec2(00,00));
 		IOState curState = Config::getInstance()->getValue<IOState>("IOState");
 		std::string ioDebug = std::format("{:#x} JOYPAD: {:#x}\n{:#x} DIV: {:#x}\n{:#x} TIMA: {:#x}\n{:#x} TMA: {:#x}\n{:#x} TAC: {:#x}\n{:#x} IF: {:#x}\n{:#x} STAT: {:#x}\n{:#x} SCX: {:#x}\n", REG_JOYPAD, curState.JOYPAD, REG_DIV, curState.DIV, REG_TIMA, curState.TIMA, REG_TMA, curState.TMA, REG_TAC, curState.TAC, REG_IFLAGS, curState.IFLAGS, REG_STAT, curState.STAT, REG_SCX, curState.SCX);
 		ioDebug += std::format("{:#x} SCY: {:#x}\n{:#x} LY: {:#x}\n{:#x} LYC: {:#x}\n{:#x} DMA: {:#x}\n{:#x} WX: {:#x}\n{:#x} WY: {:#x}\n{:#x} IE: {:#x}", REG_SCY, curState.SCY, REG_LY, curState.LY, REG_LYC, curState.LYC, REG_DMA, curState.DMA, REG_WX, curState.WX, REG_WY, curState.WY, REG_IE, curState.IE);
 		ImGui::Text(ioDebug.c_str());
+		ImGui::EndChild();
+		ImGui::NextColumn();
+		ImGui::BeginChild(2, ImVec2(00,00));
+		MMUState mmuState = Config::getInstance()->getValue<MMUState>("MMUState");
+		std::string mmuDebug = std::format("In BIOS? {}\nROM Bank Number: {:#x}\nRAM Bank Number: {:#x}", mmuState.inBIOS, mmuState.romBankNumber, mmuState.ramBankNumber);
+		ImGui::Text(mmuDebug.c_str());
+		ImGui::EndChild();
 		ImGui::End();
 	}
 

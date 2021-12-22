@@ -8,6 +8,7 @@
 #include"Logger.h"
 #include"Config.h"
 #include"dmgRegisters.h"
+#include"debugStates.h"
 class MMU
 {
 public:
