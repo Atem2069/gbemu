@@ -185,5 +185,8 @@
     <ClInclude Include="dmgRegisters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="debugStates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

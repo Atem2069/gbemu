@@ -41,5 +41,7 @@ private:
 	bool m_shouldRun = true;
 	bool m_initialized = false;
 
+	double m_timeMissedLastFrame = 0;
+
 	void displayWorker();
 };

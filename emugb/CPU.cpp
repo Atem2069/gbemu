@@ -14,7 +14,7 @@ CPU::~CPU()
 
 void CPU::step()
 {
-	int lastPC = (int)PC;
+	m_lastPC = PC;
 	if (!m_halted)
 		m_executeInstruction();
 	else
@@ -32,14 +32,7 @@ void CPU::step()
 		m_halted = false;
 	}
 
-	//output debug info
-	Config::getInstance()->setValue<int>("PC", lastPC);
-	Config::getInstance()->setValue<int>("AF", AF.reg);
-	Config::getInstance()->setValue<int>("BC", BC.reg);
-	Config::getInstance()->setValue<int>("DE", DE.reg);
-	Config::getInstance()->setValue<int>("HL", HL.reg);
-	Config::getInstance()->setValue<int>("SP", SP.reg);
-	Config::getInstance()->setValue<bool>("IE", m_interruptManager->getInterruptsEnabled());
+	m_setDebugInfo();	//set debug info in hashmap so it can be read externally
 }
 
 void CPU::m_executeInstruction()
@@ -604,6 +597,31 @@ void CPU::m_initIO()
 	m_mmu->write(REG_WX, 0x07);
 	m_mmu->write(REG_WY, 0x00);
 	m_mmu->write(REG_IE, 0x00);
+}
+
+void CPU::m_setDebugInfo()
+{
+	CPUState curCPUState = {};
+	curCPUState = { AF.reg,BC.reg,DE.reg,HL.reg,SP.reg,PC,m_interruptManager->getInterruptsEnabled(), m_getHalfCarryFlag(),m_getCarryFlag(),m_getZeroFlag(),m_getSubtractFlag() };
+	Config::getInstance()->setValue<CPUState>("CPUState",curCPUState);
+
+	IOState curIOState;
+	curIOState.JOYPAD = m_mmu->read(REG_JOYPAD);
+	curIOState.DIV = m_mmu->read(REG_DIV);
+	curIOState.TIMA = m_mmu->read(REG_TIMA);
+	curIOState.TMA = m_mmu->read(REG_TMA);
+	curIOState.TAC = m_mmu->read(REG_TAC);
+	curIOState.IFLAGS = m_mmu->read(REG_IFLAGS);
+	curIOState.STAT = m_mmu->read(REG_STAT);
+	curIOState.SCX = m_mmu->read(REG_SCX);
+	curIOState.SCY = m_mmu->read(REG_SCY);
+	curIOState.LY = m_mmu->read(REG_LY);
+	curIOState.LYC = m_mmu->read(REG_LYC);
+	curIOState.DMA = m_mmu->read(REG_DMA);
+	curIOState.WX = m_mmu->read(REG_WX);
+	curIOState.WY = m_mmu->read(REG_WY);
+	curIOState.IE = m_mmu->read(REG_IE);
+	Config::getInstance()->setValue<IOState>("IOState", curIOState);
 }
 
 unsigned long CPU::getCycleCount() { return m_cycleCount; }

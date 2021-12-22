@@ -8,6 +8,7 @@
 #include"InterruptManager.h"
 #include"Config.h"
 #include"dmgRegisters.h"
+#include"debugStates.h"
 
 union Register
 {
@@ -34,6 +35,7 @@ private:
 	uint8_t m_fetch();
 
 	void m_initIO();
+	void m_setDebugInfo();
 
 	void m_executeInstruction();		//standard opcodes
 	void m_executePrefixedInstruction(); //opcodes prefixed with 0xCB
@@ -58,6 +60,7 @@ private:
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.
+	uint16_t m_lastPC = 0;
 	bool m_halted = false;
 
 	void m_pushToStack(uint16_t val);	//helper functions for pushing/popping items to/from stack

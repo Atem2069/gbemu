@@ -8,6 +8,8 @@
 #include<imgui_impl_opengl3.h>
 
 #include"Config.h"
+#include"dmgRegisters.h"
+#include"debugStates.h"
 
 class GuiRenderer
 {
@@ -20,4 +22,5 @@ private:
 	static bool m_showCPUDialog;
 	static bool m_openFileDialog;
 	static bool m_showPPUDialog;
+	static bool m_showIODialog;
 };

@@ -184,6 +184,7 @@
     <ClInclude Include="Common\vec3.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPU.h" />
+    <ClInclude Include="debugStates.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="dmgRegisters.h" />
     <ClInclude Include="Gameboy.h" />

@@ -54,12 +54,20 @@ void GameBoy::run()
 		LARGE_INTEGER stop;
 		QueryPerformanceCounter(&stop);
 
-		double timeDiff = ((double)(stop.QuadPart - start.QuadPart) * 1000.0) / (double)freq.QuadPart;
+		double timeDiff = (((double)(stop.QuadPart - start.QuadPart) * 1000.0) + m_timeMissedLastFrame) / (double)freq.QuadPart;
+
+		bool m_resetCatchup = false;
+		if (timeDiff > timePeriod)
+			m_timeMissedLastFrame = timeDiff - timePeriod;
+		else
+			m_resetCatchup = true;
 		while (timeDiff < timePeriod)
 		{
 			QueryPerformanceCounter(&stop);
-			timeDiff = ((double)(stop.QuadPart - start.QuadPart) * 1000.0) / (double)freq.QuadPart;
+			timeDiff = (((double)(stop.QuadPart - start.QuadPart) * 1000.0) + m_timeMissedLastFrame) / (double)freq.QuadPart;
 		}
+		if (m_resetCatchup)
+			m_timeMissedLastFrame = 0;
 
 	}
 	m_dispWorkerThread.join();
