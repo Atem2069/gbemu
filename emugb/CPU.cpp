@@ -1447,6 +1447,7 @@ void CPU::_stop()
 		m_isInDoubleSpeedMode = !m_isInDoubleSpeedMode;
 		speedSwitchState ^= 0b10000001;	//flip current mode bit, and clear switch bit
 		Logger::getInstance()->msg(LoggerSeverity::Info, "CPU speed switched");
+		m_mmu->write(REG_KEY1, speedSwitchState);
 	}
 	else
 		Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");

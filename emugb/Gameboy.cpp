@@ -55,6 +55,8 @@ void GameBoy::run()
 		//auto curTime = std::chrono::high_resolution_clock::now();
 		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;
 		double timePeriod = 0.000952 * (double)cycleCountDiff;	//cpu clocks are measured in machine cycles (1.05MHz). 1 m-cycle is 0.000952 milliseconds
+		if (m_cpu->getInDoubleSpeedMode())
+			timePeriod = 0.000476 * (double)cycleCountDiff;
 
 		LARGE_INTEGER stop;
 		QueryPerformanceCounter(&stop);
