@@ -30,6 +30,8 @@ public:
 
 	unsigned long getCycleCount();
 
+	bool getInDoubleSpeedMode();
+
 private:
 
 	uint8_t m_fetch();
@@ -62,6 +64,7 @@ private:
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.
 	uint16_t m_lastPC = 0;
 	bool m_halted = false;
+	bool m_isInDoubleSpeedMode = false;
 
 	void m_pushToStack(uint16_t val);	//helper functions for pushing/popping items to/from stack
 	uint16_t m_popFromStack();

@@ -41,9 +41,14 @@ void GameBoy::run()
 
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		unsigned long lastCycleCount = m_cpu->getCycleCount();
+
+		unsigned long ppuSteps = m_cpu->getCycleCount();
+		if (m_cpu->getInDoubleSpeedMode())	//ppu runs at same speed in doublespeed mode
+			ppuSteps /= 2;
+
 		//step CPU
 		m_cpu->step();
-		m_ppu->step(m_cpu->getCycleCount());
+		m_ppu->step(ppuSteps);
 		m_inputManager->tick(m_inputState);
 		m_timer->tick(m_cpu->getCycleCount());
 

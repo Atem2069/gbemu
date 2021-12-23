@@ -597,6 +597,7 @@ void CPU::m_initIO()
 	m_mmu->write(REG_WX, 0x07);
 	m_mmu->write(REG_WY, 0x00);
 	m_mmu->write(REG_IE, 0x00);
+	m_mmu->write(REG_KEY1, 0x00);
 }
 
 void CPU::m_setDebugInfo()
@@ -625,6 +626,7 @@ void CPU::m_setDebugInfo()
 }
 
 unsigned long CPU::getCycleCount() { return m_cycleCount; }
+bool CPU::getInDoubleSpeedMode() {return m_isInDoubleSpeedMode;}
 
 bool CPU::m_getZeroFlag() { return (AF.low & 0b10000000) >> 7; }
 void CPU::m_setZeroFlag(bool value)
@@ -1439,7 +1441,15 @@ void CPU::_stop()
 {
 	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
 	//_halt();
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
+	uint8_t speedSwitchState = m_mmu->read(REG_KEY1);
+	if (speedSwitchState & 0b1)
+	{
+		m_isInDoubleSpeedMode = !m_isInDoubleSpeedMode;
+		speedSwitchState ^= 0b10000001;	//flip current mode bit, and clear switch bit
+		Logger::getInstance()->msg(LoggerSeverity::Info, "CPU speed switched");
+	}
+	else
+		Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
 }
 
 void CPU::_halt()
