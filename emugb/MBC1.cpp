@@ -78,6 +78,8 @@ uint8_t MBC1::read(uint16_t address)
 
 	if (address >= 0xa000 && address <= 0xbfff)
 	{
+		if (!m_SRAMEnabled)
+			return 0xFF;
 		int offset = ((int)address - 0xa000);
 		return m_RAMBanks[m_ramBankNumber][offset];
 	}
@@ -92,22 +94,32 @@ void MBC1::write(uint16_t address, uint8_t value)
 
 	if (address >= 0x0000 && address <= 0x1fff)
 	{
-		//Logger::getInstance()->msg(LoggerSeverity::Error, "Attempt to enable RAM in MBC. Unsupported");
+		if ((value & 0x0f) == 0x0A)
+			m_SRAMEnabled = true;
+		else
+			m_SRAMEnabled = false;
 		return;
 	}
 
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
 		if (!m_RAMBanking)
-			m_higherBankBits = value;
+			m_higherBankBits = (value & 0b00000011);
 		else
-			m_ramBankNumber = value;
+			m_ramBankNumber = (value & 0b00000011);
 		return;
 	}
 
 	if (address >= 0x6000 && address <= 0x7fff)
 	{
-		m_RAMBanking = value;
+		if ((value & 0b1) == 0)
+		{
+			m_RAMBanking = false;
+			m_ramBankNumber = 0;
+		}
+		if ((value & 0b1) == 1)
+			m_RAMBanking = true;
+
 		return;
 	}
 
