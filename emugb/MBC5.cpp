@@ -79,6 +79,17 @@ void MBC5::write(uint16_t address, uint8_t value)
 	if (address == 0xFF46)
 		m_DMATransfer(value);
 
+	if (address == REG_HDMA5)
+	{
+		m_memory[REG_HDMA5] = value;
+
+		uint8_t mode = (value & 0b10000000) >> 7;
+		if (mode == 0)
+			m_GDMATransfer();
+		return;
+
+	}
+
 	if (address == 0xFF50)
 	{
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Exiting BIOS..");
@@ -97,5 +108,23 @@ void MBC5::m_DMATransfer(uint8_t base)
 	for (unsigned int i = 0; i < 0xA0; i++)
 	{
 		write(0xFE00 + i, read(newAddr + i));
+	}
+}
+
+void MBC5::m_GDMATransfer()
+{
+	uint8_t m_srcHigh = read(REG_HDMA1);
+	uint8_t m_srcLow = read(REG_HDMA2) & 0xF0;
+	uint16_t m_src = (m_srcHigh << 8) | m_srcLow;
+
+	uint8_t m_dstHigh = read(REG_HDMA3) & 0x0F;
+	uint8_t m_dstLow = read(REG_HDMA4) & 0xF0;
+	uint16_t m_dest = (m_dstHigh << 8) | m_dstLow;
+
+	uint8_t dmaLength = ((read(REG_HDMA5) & 0b01111111) + 1) * 0x10;
+
+	for (int i = 0; i < dmaLength; i++)
+	{
+		write(m_dest + i, read(m_src + i));
 	}
 }

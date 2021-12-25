@@ -8,6 +8,7 @@
 #include"Logger.h"
 #include"Config.h"
 #include"dmgRegisters.h"
+#include"cgbRegisters.h"
 #include"debugStates.h"
 class MMU
 {
@@ -90,4 +91,5 @@ private:
 	std::array<uint8_t, 256> m_BIOS;
 	bool m_isInBIOS = true;		
 	void m_DMATransfer(uint8_t base);
+	void m_GDMATransfer();
 };
