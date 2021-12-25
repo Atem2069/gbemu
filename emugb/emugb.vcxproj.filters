@@ -188,5 +188,8 @@
     <ClInclude Include="debugStates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cgbRegisters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
