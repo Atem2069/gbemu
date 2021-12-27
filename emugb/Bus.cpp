@@ -61,7 +61,13 @@ uint8_t Bus::read(uint16_t address)
 	if (address >= 0xFE00 && address <= 0xFE9F)
 		return m_OAM[address - 0xFE00];
 	if (address >= 0xFF00 && address <= 0xFF7F)
+	{
+		if (address == REG_BGPD)
+			return m_paletteMemory[m_paletteIndex];
+		if (address == REG_OBPD)
+			return m_objPaletteMemory[m_objPaletteIndex];
 		return m_IORegisters[address - 0xFF00];
+	}
 	if (address >= 0xFF80 && address <= 0xFFFF)
 		return m_HRAM[address - 0xFF80];
 
@@ -113,6 +119,40 @@ void Bus::write(uint16_t address, uint8_t value)
 				m_HDMARequested = true;
 			else
 				m_GDMATransfer(value & 0b01111111);
+		}
+
+		if (address == REG_BGPI)
+		{
+			if ((value >> 7) & 0b1)
+				m_incrementPaletteIndex = true;
+			else
+				m_incrementPaletteIndex = false;
+
+			m_paletteIndex = value & 0b00111111;
+		}
+
+		if (address == REG_BGPD)
+		{
+			m_paletteMemory[m_paletteIndex] = value;
+			if (m_incrementPaletteIndex)
+				m_paletteIndex += 1;
+		}
+
+		if (address == REG_OBPI)
+		{
+			if ((value >> 7) & 0b1)
+				m_incrementObjPaletteIndex = true;
+			else
+				m_incrementObjPaletteIndex = false;
+
+			m_objPaletteIndex = value & 0b00111111;
+		}
+
+		if (address == REG_OBPD)
+		{
+			m_objPaletteMemory[m_objPaletteIndex] = value;
+			if (m_incrementObjPaletteIndex)
+				m_objPaletteIndex += 1;
 		}
 
 		m_IORegisters[address - 0xFF00] = value;

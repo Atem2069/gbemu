@@ -41,6 +41,13 @@ private:
 	std::array<uint8_t, 160> m_OAM;
 	std::array<uint8_t, 128> m_IORegisters;
 	std::array<uint8_t, 128> m_HRAM;
+	std::array<uint8_t, 64> m_paletteMemory;
+	uint8_t m_paletteIndex = 0;
+	bool m_incrementPaletteIndex = false;
+
+	std::array<uint8_t, 64> m_objPaletteMemory;
+	uint8_t m_objPaletteIndex = 0;
+	bool m_incrementObjPaletteIndex = false;
 
 	uint8_t m_WRAMBank = 1;	//default bank values
 	uint8_t m_VRAMBank = 0;

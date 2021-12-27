@@ -171,7 +171,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 	{
 		uint8_t m_tileMapXCoord = (column + (scrollX)) % 256;
 		uint16_t m_curBackgroundAddress = m_backgroundBase + (m_tileMapXCoord / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
-		uint8_t m_tileIndex = m_bus->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
+		uint8_t m_tileIndex = m_bus->readVRAM(0,m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
@@ -180,8 +180,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
 		tileMemLocation += ((line + scrollY) % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
 
-		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
-		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
+		uint8_t tileData1 = m_bus->readVRAM(0,tileMemLocation);		//extract two bytes that make up the tile
+		uint8_t tileData2 = m_bus->readVRAM(0,tileMemLocation + 1);
 		m_backgroundFIFO[column] = m_plotPixel(column, line, scrollX, tileData1, tileData2);
 	}
 
@@ -215,7 +215,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	for (uint16_t column = 0; (column+winX) < 160; column++)
 	{
 		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
-		uint8_t m_tileIndex = m_bus->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
+		uint8_t m_tileIndex = m_bus->readVRAM(0,m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
@@ -224,8 +224,8 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
 		tileMemLocation += (m_windowLineCount % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
 
-		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
-		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
+		uint8_t tileData1 = m_bus->readVRAM(0,tileMemLocation);		//extract two bytes that make up the tile
+		uint8_t tileData2 = m_bus->readVRAM(0,tileMemLocation + 1);
 		int pixelIdx = std::min((plotLine * 160) + (column+winX),23039);	//visual studio warns of false buffer overrun warning, idk why
 		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
@@ -280,8 +280,8 @@ void PPU::m_renderSprites(uint8_t line)
 		}
 
 		uint16_t addr = 0x8000 + (patternIdx * 16 + ((lineOffset % 8) * 2));
-		uint8_t byte1 = m_bus->read(addr);
-		uint8_t byte2 = m_bus->read(addr + 1);
+		uint8_t byte1 = m_bus->readVRAM(0,addr);
+		uint8_t byte2 = m_bus->readVRAM(0,addr + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{

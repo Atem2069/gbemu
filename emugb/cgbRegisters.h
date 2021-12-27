@@ -11,3 +11,7 @@ const uint16_t REG_VBK = 0xFF4F;	//vram bank (bit 0)
 const uint16_t REG_SVBK = 0xFF70;	//warm bank (bits 0-2)
 
 const uint16_t REG_OPRI = 0xFF6C;	//object priority 
+const uint16_t REG_BGPI = 0xFF68;
+const uint16_t REG_BGPD = 0xFF69;
+const uint16_t REG_OBPI = 0xFF6A;
+const uint16_t REG_OBPD = 0xFF6B;
