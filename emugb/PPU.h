@@ -1,6 +1,6 @@
 #pragma once
 
-#include"MMU.h"
+#include"Bus.h"
 #include"InterruptManager.h"
 #include"Logger.h"
 #include"Common/vec3.h"
@@ -10,7 +10,7 @@
 class PPU
 {
 public:
-	PPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
+	PPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager);
 	~PPU();
 
 	void step(unsigned long cycleCount);
@@ -20,7 +20,7 @@ private:
 	int m_displayMode = 0;
 	//MMU* m_mmu;
 	//InterruptManager* m_interruptManager;
-	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	unsigned long m_lastCycleCount = 0;
 

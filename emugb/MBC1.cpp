@@ -1,13 +1,7 @@
 #include"MMU.h"
 
-MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
+MBC1::MBC1(std::vector<uint8_t> ROM)
 {
-	m_BIOS = m_firmware;
-	std::copy(ROM.begin(), ROM.begin() + 32768, m_memory.begin());
-	for (int i = 32768; i < 65536; i++)
-	{
-		m_memory[i] = 0xFF;
-	}
 
 	for (int i = 0; i < ROM.size() - 16384; i += 16384)
 	{
@@ -17,7 +11,7 @@ MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
 	}
 
 
-	uint8_t cartType = m_memory[CART_TYPE];
+	uint8_t cartType = ROM[CART_TYPE];
 	if (cartType == 3)
 		m_shouldSave = true;
 
@@ -48,7 +42,6 @@ MBC1::MBC1(std::array<uint8_t,256> m_firmware, std::vector<uint8_t> ROM)
 		}
 	}
 
-	m_isInBIOS = true;
 }
 
 MBC1::~MBC1()

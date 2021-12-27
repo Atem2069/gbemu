@@ -1,8 +1,8 @@
 #include"PPU.h"
 
-PPU::PPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
+PPU::PPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager)
 {
-	m_mmu = mmu;
+	m_bus = bus;
 	m_interruptManager = interruptManager;
 
 }
@@ -16,14 +16,14 @@ void PPU::step(unsigned long cycleCount)
 {
 	if (!m_getDisplayEnabled())
 	{
-		m_mmu->write(REG_LY, 0);
-		m_mmu->write(REG_STAT, m_mmu->read(REG_STAT) & 0b11111100);
+		m_bus->write(REG_LY, 0);
+		m_bus->write(REG_STAT, m_bus->read(REG_STAT) & 0b11111100);
 		return;
 	}
 
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
-	uint8_t curLine = m_mmu->read(REG_LY);
-	uint8_t status = m_mmu->read(REG_STAT);
+	uint8_t curLine = m_bus->read(REG_LY);
+	uint8_t status = m_bus->read(REG_STAT);
 
 	//reading out flags which can trigger STAT interrupt
 	bool OAMSTAT = (status >> 5) & 0b1;
@@ -99,7 +99,7 @@ void PPU::step(unsigned long cycleCount)
 
 	if (LYCSTAT)
 	{
-		uint8_t LYC = m_mmu->read(REG_LYC);
+		uint8_t LYC = m_bus->read(REG_LYC);
 		if (curLine == LYC && curLine != lastLY)
 		{
 			status |= 0b00000100;	//set LYC coincidence flag
@@ -108,8 +108,8 @@ void PPU::step(unsigned long cycleCount)
 	}
 
 	lastLY = curLine;
-	m_mmu->write(REG_STAT, status);	//update ppu registers (status and cur line)
-	m_mmu->write(REG_LY, curLine);
+	m_bus->write(REG_STAT, status);	//update ppu registers (status and cur line)
+	m_bus->write(REG_LY, curLine);
 }
 
 void PPU::m_renderBackgroundScanline(uint8_t line)	
@@ -118,8 +118,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("background"))
 		return;
-	uint8_t scrollY = (m_mmu->read(REG_SCY));// % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
-	uint8_t scrollX = (m_mmu->read(REG_SCX));// % 256;
+	uint8_t scrollY = (m_bus->read(REG_SCY));// % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
+	uint8_t scrollX = (m_bus->read(REG_SCX));// % 256;
 	uint16_t m_backgroundBase = (m_getBackgroundTileMapDisplaySelect()) ? 0x9c00 : 0x9800;
 	//get tilemap base addr
 	m_backgroundBase += (((line + scrollY) % 256) / 8) * 32;	//Divide by 8 using floor division to get correct row number. Then multiply by 32 because there exist 32 tiles per row
@@ -128,7 +128,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 	{
 		uint8_t m_tileMapXCoord = (column + (scrollX)) % 256;
 		uint16_t m_curBackgroundAddress = m_backgroundBase + (m_tileMapXCoord / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
-		uint8_t m_tileIndex = m_mmu->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
+		uint8_t m_tileIndex = m_bus->read(m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
@@ -137,8 +137,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
 		tileMemLocation += ((line + scrollY) % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
 
-		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
-		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
+		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
+		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
 		m_plotPixel(column, line, scrollX, tileData1, tileData2);
 	}
 
@@ -150,8 +150,8 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("window"))
 		return;
-	int8_t winX = m_mmu->read(REG_WX)-7;	//winx register starts at 7
-	uint8_t winY = m_mmu->read(REG_WY);
+	int8_t winX = m_bus->read(REG_WX)-7;	//winx register starts at 7
+	uint8_t winY = m_bus->read(REG_WY);
 
 	if (line < winY)
 		return;
@@ -172,7 +172,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 	for (uint16_t column = 0; (column+winX) < 160; column++)
 	{
 		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
-		uint8_t m_tileIndex = m_mmu->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
+		uint8_t m_tileIndex = m_bus->read(m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
@@ -181,14 +181,14 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
 		tileMemLocation += (m_windowLineCount % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
 
-		uint8_t tileData1 = m_mmu->read(tileMemLocation);		//extract two bytes that make up the tile
-		uint8_t tileData2 = m_mmu->read(tileMemLocation + 1);
+		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
+		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
 		//m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
 		int pixelIdx = std::min((plotLine * 160) + (column+winX),23039);	//visual studio warns of false buffer overrun warning, idk why
 		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
 		uint8_t colIdx = (colHigher << 1) | colLower;
-		m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx, m_mmu->read(0xFF47));
+		m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
 	}
 	m_windowLineCount += 1;
 }
@@ -209,10 +209,10 @@ void PPU::m_renderSprites(uint8_t line)
 	{
 		uint16_t spriteAttribAddress = 0xFE00 + (i * 4);
 		i++;
-		auto y = m_mmu->read(spriteAttribAddress) - 16;
-		auto x = m_mmu->read(spriteAttribAddress + 1) - 8;
-		auto patternIdx = m_mmu->read(spriteAttribAddress + 2);
-		auto attributes = m_mmu->read(spriteAttribAddress + 3);
+		auto y = m_bus->read(spriteAttribAddress) - 16;
+		auto x = m_bus->read(spriteAttribAddress + 1) - 8;
+		auto patternIdx = m_bus->read(spriteAttribAddress + 2);
+		auto attributes = m_bus->read(spriteAttribAddress + 3);
 		auto spritePriority = (attributes & 0b10000000) >> 7;
 		auto yFlip = (attributes & 0b01000000) >> 6;
 		auto xFlip = (attributes & 0b00100000) >> 5;
@@ -238,8 +238,8 @@ void PPU::m_renderSprites(uint8_t line)
 		}
 
 		uint16_t addr = 0x8000 + (patternIdx * 16 + ((lineOffset % 8) * 2));
-		uint8_t byte1 = m_mmu->read(addr);
-		uint8_t byte2 = m_mmu->read(addr + 1);
+		uint8_t byte1 = m_bus->read(addr);
+		uint8_t byte2 = m_bus->read(addr + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
@@ -248,9 +248,9 @@ void PPU::m_renderSprites(uint8_t line)
 			int column = std::min(x + k, 159);
 			if (m_posAtPixel[column] <= x)		//if a sprite is already drawn, and has a lower than or equal x-origin than current sprite, then the current sprite isn't drawn there.
 				continue;
-			uint8_t paletteData = m_mmu->read(0xFF48);
+			uint8_t paletteData = m_bus->read(0xFF48);
 			if (paletteIdx==1)
-				paletteData = m_mmu->read(0xFF49);
+				paletteData = m_bus->read(0xFF49);
 			int pixelIdx = (line * 160) + column;
 			if (spritePriority && m_backBuffer[pixelIdx] != 0)
 				continue;
@@ -278,7 +278,7 @@ void PPU::m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLo
 	uint8_t colLower = (byteHigh >> (7 - (x%8))) & 0b1;
 	uint8_t colHigher = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;
-	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_mmu->read(0xFF47));
+	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_bus->read(0xFF47));
 }
 
 unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
@@ -295,40 +295,40 @@ unsigned int* PPU::getDisplay()
 
 bool PPU::m_getDisplayEnabled()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 7) & 0b00000001;
+	return ((m_bus->read(REG_LCDC)) >> 7) & 0b00000001;
 }
 
 bool PPU::m_getTileDataSelect()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 4) & 0b00000001;
+	return ((m_bus->read(REG_LCDC)) >> 4) & 0b00000001;
 }
 
 bool PPU::m_getBackgroundTileMapDisplaySelect()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 3) & 0b00000001;
+	return ((m_bus->read(REG_LCDC)) >> 3) & 0b00000001;
 }
 
 bool PPU::m_getWindowTileMapDisplaySelect()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 6) & 0b00000001;
+	return ((m_bus->read(REG_LCDC)) >> 6) & 0b00000001;
 }
 
 bool PPU::m_getBackgroundEnabled()
 {
-	return ((m_mmu->read(REG_LCDC))) & 0b1;
+	return ((m_bus->read(REG_LCDC))) & 0b1;
 }
 
 bool PPU::m_getWindowEnabled()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 5) & 0b1;
+	return ((m_bus->read(REG_LCDC)) >> 5) & 0b1;
 }
 
 bool PPU::m_getSpritesEnabled()
 {
-	return ((m_mmu->read(REG_LCDC)) >> 1) & 0b1;
+	return ((m_bus->read(REG_LCDC)) >> 1) & 0b1;
 }
 
 bool PPU::m_spriteIs8x8()
 {
-	return !(((m_mmu->read(REG_LCDC)) >> 2) & 0b1);
+	return !(((m_bus->read(REG_LCDC)) >> 2) & 0b1);
 }

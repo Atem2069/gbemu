@@ -92,5 +92,9 @@ void Bus::write(uint16_t address, uint8_t value)
 
 void Bus::m_DMATransfer(uint8_t base)
 {
-
+	uint16_t newAddr = ((unsigned int)base << 8);
+	for (unsigned int i = 0; i < 0xA0; i++)
+	{
+		write(0xFE00 + i, read(newAddr + i));
+	}
 }

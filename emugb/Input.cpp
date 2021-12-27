@@ -1,8 +1,8 @@
 #include"Input.h"
 
-InputManager::InputManager(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
+InputManager::InputManager(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager)
 {
-	m_mmu = mmu;
+	m_bus = bus;
 	m_interruptManager = interruptManager;
 }
 
@@ -13,7 +13,7 @@ InputManager::~InputManager()
 
 void InputManager::tick(InputState curInputState)
 {
-	uint8_t joypad = m_mmu->read(REG_JOYPAD) & 0b11110000;
+	uint8_t joypad = m_bus->read(REG_JOYPAD) & 0b11110000;
 	bool dirKeys = (joypad >> 5) & 0b1;
 	if (!dirKeys)
 	{
@@ -35,8 +35,8 @@ void InputManager::tick(InputState curInputState)
 	}
 	//joypad = ~joypad;	//flip bits (high=off, low=on for some reason)
 	joypad ^= 0b00001111;
-	//if (joypad != m_mmu->read(REG_JOYPAD))
+	//if (joypad != m_bus->read(REG_JOYPAD))
 	//	m_interruptManager->requestInterrupt(InterruptType::Joypad);
 
-	m_mmu->write(REG_JOYPAD, joypad);
+	m_bus->write(REG_JOYPAD, joypad);
 }
