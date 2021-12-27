@@ -33,9 +33,12 @@ private:
 
 	std::array<uint8_t, 256> m_bootRom;
 
-	std::array<uint8_t, 8192> m_workRAM;
-	std::array<uint8_t, 8192> m_VRAM;
+	std::array<std::array<uint8_t, 4096>, 8> m_workRAM;
+	std::array<std::array<uint8_t, 8192>,2> m_VRAM;
 	std::array<uint8_t, 160> m_OAM;
 	std::array<uint8_t, 128> m_IORegisters;
 	std::array<uint8_t, 128> m_HRAM;
+
+	uint8_t m_WRAMBank = 1;	//default bank values
+	uint8_t m_VRAMBank = 0;
 };

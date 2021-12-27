@@ -16,9 +16,15 @@ Bus::Bus(std::array<uint8_t, 256> bootRom, std::vector<uint8_t> ROM)
 		m_mbc = std::make_shared<MBC5>(ROM);
 
 	for (int i = 0; i < m_VRAM.size(); i++)
-		m_VRAM[i] = 0xFF;
+	{
+		for (int j = 0; j < m_VRAM[i].size(); j++)
+			m_VRAM[i][j] = 0xFF;
+	}
 	for (int i = 0; i < m_workRAM.size(); i++)
-		m_workRAM[i] = 0xFF;
+	{
+		for (int j = 0; j < m_workRAM[i].size(); j++)
+			m_workRAM[i][j] = 0xFF;
+	}
 	for (int i = 0; i < m_IORegisters.size(); i++)
 		m_IORegisters[i] = 0xFF;
 	for (int i = 0; i < m_HRAM.size(); i++)
@@ -40,12 +46,15 @@ uint8_t Bus::read(uint16_t address)
 	if (address <= 0x7FFF || (address >= 0xA000 && address <= 0xBFFF))
 		return m_mbc->read(address);
 	if (address >= 0x8000 && address <= 0x9FFF)
-		return m_VRAM[address - 0x8000];
+		return m_VRAM[m_VRAMBank][address - 0x8000];
 	if (address >= 0xC000 && address <= 0xFDFF)
 	{
 		if (address >= 0xE000)
 			address -= 0x2000;
-		return m_workRAM[address - 0xC000];
+		if (address <= 0xCFFF)
+			return m_workRAM[0][address - 0xC000];	//bank 0 is always fixed (c000-cfff)
+		else
+			return m_workRAM[m_WRAMBank][address - 0xD000];	//rest is bank switched (1-7)
 	}
 	if (address >= 0xFE00 && address <= 0xFE9F)
 		return m_OAM[address - 0xFE00];
@@ -63,12 +72,15 @@ void Bus::write(uint16_t address, uint8_t value)
 	if (address <= 0x7FFF || (address >= 0xA000 && address <= 0xBFFF))
 		m_mbc->write(address,value);
 	if (address >= 0x8000 && address <= 0x9FFF)
-		m_VRAM[address - 0x8000] = value;
+		m_VRAM[m_VRAMBank][address - 0x8000] = value;
 	if (address >= 0xC000 && address <= 0xFDFF)
 	{
 		if (address >= 0xE000)
 			address -= 0x2000;
-		m_workRAM[address - 0xC000] = value;
+		if (address <= 0xCFFF)
+			m_workRAM[0][address - 0xC000] = value;
+		else
+			m_workRAM[m_WRAMBank][address - 0xD000] = value;
 	}
 	if (address >= 0xFE00 && address <= 0xFE9F)
 		m_OAM[address - 0xFE00] = value;
@@ -80,6 +92,11 @@ void Bus::write(uint16_t address, uint8_t value)
 			Logger::getInstance()->msg(LoggerSeverity::Info, "Unmapping boot ROM. .");
 			m_isInBootRom = false;
 		}
+
+		if (address == REG_SVBK)
+			m_WRAMBank = value & 0b00000111;	//set wram bank
+		if (address == REG_VBK)
+			m_VRAMBank = value & 0b1;			//set vram bank
 
 		if (address == 0xFF46)
 			m_DMATransfer(value);
