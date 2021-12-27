@@ -15,7 +15,7 @@ public:
 
 	void step(unsigned long cycleCount);
 
-	unsigned int* getDisplay();
+	vec3* getDisplay();
 private:
 	int m_displayMode = 0;
 	//MMU* m_mmu;
@@ -30,12 +30,13 @@ private:
 	bool m_HDMAInProgress = false;
 	uint8_t m_hdmaTransferBytes = 0;
 
-	unsigned int m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
-	unsigned int m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
+	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
+	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
 	unsigned int m_backgroundFIFO[160] = {};	//background/window fifo combined into one
 	unsigned int m_spriteFIFO[160] = {};
 	unsigned int m_spritePaletteIndices[160] = {};
+	unsigned int m_backgroundPaletteIndices[160] = {};
 
 	void m_renderBackgroundScanline(uint8_t line);
 	void m_renderWindowScanline(uint8_t line);

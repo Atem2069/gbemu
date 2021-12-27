@@ -169,7 +169,7 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
 	std::vector<uint8_t> m_bios;
-	m_bios.assign(BIOS::rawData, BIOS::rawData + 2304);	//256 byte BIOS.
+	m_bios.assign(BIOS::cgbDump, BIOS::cgbDump + 2304);	//256 byte BIOS.
 	//std::copy(std::begin(BIOS::cgbDump), std::end(BIOS::cgbDump), m_bios.begin());
 	uint8_t cartridgeType = cartData[CART_TYPE];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Type: " + std::to_string((int)cartridgeType));
