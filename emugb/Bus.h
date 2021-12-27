@@ -30,6 +30,8 @@ public:
 	bool getHDMA();
 	void acknowledgeHDMA();
 	void finishHDMA();
+
+	bool getInCompatibilityMode();
 private:
 	std::shared_ptr<MMU> m_mbc;
 	bool m_isInBootRom = true;
@@ -54,4 +56,6 @@ private:
 
 	uint8_t m_WRAMBank = 1;	//default bank values
 	uint8_t m_VRAMBank = 0;
+
+	bool m_isInCompatibilityMode = false;
 };

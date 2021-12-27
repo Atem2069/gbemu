@@ -1,6 +1,8 @@
 #pragma once
 #include<iostream>
 
+const uint16_t REG_KEY0 = 0xFF4C;	//cpu mode register
+
 const uint16_t REG_HDMA1 = 0xFF51;	//dma src (high)
 const uint16_t REG_HDMA2 = 0xFF52;	//dma src (low)
 const uint16_t REG_HDMA3 = 0xFF53;	//dma dest (high)

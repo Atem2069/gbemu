@@ -63,8 +63,11 @@ void PPU::step(unsigned long cycleCount)
 			m_renderWindowScanline(curLine);
 			m_renderSprites(curLine);
 
+			uint8_t priority = m_bus->read(REG_LCDC) & 0b1;
+
 			for (int i = 0; i < 160; i++)
 			{
+
 				unsigned int pixelIdx = (curLine * 160) + i;
 				unsigned int bgIndex = m_backgroundFIFO[i];
 				unsigned int spriteIndex = m_spriteFIFO[i];
@@ -81,9 +84,9 @@ void PPU::step(unsigned long cycleCount)
 
 				m_backBuffer[pixelIdx] = res;
 
-				if (spriteIndex != 0)
+				//if (spriteIndex != 0 && ( !priority || m_spriteAboveBackground[i] || (!m_spriteAboveBackground[i] && m_backgroundFIFO[i]==0)))
+				if((spriteIndex != 0 && m_spriteAboveBackground[i]) || (spriteIndex != 0 && !m_spriteAboveBackground[i] && bgIndex==0) || (!priority))
 				{
-					//m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(spriteIndex, m_bus->read(m_spritePaletteIndices[i]));
 					uint8_t spritePaletteIdx = m_spritePaletteIndices[i];
 					uint16_t col = m_bus->readObjColor(spritePaletteIdx, spriteIndex);
 					int red = (col & 0b0000000000011111);
@@ -96,6 +99,9 @@ void PPU::step(unsigned long cycleCount)
 
 				m_spriteFIFO[i] = 0;
 				m_backgroundFIFO[i] = 0;
+				m_spritePaletteIndices[i] = 0;
+				m_backgroundPaletteIndices[i] = 0;
+				m_spriteAboveBackground[i] = 0;
 			}
 
 			curLine++;
@@ -195,20 +201,44 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		uint16_t m_curBackgroundAddress = m_backgroundBase + (m_tileMapXCoord / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
 		uint8_t m_tileIndex = m_bus->readVRAM(0,m_curBackgroundAddress);	//now we have tile index which we can lookup in the tile data map
 
-		uint8_t m_tileAttributes = m_bus->readVRAM(1, m_curBackgroundAddress);
-		uint8_t tileBank = (m_tileAttributes & 0b00001000) >> 3;
-		uint8_t tilePalette = (m_tileAttributes & 0b00000111);
+		uint8_t tileBank = 0;
+		uint8_t tilePalette = 0;
+		bool yFlip = false;
+		bool xFlip = false;
+
+		if (!m_bus->getInCompatibilityMode())
+		{
+			uint8_t m_tileAttributes = m_bus->readVRAM(1, m_curBackgroundAddress);
+			tileBank = (m_tileAttributes & 0b00001000) >> 3;
+			tilePalette = (m_tileAttributes & 0b00000111);
+			yFlip = (m_tileAttributes & 0b01000000) >> 6;
+			xFlip = (m_tileAttributes & 0b00100000) >> 5;
+		}
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
 			m_tileIndex += 128;
 		tileMemLocation += (m_tileIndex * 16);
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
-		tileMemLocation += ((line + scrollY) % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
-
+		if (!yFlip)
+			tileMemLocation += ((line + scrollY) % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
+		else
+			tileMemLocation += (7 - ((line + scrollY) % 8)) * 2;
 		uint8_t tileData1 = m_bus->readVRAM(tileBank,tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_bus->readVRAM(tileBank,tileMemLocation + 1);
-		m_backgroundFIFO[column] = m_plotPixel(column, line, scrollX, tileData1, tileData2);
+		//m_backgroundFIFO[column] = m_plotPixel(column, line, scrollX, tileData1, tileData2);
+		uint8_t scr_column = column + (scrollX % 8);
+		uint8_t colLower = (tileData1 >> (7 - (scr_column % 8))) & 0b1;
+		uint8_t colHigher = (tileData2 >> (7 - (scr_column % 8))) & 0b1;
+
+		if (xFlip)
+		{
+			colLower = (tileData1 >> (scr_column % 8)) & 0b1;
+			colHigher = (tileData2 >> (scr_column % 8)) & 0b1;
+		}
+
+		uint8_t colIdx = (colHigher << 1) | colLower;
+		m_backgroundFIFO[column] = colIdx;
 		m_backgroundPaletteIndices[column] = tilePalette;
 	}
 
@@ -244,22 +274,43 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		uint16_t m_curTilemapAddress = m_windowBase + (column / 8); //divide x coord by 8 similarly, to put it into tile coords from pixel coords
 		uint8_t m_tileIndex = m_bus->readVRAM(0,m_curTilemapAddress);	//now we have tile index which we can lookup in the tile data map
 
-		uint8_t m_tileAttributes = m_bus->readVRAM(1, m_curTilemapAddress);
-		uint8_t tileBank = (m_tileAttributes & 0b00001000) >> 3;
-		uint8_t tilePalette = (m_tileAttributes & 0b00000111);
+
+		uint8_t tileBank = 0;
+		uint8_t tilePalette = 0;
+		bool xFlip = false;
+		bool yFlip = false;
+
+		if (!m_bus->getInCompatibilityMode())
+		{
+			uint8_t m_tileAttributes = m_bus->readVRAM(1, m_curTilemapAddress);
+			tileBank = (m_tileAttributes & 0b00001000) >> 3;
+			tilePalette = (m_tileAttributes & 0b00000111);
+			yFlip = (m_tileAttributes & 0b01000000) >> 6;
+			xFlip = (m_tileAttributes & 0b00100000) >> 5;
+		}
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
 		if (!m_getTileDataSelect())
 			m_tileIndex += 128;
 		tileMemLocation += (m_tileIndex * 16);
 		//tile is 16 bytes long. each 2 bytes specifies a specific row.
+		if(!yFlip)
 		tileMemLocation += (m_windowLineCount % 8) * 2;	//so we do modulus of scrolled y coord to find out the row, then multiply by two for alignment
+		else
+			tileMemLocation += (7 - (m_windowLineCount % 8)) * 2;
 
 		uint8_t tileData1 = m_bus->readVRAM(tileBank,tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_bus->readVRAM(tileBank,tileMemLocation + 1);
 		int pixelIdx = std::min((plotLine * 160) + (column+winX),23039);	//visual studio warns of false buffer overrun warning, idk why
 		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
+
+		if (xFlip)
+		{
+			colLower = (tileData1 >> (column % 8)) & 0b1;
+			colHigher = (tileData2 >> (column % 8)) & 0b1;
+		}
+
 		uint8_t colIdx = (colHigher << 1) | colLower;
 		m_backgroundFIFO[std::min(column + winX,159)] = colIdx;
 		m_backgroundPaletteIndices[std::min(column + winX, 259)] = tilePalette;
@@ -290,8 +341,14 @@ void PPU::m_renderSprites(uint8_t line)
 		auto spritePriority = (attributes & 0b10000000) >> 7;
 		auto yFlip = (attributes & 0b01000000) >> 6;
 		auto xFlip = (attributes & 0b00100000) >> 5;
-		//auto paletteIdx = (attributes & 0b00010000) >> 4;
 		auto paletteIdx = (attributes & 0b00000111);
+		auto tileBank = (attributes & 0b00001000) >> 3;
+
+		if (m_bus->getInCompatibilityMode())
+		{
+			//tileBank = 0;
+			paletteIdx = ((attributes & 0b00010000) >> 4) ;
+		}
 
 		uint8_t lowerBound = (m_spriteIs8x8() ? 8 : 16);
 
@@ -313,8 +370,8 @@ void PPU::m_renderSprites(uint8_t line)
 		}
 
 		uint16_t addr = 0x8000 + (patternIdx * 16 + ((lineOffset % 8) * 2));
-		uint8_t byte1 = m_bus->readVRAM(0,addr);
-		uint8_t byte2 = m_bus->readVRAM(0,addr + 1);
+		uint8_t byte1 = m_bus->readVRAM(tileBank,addr);
+		uint8_t byte2 = m_bus->readVRAM(tileBank,addr + 1);
 		//process bytes and draw to screen
 		for (int k = 0; k < 8; k++)
 		{
@@ -323,12 +380,7 @@ void PPU::m_renderSprites(uint8_t line)
 			int column = std::min(x + k, 159);
 			if (m_posAtPixel[column] <= x)		//if a sprite is already drawn, and has a lower than or equal x-origin than current sprite, then the current sprite isn't drawn there.
 				continue;
-			uint8_t paletteData = m_bus->read(0xFF48);
-			if (paletteIdx==1)
-				paletteData = m_bus->read(0xFF49);
 			int pixelIdx = (line * 160) + column;
-			if (spritePriority && m_backgroundFIFO[column] != 0)
-				continue;
 			uint8_t byteShift = (7 - (k % 8));
 			if (xFlip)
 				byteShift = (k % 8);
@@ -339,6 +391,7 @@ void PPU::m_renderSprites(uint8_t line)
 				continue;
 			m_spriteFIFO[column] = colIdx;
 			m_spritePaletteIndices[column] = paletteIdx;
+			m_spriteAboveBackground[column] = !spritePriority;
 			m_posAtPixel[column] = x;			//if sprite pixel is not blank, update pos data (otherwise transparency breaks in sprite-sprite interactions)
 		}
 
@@ -390,7 +443,8 @@ bool PPU::m_getWindowTileMapDisplaySelect()
 
 bool PPU::m_getBackgroundEnabled()
 {
-	return ((m_bus->read(REG_LCDC))) & 0b1;
+	return true;
+	//return ((m_bus->read(REG_LCDC))) & 0b1;
 }
 
 bool PPU::m_getWindowEnabled()

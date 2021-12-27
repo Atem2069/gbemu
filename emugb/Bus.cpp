@@ -155,6 +155,15 @@ void Bus::write(uint16_t address, uint8_t value)
 				m_objPaletteIndex += 1;
 		}
 
+		if (address == REG_KEY0)
+		{
+			if (value == 0x04)
+			{
+				Logger::getInstance()->msg(LoggerSeverity::Info, "Entering compatibility mode. CGB features are disabled.");
+				m_isInCompatibilityMode = true;
+			}
+		}
+
 		m_IORegisters[address - 0xFF00] = value;
 	}
 	if (address >= 0xFF80 && address <= 0xFFFF)
@@ -205,6 +214,11 @@ void Bus::acknowledgeHDMA()
 void Bus::finishHDMA()
 {
 	m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;	//DMA completed (bit 7 set)
+}
+
+bool Bus::getInCompatibilityMode()
+{
+	return m_isInCompatibilityMode;
 }
 
 void Bus::m_DMATransfer(uint8_t base)
