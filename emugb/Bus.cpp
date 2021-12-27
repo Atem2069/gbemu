@@ -1,6 +1,6 @@
 #include"Bus.h"
 
-Bus::Bus(std::array<uint8_t, 256> bootRom, std::vector<uint8_t> ROM)
+Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM)
 {
 
 	m_bootRom = bootRom;
@@ -42,6 +42,8 @@ Bus::~Bus()
 uint8_t Bus::read(uint16_t address)
 {
 	if (address <= 0xFF && m_isInBootRom)
+		return m_bootRom[address];
+	if (address >= 0x200 && address <= 0x08ff && m_isInBootRom)
 		return m_bootRom[address];
 	if (address <= 0x7FFF || (address >= 0xA000 && address <= 0xBFFF))
 		return m_mbc->read(address);
@@ -94,7 +96,11 @@ void Bus::write(uint16_t address, uint8_t value)
 		}
 
 		if (address == REG_SVBK)
+		{
 			m_WRAMBank = value & 0b00000111;	//set wram bank
+			if (m_WRAMBank == 0)
+				m_WRAMBank = 1;
+		}
 		if (address == REG_VBK)
 			m_VRAMBank = value & 0b1;			//set vram bank
 

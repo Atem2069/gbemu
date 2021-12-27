@@ -15,7 +15,7 @@
 class Bus
 {
 public:
-	Bus(std::array<uint8_t, 256> bootRom, std::vector<uint8_t> ROM);
+	Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM);
 	~Bus();
 
 	uint8_t read(uint16_t address);
@@ -31,7 +31,7 @@ private:
 	void m_DMATransfer(uint8_t base);
 	void m_GDMATransfer(uint8_t length);
 
-	std::array<uint8_t, 256> m_bootRom;
+	std::vector<uint8_t> m_bootRom;
 
 	std::array<std::array<uint8_t, 4096>, 8> m_workRAM;
 	std::array<std::array<uint8_t, 8192>,2> m_VRAM;

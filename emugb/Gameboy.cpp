@@ -168,9 +168,9 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
-	std::array<uint8_t,256> m_bios;
-	//m_bios.assign(BIOS::rawData, BIOS::rawData + 256);	//256 byte BIOS.
-	std::copy(std::begin(BIOS::rawData), std::end(BIOS::rawData), m_bios.begin());
+	std::vector<uint8_t> m_bios;
+	m_bios.assign(BIOS::rawData, BIOS::rawData + 2304);	//256 byte BIOS.
+	//std::copy(std::begin(BIOS::cgbDump), std::end(BIOS::cgbDump), m_bios.begin());
 	uint8_t cartridgeType = cartData[CART_TYPE];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Type: " + std::to_string((int)cartridgeType));
 
@@ -185,20 +185,8 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 	if(ramSizeIdx)
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge contains an additional " + std::to_string(ramLookup[ramSizeIdx]) + " KB of RAM");
 
-	/*if (!cartridgeType)
-		bus = std::make_shared<bus>(m_bios, cartData);
-	else if (cartridgeType >= 1 && cartridgeType <= 3)
-		bus = std::make_shared<MBC1>(m_bios, cartData);
-	else if (cartridgeType >= 0x0f && cartridgeType <= 0x13)
-		bus = std::make_shared<MBC3>(m_bios, cartData);
-	else if (cartridgeType >= 0x19 && cartridgeType <= 0x1e)
-		bus = std::make_shared<MBC5>(m_bios, cartData);*/
 	bus = std::make_shared<Bus>(m_bios, cartData);
-	//else
-	//{
-	////	Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid cartridge specified. The Bank Switcher chip is not supported.");
-	//	return false;
-	//}
+
 
 	return true;
 }
