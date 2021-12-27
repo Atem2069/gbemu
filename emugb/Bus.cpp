@@ -54,7 +54,7 @@ uint8_t Bus::read(uint16_t address)
 	if (address >= 0xFF80 && address <= 0xFFFF)
 		return m_HRAM[address - 0xFF80];
 
-	return 0xFF;	//assume open bus
+	return 0xFF;	//ideally open bus behaviour would be emulated, but like one game depends on it - so it doesn't matter
 
 }
 
@@ -84,10 +84,34 @@ void Bus::write(uint16_t address, uint8_t value)
 		if (address == 0xFF46)
 			m_DMATransfer(value);
 
+		if (address == REG_HDMA5)
+		{
+			if ((value >> 7) & 0b1)
+				m_HDMARequested = true;
+			else
+				m_GDMATransfer();
+		}
+
 		m_IORegisters[address - 0xFF00] = value;
 	}
 	if (address >= 0xFF80 && address <= 0xFFFF)
 		m_HRAM[address - 0xFF80] = value;
+}
+
+bool Bus::getHDMA()
+{
+	return m_HDMARequested;
+}
+
+void Bus::acknowledgeHDMA()
+{
+	m_HDMARequested = false;
+	m_IORegisters[REG_HDMA5 - 0xFF00] &= 0b01111111;	//DMA in progress (bit 7 cleared)
+}
+
+void Bus::finishHDMA()
+{
+	m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;	//DMA completed (bit 7 set)
 }
 
 void Bus::m_DMATransfer(uint8_t base)
@@ -97,4 +121,9 @@ void Bus::m_DMATransfer(uint8_t base)
 	{
 		write(0xFE00 + i, read(newAddr + i));
 	}
+}
+
+void Bus::m_GDMATransfer()
+{
+	//todo
 }

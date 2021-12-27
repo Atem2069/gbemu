@@ -20,10 +20,16 @@ public:
 
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
+
+	bool getHDMA();
+	void acknowledgeHDMA();
+	void finishHDMA();
 private:
 	std::shared_ptr<MMU> m_mbc;
 	bool m_isInBootRom = true;
+	bool m_HDMARequested = false;
 	void m_DMATransfer(uint8_t base);
+	void m_GDMATransfer();
 
 	std::array<uint8_t, 256> m_bootRom;
 
