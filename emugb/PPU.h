@@ -33,10 +33,14 @@ private:
 	unsigned int m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
 	unsigned int m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
 
+	unsigned int m_backgroundFIFO[160] = {};	//background/window fifo combined into one
+	unsigned int m_spriteFIFO[160] = {};
+	unsigned int m_spritePaletteIndices[160] = {};
+
 	void m_renderBackgroundScanline(uint8_t line);
 	void m_renderWindowScanline(uint8_t line);
 	void m_renderSprites(uint8_t line);
-	void m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow);
+	unsigned int m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow);
 	unsigned int m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette);
 
 	bool m_getDisplayEnabled();

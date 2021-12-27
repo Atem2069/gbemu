@@ -62,6 +62,20 @@ void PPU::step(unsigned long cycleCount)
 			m_renderBackgroundScanline(curLine);
 			m_renderWindowScanline(curLine);
 			m_renderSprites(curLine);
+
+			for (int i = 0; i < 160; i++)
+			{
+				unsigned int pixelIdx = (curLine * 160) + i;
+				unsigned int bgIndex = m_backgroundFIFO[i];
+				unsigned int spriteIndex = m_spriteFIFO[i];
+				m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(bgIndex, m_bus->read(0xFF47));
+				if (spriteIndex != 0)
+					m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(spriteIndex, m_bus->read(m_spritePaletteIndices[i]));
+
+				m_spriteFIFO[i] = 0;
+				m_backgroundFIFO[i] = 0;
+			}
+
 			curLine++;
 			if (curLine == 144)
 			{
@@ -168,7 +182,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 
 		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
-		m_plotPixel(column, line, scrollX, tileData1, tileData2);
+		m_backgroundFIFO[column] = m_plotPixel(column, line, scrollX, tileData1, tileData2);
 	}
 
 }
@@ -212,12 +226,11 @@ void PPU::m_renderWindowScanline(uint8_t line)
 
 		uint8_t tileData1 = m_bus->read(tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_bus->read(tileMemLocation + 1);
-		//m_plotPixel(column+winX, plotLine, 0, tileData1, tileData2);
 		int pixelIdx = std::min((plotLine * 160) + (column+winX),23039);	//visual studio warns of false buffer overrun warning, idk why
 		uint8_t colLower = (tileData1 >> (7 - (column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (column % 8))) & 0b1;
 		uint8_t colIdx = (colHigher << 1) | colLower;
-		m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
+		m_backgroundFIFO[std::min(column + winX,159)] = colIdx;
 	}
 	m_windowLineCount += 1;
 }
@@ -281,7 +294,7 @@ void PPU::m_renderSprites(uint8_t line)
 			if (paletteIdx==1)
 				paletteData = m_bus->read(0xFF49);
 			int pixelIdx = (line * 160) + column;
-			if (spritePriority && m_backBuffer[pixelIdx] != 0)
+			if (spritePriority && m_backgroundFIFO[column] != 0)
 				continue;
 			uint8_t byteShift = (7 - (k % 8));
 			if (xFlip)
@@ -291,8 +304,8 @@ void PPU::m_renderSprites(uint8_t line)
 			uint8_t colIdx = (colHigher << 1) | colLower;
 			if (colIdx == 0)
 				continue;
-			unsigned int col = m_getColourFromPaletteIdx(colIdx, paletteData);
-			m_backBuffer[pixelIdx] = col;
+			m_spriteFIFO[column] = colIdx;
+			m_spritePaletteIndices[column] = (paletteIdx) ? 0xFF49 : 0xFF48;
 			m_posAtPixel[column] = x;			//if sprite pixel is not blank, update pos data (otherwise transparency breaks in sprite-sprite interactions)
 		}
 
@@ -300,14 +313,14 @@ void PPU::m_renderSprites(uint8_t line)
 	}
 }
 
-void PPU::m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow)
+unsigned int PPU::m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow)
 {
 	int pixelIdx = (y * 160) + x;
 	x += (scroll % 8);
 	uint8_t colLower = (byteHigh >> (7 - (x%8))) & 0b1;
 	uint8_t colHigher = (byteLow >> (7 - (x % 8))) & 0b1;
 	uint8_t colIdx = (colHigher << 1) | colLower;
-	m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(colIdx,m_bus->read(0xFF47));
+	return colIdx;
 }
 
 unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
