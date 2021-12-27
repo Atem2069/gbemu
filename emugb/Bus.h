@@ -29,7 +29,7 @@ private:
 	bool m_isInBootRom = true;
 	bool m_HDMARequested = false;
 	void m_DMATransfer(uint8_t base);
-	void m_GDMATransfer();
+	void m_GDMATransfer(uint8_t length);
 
 	std::array<uint8_t, 256> m_bootRom;
 
