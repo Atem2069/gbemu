@@ -121,6 +121,16 @@ void Bus::write(uint16_t address, uint8_t value)
 		m_HRAM[address - 0xFF80] = value;
 }
 
+uint8_t Bus::readVRAM(uint8_t bank, uint16_t address)
+{
+	return m_VRAM[bank][address - 0x8000];
+}
+
+void Bus::writeVRAM(uint8_t bank, uint16_t address, uint8_t value)
+{
+	m_VRAM[bank][address - 0x8000] = value;
+}
+
 bool Bus::getHDMA()
 {
 	return m_HDMARequested;

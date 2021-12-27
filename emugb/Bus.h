@@ -21,6 +21,9 @@ public:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
 
+	uint8_t readVRAM(uint8_t bank, uint16_t address);
+	void writeVRAM(uint8_t bank, uint16_t address, uint8_t value);
+
 	bool getHDMA();
 	void acknowledgeHDMA();
 	void finishHDMA();
