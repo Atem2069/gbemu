@@ -108,6 +108,9 @@
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files\Config/Logging</Filter>
     </ClCompile>
+    <ClCompile Include="Bus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MMU.h">
@@ -189,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cgbRegisters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
