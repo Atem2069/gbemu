@@ -24,6 +24,9 @@ public:
 	uint8_t readVRAM(uint8_t bank, uint16_t address);
 	void writeVRAM(uint8_t bank, uint16_t address, uint8_t value);
 
+	uint16_t readBgColor(uint8_t paletteIndex, uint8_t colorIndex);
+	uint16_t readObjColor(uint8_t paletteIndex, uint8_t colorIndex);
+
 	bool getHDMA();
 	void acknowledgeHDMA();
 	void finishHDMA();

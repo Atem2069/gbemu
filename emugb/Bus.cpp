@@ -171,6 +171,26 @@ void Bus::writeVRAM(uint8_t bank, uint16_t address, uint8_t value)
 	m_VRAM[bank][address - 0x8000] = value;
 }
 
+uint16_t Bus::readBgColor(uint8_t paletteIndex, uint8_t colorIndex)
+{
+	uint8_t idx = (paletteIndex * 8) + (colorIndex * 2);	//8 bytes per palette, 2 bytes per color
+
+	uint8_t low = m_paletteMemory[idx];
+	uint8_t high = m_paletteMemory[idx + 1];
+	uint16_t col = (high << 8) | low;
+	return col;
+}
+
+uint16_t Bus::readObjColor(uint8_t paletteIndex, uint8_t colorIndex)
+{
+	uint8_t idx = (paletteIndex * 8) + (colorIndex * 2);	//8 bytes per palette, 2 bytes per color
+
+	uint8_t low = m_objPaletteMemory[idx];
+	uint8_t high = m_objPaletteMemory[idx + 1];
+	uint16_t col = (high << 8) | low;
+	return col;
+}
+
 bool Bus::getHDMA()
 {
 	return m_HDMARequested;
