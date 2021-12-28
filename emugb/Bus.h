@@ -28,6 +28,7 @@ public:
 	uint16_t readObjColor(uint8_t paletteIndex, uint8_t colorIndex);
 
 	bool getHDMA();
+	bool getHDMAInProgress();
 	void acknowledgeHDMA();
 	void finishHDMA();
 
@@ -36,6 +37,7 @@ private:
 	std::shared_ptr<MMU> m_mbc;
 	bool m_isInBootRom = true;
 	bool m_HDMARequested = false;
+	bool m_HDMAInProgress = false;
 	void m_DMATransfer(uint8_t base);
 	void m_GDMATransfer(uint8_t length);
 

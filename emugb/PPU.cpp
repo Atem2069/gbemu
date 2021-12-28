@@ -126,33 +126,41 @@ void PPU::step(unsigned long cycleCount)
 			}
 			else
 			{
-				if (m_bus->getHDMA())
+				if (m_bus->getHDMA() && !m_HDMAInProgress)
 				{
 					m_bus->acknowledgeHDMA();
 					m_HDMAInProgress = true;
 				}
 				if (m_HDMAInProgress)
 				{
-					uint8_t transferLength = m_bus->read(REG_HDMA5) & 0b01111111;
-					if (m_hdmaTransferBytes >= transferLength)
+					if (!m_bus->getHDMAInProgress())
 					{
-						m_bus->finishHDMA();
 						m_HDMAInProgress = false;
 					}
 					else
 					{
-						uint8_t srcHigh = m_bus->read(REG_HDMA1);
-						uint8_t srcLow = m_bus->read(REG_HDMA2) & 0xF0;
-						uint16_t src = (srcHigh << 8) | srcLow;
-
-						uint8_t dstHigh = m_bus->read(REG_HDMA3) & 0x0F;
-						uint8_t dstLow = m_bus->read(REG_HDMA4) & 0xF0;
-						uint16_t dst = (dstHigh << 8) | dstLow;
-						for (int i = 0; i < 16; i++)
+						int transferLength = m_bus->read(REG_HDMA5) & 0b01111111;
+						if (m_hdmaTransferBytes >= ((transferLength + 1) * 16))
 						{
-							m_bus->write(dst + m_hdmaTransferBytes + i, m_bus->read(src + m_hdmaTransferBytes + i));
+							m_bus->finishHDMA();
+							m_HDMAInProgress = false;
 						}
-						m_hdmaTransferBytes += 16;
+						else
+						{
+							uint8_t srcHigh = m_bus->read(REG_HDMA1);
+							uint8_t srcLow = m_bus->read(REG_HDMA2) & 0xF0;
+							uint16_t src = (srcHigh << 8) | srcLow;
+
+							uint8_t dstHigh = m_bus->read(REG_HDMA3) & 0b00011111;
+							uint8_t dstLow = m_bus->read(REG_HDMA4) & 0xF0;
+							uint16_t dst = 0x8000 + ((dstHigh << 8) | dstLow);
+
+							for (int i = 0; i < 16; i++)
+							{
+								m_bus->write(dst + m_hdmaTransferBytes + i, m_bus->read(src + m_hdmaTransferBytes + i));
+							}
+							m_hdmaTransferBytes += 16;
+						}
 					}
 				}
 				//go back to OAM search otherwise and continue scanning lines
