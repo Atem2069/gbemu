@@ -1,8 +1,8 @@
 #include "InterruptManager.h"
 
-InterruptManager::InterruptManager(std::shared_ptr<MMU>& mmu)
+InterruptManager::InterruptManager(std::shared_ptr<Bus>& bus)
 {
-	m_mmu = mmu;
+	m_bus = bus;
 }
 
 InterruptManager::~InterruptManager()
@@ -12,7 +12,7 @@ InterruptManager::~InterruptManager()
 
 void InterruptManager::requestInterrupt(InterruptType interrupt)
 {
-	uint8_t intFlags = m_mmu->read(REG_IFLAGS);
+	uint8_t intFlags = m_bus->read(REG_IFLAGS);
 
 	switch (interrupt)
 	{
@@ -30,13 +30,13 @@ void InterruptManager::requestInterrupt(InterruptType interrupt)
 		break;
 	}
 
-	m_mmu->write(REG_IFLAGS, intFlags);
+	m_bus->write(REG_IFLAGS, intFlags);
 }
 
 InterruptType InterruptManager::getActiveInterrupt()
 {
-	uint8_t intFlags = m_mmu->read(REG_IFLAGS);
-	uint8_t enabledInterrupts = m_mmu->read(REG_IE);
+	uint8_t intFlags = m_bus->read(REG_IFLAGS);
+	uint8_t enabledInterrupts = m_bus->read(REG_IE);
 
 	uint8_t activeInterrupts = intFlags & enabledInterrupts;
 	InterruptType chosenInterruptType = InterruptType::None;
@@ -62,7 +62,7 @@ InterruptType InterruptManager::getActiveInterrupt()
 	}
 
 	if (interruptsEnabled)				//only turn down flags if interrupts enabled
-		m_mmu->write(REG_IFLAGS, intFlags);
+		m_bus->write(REG_IFLAGS, intFlags);
 
 	return chosenInterruptType;
 }

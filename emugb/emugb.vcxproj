@@ -154,6 +154,7 @@
     <ClCompile Include="..\lib\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\lib\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\lib\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Display.cpp" />
@@ -180,6 +181,8 @@
     <ClInclude Include="..\lib\imgui\imstb_textedit.h" />
     <ClInclude Include="..\lib\imgui\imstb_truetype.h" />
     <ClInclude Include="BIOS\biosdump.h" />
+    <ClInclude Include="Bus.h" />
+    <ClInclude Include="cgbRegisters.h" />
     <ClInclude Include="Common\vec2.h" />
     <ClInclude Include="Common\vec3.h" />
     <ClInclude Include="Config.h" />

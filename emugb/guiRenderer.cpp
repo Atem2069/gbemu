@@ -137,7 +137,7 @@ void GuiRenderer::render()
 		ofn.hwndOwner = NULL;
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = "Game Boy ROM Files\0*.gb\0";
+		ofn.lpstrFilter = "Game Boy ROM Files\0*.gb;*.gbc\0";
 		ofn.nFilterIndex = 1;
 		ofn.lpstrFileTitle = NULL;
 		ofn.nMaxFileTitle = 0;

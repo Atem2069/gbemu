@@ -82,6 +82,10 @@ Display::Display(int width, int height)
 	glShaderSource(m_fs, 1, &m_fsSourcePtr, 0);
 	glCompileShader(m_fs);
 
+	char buf[512];
+	glGetShaderInfoLog(m_fs, 512, nullptr, buf);
+	std::cout << buf;
+
 	m_program = glCreateProgram();
 	glAttachShader(m_program, m_vs);
 	glAttachShader(m_program, m_fs);
@@ -92,7 +96,7 @@ Display::Display(int width, int height)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);	//override driver's default 4-byte unpack stride, maybe reudndant
 	glGenTextures(1, &m_texHandle);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, 160, 144, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGB, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -143,7 +147,7 @@ void Display::draw()
 void Display::upload(void* data)
 {
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGB, GL_FLOAT, data);
 }
 
 bool Display::getInitialized() { return m_initialized; }

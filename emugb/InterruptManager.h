@@ -1,7 +1,7 @@
 #pragma once
 
 #include"Logger.h"
-#include"MMU.h"
+#include"Bus.h"
 #include"dmgRegisters.h"
 
 enum class InterruptType
@@ -17,7 +17,7 @@ enum class InterruptType
 class InterruptManager
 {
 public:
-	InterruptManager(std::shared_ptr<MMU>& mmu);
+	InterruptManager(std::shared_ptr<Bus>& bus);
 	~InterruptManager();
 
 	void requestInterrupt(InterruptType interrupt);
@@ -28,6 +28,6 @@ public:
 	bool getInterruptsEnabled();
 
 private:
-	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<Bus> m_bus;
 	bool interruptsEnabled = false;
 };

@@ -4,7 +4,7 @@
 #include<sstream>
 #include<format>
 #include"Logger.h"
-#include"MMU.h"
+#include"Bus.h"
 #include"InterruptManager.h"
 #include"Config.h"
 #include"dmgRegisters.h"
@@ -23,7 +23,7 @@ union Register
 class CPU
 {
 public:
-	CPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager);
+	CPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager);
 	~CPU();
 
 	void step();
@@ -56,7 +56,7 @@ private:
 
 	std::string m_lastInstruction = "";
 
-	std::shared_ptr<MMU> m_mmu;
+	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	unsigned long m_cycleCount = 0;
 

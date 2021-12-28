@@ -112,7 +112,7 @@ void GameBoy::m_initialise()
 	if (cart.empty())
 		return;
 
-	if (!m_loadCartridge(cart, m_mmu))
+	if (!m_loadCartridge(cart, m_bus))
 	{
 		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
 		Config::getInstance()->setValue<std::string>("RomName", "");
@@ -120,12 +120,12 @@ void GameBoy::m_initialise()
 	}
 
 
-	//initialize MMU now
-	m_interruptManager = std::make_shared<InterruptManager>(m_mmu);
-	m_cpu = std::make_shared<CPU>(m_mmu, m_interruptManager);
-	m_ppu = std::make_shared<PPU>(m_mmu, m_interruptManager);
-	m_inputManager = std::make_shared<InputManager>(m_mmu,m_interruptManager);
-	m_timer = std::make_shared<Timer>(m_mmu, m_interruptManager);
+	//initialize bus now
+	m_interruptManager = std::make_shared<InterruptManager>(m_bus);
+	m_cpu = std::make_shared<CPU>(m_bus, m_interruptManager);
+	m_ppu = std::make_shared<PPU>(m_bus, m_interruptManager);
+	m_inputManager = std::make_shared<InputManager>(m_bus,m_interruptManager);
+	m_timer = std::make_shared<Timer>(m_bus, m_interruptManager);
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
 	Config::getInstance()->setValue<bool>("reset", false);
@@ -142,10 +142,10 @@ void GameBoy::m_destroy()
 	m_ppu.reset();
 	m_cpu.reset();
 	m_interruptManager.reset();
-	m_mmu.reset();
+	m_bus.reset();
 }
 
-bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
+bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 {
 	std::vector<uint8_t> cartData;
 	std::ifstream romReadHandle(name, std::ios::in | std::ios::binary);
@@ -168,9 +168,9 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
-	std::array<uint8_t,256> m_bios;
-	//m_bios.assign(BIOS::rawData, BIOS::rawData + 256);	//256 byte BIOS.
-	std::copy(std::begin(BIOS::rawData), std::end(BIOS::rawData), m_bios.begin());
+	std::vector<uint8_t> m_bios;
+	m_bios.assign(BIOS::cgbDump, BIOS::cgbDump + 2304);	//256 byte BIOS.
+	//std::copy(std::begin(BIOS::cgbDump), std::end(BIOS::cgbDump), m_bios.begin());
 	uint8_t cartridgeType = cartData[CART_TYPE];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge Type: " + std::to_string((int)cartridgeType));
 
@@ -185,19 +185,8 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<MMU>& mmu)
 	if(ramSizeIdx)
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge contains an additional " + std::to_string(ramLookup[ramSizeIdx]) + " KB of RAM");
 
-	if (!cartridgeType)
-		mmu = std::make_shared<MMU>(m_bios, cartData);
-	else if (cartridgeType >= 1 && cartridgeType <= 3)
-		mmu = std::make_shared<MBC1>(m_bios, cartData);
-	else if (cartridgeType >= 0x0f && cartridgeType <= 0x13)
-		mmu = std::make_shared<MBC3>(m_bios, cartData);
-	else if (cartridgeType >= 0x19 && cartridgeType <= 0x1e)
-		mmu = std::make_shared<MBC5>(m_bios, cartData);
-	else
-	{
-		Logger::getInstance()->msg(LoggerSeverity::Error, "Invalid cartridge specified. The Bank Switcher chip is not supported.");
-		return false;
-	}
+	bus = std::make_shared<Bus>(m_bios, cartData);
+
 
 	return true;
 }

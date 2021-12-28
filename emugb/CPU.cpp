@@ -1,8 +1,8 @@
 #include"CPU.h"
 
-CPU::CPU(std::shared_ptr<MMU>& mmu, std::shared_ptr<InterruptManager>& interruptManager)
+CPU::CPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager)
 {
-	m_mmu = mmu;
+	m_bus = bus;
 	m_interruptManager = interruptManager;
 	m_initIO();	//init CPU and I/O registers to correct values
 }
@@ -582,22 +582,22 @@ void CPU::m_initIO()
 	SP.reg = 0xFFFE;
 	PC = 0;
 
-	m_mmu->write(REG_JOYPAD, 0xCF);
-	m_mmu->write(REG_DIV, 0xAB);
-	m_mmu->write(REG_TIMA, 0x00);
-	m_mmu->write(REG_TMA, 0x00);
-	m_mmu->write(REG_TAC, 0xF8);
-	m_mmu->write(REG_IFLAGS, 0xE1);
-	m_mmu->write(REG_STAT, 0x85);
-	m_mmu->write(REG_SCX, 0x00);
-	m_mmu->write(REG_SCY, 0x00);
-	m_mmu->write(REG_LY, 0x00);
-	m_mmu->write(REG_LYC, 0x00);
-	m_mmu->write(REG_DMA, 0xFF);
-	m_mmu->write(REG_WX, 0x07);
-	m_mmu->write(REG_WY, 0x00);
-	m_mmu->write(REG_IE, 0x00);
-	m_mmu->write(REG_KEY1, 0x00);
+	m_bus->write(REG_JOYPAD, 0xCF);
+	m_bus->write(REG_DIV, 0xAB);
+	m_bus->write(REG_TIMA, 0x00);
+	m_bus->write(REG_TMA, 0x00);
+	m_bus->write(REG_TAC, 0xF8);
+	m_bus->write(REG_IFLAGS, 0xE1);
+	m_bus->write(REG_STAT, 0x85);
+	m_bus->write(REG_SCX, 0x00);
+	m_bus->write(REG_SCY, 0x00);
+	m_bus->write(REG_LY, 0x00);
+	m_bus->write(REG_LYC, 0x00);
+	m_bus->write(REG_DMA, 0xFF);
+	m_bus->write(REG_WX, 0x07);
+	m_bus->write(REG_WY, 0x00);
+	m_bus->write(REG_IE, 0x00);
+	m_bus->write(REG_KEY1, 0x00);
 }
 
 void CPU::m_setDebugInfo()
@@ -607,21 +607,21 @@ void CPU::m_setDebugInfo()
 	Config::getInstance()->setValue<CPUState>("CPUState",curCPUState);
 
 	IOState curIOState;
-	curIOState.JOYPAD = m_mmu->read(REG_JOYPAD);
-	curIOState.DIV = m_mmu->read(REG_DIV);
-	curIOState.TIMA = m_mmu->read(REG_TIMA);
-	curIOState.TMA = m_mmu->read(REG_TMA);
-	curIOState.TAC = m_mmu->read(REG_TAC);
-	curIOState.IFLAGS = m_mmu->read(REG_IFLAGS);
-	curIOState.STAT = m_mmu->read(REG_STAT);
-	curIOState.SCX = m_mmu->read(REG_SCX);
-	curIOState.SCY = m_mmu->read(REG_SCY);
-	curIOState.LY = m_mmu->read(REG_LY);
-	curIOState.LYC = m_mmu->read(REG_LYC);
-	curIOState.DMA = m_mmu->read(REG_DMA);
-	curIOState.WX = m_mmu->read(REG_WX);
-	curIOState.WY = m_mmu->read(REG_WY);
-	curIOState.IE = m_mmu->read(REG_IE);
+	curIOState.JOYPAD = m_bus->read(REG_JOYPAD);
+	curIOState.DIV = m_bus->read(REG_DIV);
+	curIOState.TIMA = m_bus->read(REG_TIMA);
+	curIOState.TMA = m_bus->read(REG_TMA);
+	curIOState.TAC = m_bus->read(REG_TAC);
+	curIOState.IFLAGS = m_bus->read(REG_IFLAGS);
+	curIOState.STAT = m_bus->read(REG_STAT);
+	curIOState.SCX = m_bus->read(REG_SCX);
+	curIOState.SCY = m_bus->read(REG_SCY);
+	curIOState.LY = m_bus->read(REG_LY);
+	curIOState.LYC = m_bus->read(REG_LYC);
+	curIOState.DMA = m_bus->read(REG_DMA);
+	curIOState.WX = m_bus->read(REG_WX);
+	curIOState.WY = m_bus->read(REG_WY);
+	curIOState.IE = m_bus->read(REG_IE);
 	Config::getInstance()->setValue<IOState>("IOState", curIOState);
 }
 
@@ -666,7 +666,7 @@ void CPU::m_setSubtractFlag(bool value)
 
 uint8_t CPU::m_fetch()
 {
-	uint8_t val = m_mmu->read(PC);
+	uint8_t val = m_bus->read(PC);
 	PC++;
 	return val;
 }
@@ -676,15 +676,15 @@ void CPU::m_pushToStack(uint16_t val)
 	uint8_t highByte = (val & 0xFF00) >> 8;
 	uint8_t lowByte = (val & 0x00FF);
 
-	m_mmu->write(SP.reg - 1, highByte);
-	m_mmu->write(SP.reg - 2, lowByte);
+	m_bus->write(SP.reg - 1, highByte);
+	m_bus->write(SP.reg - 2, lowByte);
 	SP.reg -= 2;
 }
 
 uint16_t CPU::m_popFromStack()
 {
-	uint8_t lowByte = m_mmu->read(SP.reg);
-	uint8_t highByte = m_mmu->read(SP.reg + 1);
+	uint8_t lowByte = m_bus->read(SP.reg);
+	uint8_t highByte = m_bus->read(SP.reg + 1);
 	SP.reg += 2;
 	uint16_t val = (((uint16_t)highByte) << 8) | lowByte;
 	return val;
@@ -711,40 +711,40 @@ void CPU::_loadImmFromRegister(uint8_t& regA, uint8_t& regB)
 
 void CPU::_loadDirectFromPairRegister(uint8_t& regA, Register& regB)
 {
-	regA = m_mmu->read(regB.reg);
+	regA = m_bus->read(regB.reg);
 	m_cycleCount += 2;
 }
 
 void CPU::_loadDirectFromPairRegisterInc(uint8_t& regA, Register& regB)
 {
-	regA = m_mmu->read(regB.reg);
+	regA = m_bus->read(regB.reg);
 	regB.reg++;
 	m_cycleCount += 2;
 }
 
 void CPU::_loadDirectFromPairRegisterDec(uint8_t& regA, Register& regB)
 {
-	regA = m_mmu->read(regB.reg);
+	regA = m_bus->read(regB.reg);
 	regB.reg--;
 	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegister(Register& regA, uint8_t& regB)
 {
-	m_mmu->write(regA.reg, regB);
+	m_bus->write(regA.reg, regB);
 	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegisterInc(Register& regA, uint8_t& regB)
 {
-	m_mmu->write(regA.reg, regB);
+	m_bus->write(regA.reg, regB);
 	regA.reg++;
 	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterAtPairRegisterDec(Register& regA, uint8_t& regB)
 {
-	m_mmu->write(regA.reg, regB);
+	m_bus->write(regA.reg, regB);
 	regA.reg--;
 	m_cycleCount += 2;
 }
@@ -755,8 +755,8 @@ void CPU::_storePairRegisterAtAddress(Register& reg)
 	uint8_t memHigh = m_fetch();
 	uint16_t addr = ((uint16_t)memHigh << 8) | memLow;
 
-	m_mmu->write(addr, reg.low);
-	m_mmu->write(addr + 1, reg.high);
+	m_bus->write(addr, reg.low);
+	m_bus->write(addr + 1, reg.high);
 	m_cycleCount += 5;
 }
 
@@ -765,7 +765,7 @@ void CPU::_storeRegisterAtAddress(uint8_t& reg)
 	uint8_t memLow = m_fetch();
 	uint8_t memHigh = m_fetch();
 	uint16_t addr = ((uint16_t)memHigh << 8) | memLow;
-	m_mmu->write(addr, reg);
+	m_bus->write(addr, reg);
 	m_cycleCount += 4;
 }
 
@@ -774,39 +774,39 @@ void CPU::_loadRegisterFromAddress(uint8_t& reg)
 	uint8_t memLow = m_fetch();
 	uint8_t memHigh = m_fetch();
 	uint16_t addr = ((uint16_t)memHigh << 8) | memLow;
-	reg = m_mmu->read(addr);
+	reg = m_bus->read(addr);
 	m_cycleCount += 4;
 }
 
 void CPU::_storeOperandAtPairAddress(Register& reg)
 {
-	m_mmu->write(reg.reg, m_fetch());
+	m_bus->write(reg.reg, m_fetch());
 	m_cycleCount += 3;
 }
 
 void CPU::_storeRegisterInHRAM(uint8_t& regDst, uint8_t& regSrc)
 {
-	m_mmu->write(0xFF00 + regDst, regSrc);	//destination register contains index from 0xFF00 to write to HRAM
+	m_bus->write(0xFF00 + regDst, regSrc);	//destination register contains index from 0xFF00 to write to HRAM
 	m_cycleCount += 2;
 }
 
 void CPU::_loadFromHRAM(uint8_t& regDst, uint8_t& regSrcIdx)
 {
-	regDst = m_mmu->read(0xFF00 + regSrcIdx);
+	regDst = m_bus->read(0xFF00 + regSrcIdx);
 	m_cycleCount += 2;
 }
 
 void CPU::_storeRegisterInHRAMImm(uint8_t& reg)
 {
 	uint16_t addr = (uint16_t)m_fetch();
-	m_mmu->write(0xFF00 + addr, reg);
+	m_bus->write(0xFF00 + addr, reg);
 	m_cycleCount += 3;
 }
 
 void CPU::_loadFromHRAMImm(uint8_t& reg)
 {
 	uint16_t addr = (uint16_t)m_fetch();
-	reg = m_mmu->read(0xFF00 + addr);
+	reg = m_bus->read(0xFF00 + addr);
 	m_cycleCount += 3;
 }
 
@@ -818,14 +818,14 @@ void CPU::_incrementPairRegister(Register& reg)
 
 void CPU::_incrementPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	 
 	m_setHalfCarryFlag(((val & 0x0F) + (1 & 0x0F)) > 0x0F);
 	val += 1;
 	m_setZeroFlag(!val);
 	m_setSubtractFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 3;
 }
 
@@ -845,14 +845,14 @@ void CPU::_decrementPairRegister(Register& reg)
 
 void CPU::_decrementPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 
 	val--;
 	m_setHalfCarryFlag((val & 0x0f) == 0x0f);
 	m_setZeroFlag(!val);
 	m_setSubtractFlag(true);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 3;
 }
 
@@ -1139,7 +1139,7 @@ void CPU::_addRegisters(uint8_t& regA, uint8_t& regB)
 
 void CPU::_addPairAddress(uint8_t& regA, Register& regB)
 {
-	uint8_t val = m_mmu->read(regB.reg);
+	uint8_t val = m_bus->read(regB.reg);
 
 	m_setHalfCarryFlag(((regA & 0x0F) + (val & 0x0F)) > 0x0F);
 	m_setCarryFlag(((int)regA + (int)val) > 0xFF);
@@ -1165,7 +1165,7 @@ void CPU::_addRegistersCarry(uint8_t& regA, uint8_t& regB)
 
 void CPU::_addPairAddressCarry(uint8_t& regA, Register& regB)
 {
-	uint8_t val = m_mmu->read(regB.reg);
+	uint8_t val = m_bus->read(regB.reg);
 	uint8_t lastCarryFlag = m_getCarryFlag();
 	m_setHalfCarryFlag(((regA & 0x0F) + (val & 0x0F) + (lastCarryFlag & 0x0F)) > 0x0F);
 	m_setCarryFlag(((int)regA + (int)val + (int)lastCarryFlag) > 0xFF);
@@ -1234,7 +1234,7 @@ void CPU::_subRegisterCarry(uint8_t& reg)
 
 void CPU::_subPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	m_setCarryFlag(AF.high < val);
 	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf)) & 0x10);
 	m_setSubtractFlag(true);
@@ -1247,7 +1247,7 @@ void CPU::_subPairAddress(Register& reg)
 
 void CPU::_subPairAddressCarry(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t lastCarryFlag = m_getCarryFlag();
 	m_setCarryFlag(AF.high < (val+lastCarryFlag));
 	m_setHalfCarryFlag(((AF.high & 0xf) - (val & 0xf) - (lastCarryFlag & 0xf)) & 0x10);
@@ -1298,7 +1298,7 @@ void CPU::_andRegister(uint8_t& reg)
 
 void CPU::_andPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	AF.high &= val;
 	m_setZeroFlag(!AF.high);
 	m_setSubtractFlag(false);
@@ -1330,7 +1330,7 @@ void CPU::_xorRegister(uint8_t& reg)
 
 void CPU::_xorPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	AF.high ^= val;
 	m_setZeroFlag(!AF.high);
 	m_setSubtractFlag(false);
@@ -1362,7 +1362,7 @@ void CPU::_orRegister(uint8_t& reg)
 
 void CPU::_orPairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	AF.high |= val;
 	m_setZeroFlag(!AF.high);
 	m_setSubtractFlag(false);
@@ -1393,7 +1393,7 @@ void CPU::_compareRegister(uint8_t& reg)
 
 void CPU::_comparePairAddress(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	m_setHalfCarryFlag((AF.high & 0xF) - (val & 0xF) & 0x10);
 	m_setCarryFlag(AF.high < val);
 	m_setZeroFlag(AF.high - val == 0);
@@ -1441,13 +1441,13 @@ void CPU::_stop()
 {
 	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
 	//_halt();
-	uint8_t speedSwitchState = m_mmu->read(REG_KEY1);
+	uint8_t speedSwitchState = m_bus->read(REG_KEY1);
 	if (speedSwitchState & 0b1)
 	{
 		m_isInDoubleSpeedMode = !m_isInDoubleSpeedMode;
 		speedSwitchState ^= 0b10000001;	//flip current mode bit, and clear switch bit
 		Logger::getInstance()->msg(LoggerSeverity::Info, "CPU speed switched");
-		m_mmu->write(REG_KEY1, speedSwitchState);
+		m_bus->write(REG_KEY1, speedSwitchState);
 	}
 	else
 		Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
@@ -1610,7 +1610,7 @@ void CPU::_RLC(uint8_t& reg)
 
 void CPU::_RL(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	
 	uint8_t msb = (val & 0b10000000) >> 7;
 	uint8_t lastCarry = (m_getCarryFlag()) ? 0b00000001 : 0b0;
@@ -1622,13 +1622,13 @@ void CPU::_RL(Register& reg)
 	m_setHalfCarryFlag(false);
 	m_cycleCount += 2;
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
 void CPU::_RLC(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 
 	uint8_t msb = (val & 0b10000000) >> 7;
 	val <<= 1;
@@ -1638,7 +1638,7 @@ void CPU::_RLC(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1669,7 +1669,7 @@ void CPU::_RRC(uint8_t& reg)
 
 void CPU::_RR(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t lsb = (val & 0b00000001);
 	val >>= 1;
 	uint8_t m_lastCarry = (m_getCarryFlag()) ? 0b10000000 : 0b0;
@@ -1679,13 +1679,13 @@ void CPU::_RR(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
 void CPU::_RRC(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 
 	uint8_t lsb = (val & 0b00000001);
 	val >>= 1;
@@ -1695,7 +1695,7 @@ void CPU::_RRC(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1712,7 +1712,7 @@ void CPU::_SLA(uint8_t& reg)
 
 void CPU::_SLA(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t msb = (val & 0b10000000) >> 7;
 	val <<= 1;
 	m_setZeroFlag(!val);
@@ -1720,7 +1720,7 @@ void CPU::_SLA(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1739,7 +1739,7 @@ void CPU::_SRA(uint8_t& reg)
 
 void CPU::_SRA(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t lsb = (val & 0b00000001);
 	uint8_t msb = (val & 0b10000000);
 	val >>= 1;
@@ -1749,7 +1749,7 @@ void CPU::_SRA(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1766,7 +1766,7 @@ void CPU::_SRL(uint8_t& reg)
 
 void CPU::_SRL(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t lsb = (val & 0b00000001);
 	val >>= 1;
 	m_setZeroFlag(!val);
@@ -1774,7 +1774,7 @@ void CPU::_SRL(Register& reg)
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1794,7 +1794,7 @@ void CPU::_SWAP(uint8_t& reg)
 
 void CPU::_SWAP(Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t low = (val & 0x0F) << 4;
 	uint8_t high = (val & 0xF0) >> 4;
 
@@ -1805,7 +1805,7 @@ void CPU::_SWAP(Register& reg)
 	m_setHalfCarryFlag(false);
 	m_setCarryFlag(false);
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1820,7 +1820,7 @@ void CPU::_BIT(int idx, uint8_t& reg)
 
 void CPU::_BIT(int idx, Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t bitVal = (val >> idx) & 0b00000001;
 	m_setZeroFlag(!bitVal);
 	m_setSubtractFlag(false);
@@ -1839,12 +1839,12 @@ void CPU::_RES(int idx, uint8_t& reg)
 
 void CPU::_RES(int idx, Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t mask = 0b00000001 << idx;
 	mask ^= 0b11111111;	//invert all bits
 	val &= mask;
 
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
 
@@ -1857,9 +1857,9 @@ void CPU::_SET(int idx, uint8_t& reg)
 
 void CPU::_SET(int idx, Register& reg)
 {
-	uint8_t val = m_mmu->read(reg.reg);
+	uint8_t val = m_bus->read(reg.reg);
 	uint8_t mask = 0b00000001 << idx;
 	val |= mask;
-	m_mmu->write(reg.reg, val);
+	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;
 }
