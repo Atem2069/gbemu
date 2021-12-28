@@ -249,8 +249,6 @@ void Bus::m_GDMATransfer(uint8_t length)
 	uint8_t dstLow = read(REG_HDMA4) & 0xF0;
 	uint16_t dst = 0x8000 + ((dstHigh << 8) | dstLow);
 
-	std::cout << std::hex << src << " " << dst << std::endl;
-
 	for (int i = 0; i < (int)(length+1)*16; i++)
 		write(dst + i, read(src + i));
 
