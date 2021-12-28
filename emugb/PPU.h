@@ -38,6 +38,7 @@ private:
 	unsigned int m_spritePaletteIndices[160] = {};
 	unsigned int m_backgroundPaletteIndices[160] = {};
 	bool m_spriteAboveBackground[160] = {};
+	bool m_backgroundPriority[160] = {};
 
 	void m_renderBackgroundScanline(uint8_t line);
 	void m_renderWindowScanline(uint8_t line);

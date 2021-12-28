@@ -77,31 +77,41 @@ void PPU::step(unsigned long cycleCount)
 				uint16_t col = m_bus->readBgColor(backgroundPaletteIdx, bgIndex);
 
 				int red = (col & 0b0000000000011111);
+				red = (red << 3) | (red >> 2);
 				int green = (col & 0b0000001111100000) >> 5;
+				green = (green << 3) | (green >> 2);
 				int blue = (col & 0b0111110000000000) >> 10;
+				blue = (blue << 3) | (blue >> 2);
 
-				vec3 res = { (float)red / 32.0f,(float)green / 32.0f,(float)blue / 32.0f };
+				vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
 
 				m_backBuffer[pixelIdx] = res;
 
 				//if (spriteIndex != 0 && ( !priority || m_spriteAboveBackground[i] || (!m_spriteAboveBackground[i] && m_backgroundFIFO[i]==0)))
-				if((spriteIndex != 0 && m_spriteAboveBackground[i]) || (spriteIndex != 0 && !m_spriteAboveBackground[i] && bgIndex==0) || (!priority))
+				if (!m_backgroundPriority[i])
 				{
-					uint8_t spritePaletteIdx = m_spritePaletteIndices[i];
-					uint16_t col = m_bus->readObjColor(spritePaletteIdx, spriteIndex);
-					int red = (col & 0b0000000000011111);
-					int green = (col & 0b0000001111100000) >> 5;
-					int blue = (col & 0b0111110000000000) >> 10;
+					if ((spriteIndex != 255 && m_spriteAboveBackground[i]) || (spriteIndex != 255 && !m_spriteAboveBackground[i] && bgIndex == 0) || (spriteIndex != 255 && !priority))
+					{
+						uint8_t spritePaletteIdx = m_spritePaletteIndices[i];
+						uint16_t objcol = m_bus->readObjColor(spritePaletteIdx, spriteIndex);
+						int objred = (objcol & 0b0000000000011111);
+						objred = (objred << 3) | (objred >> 2);
+						int objgreen = (objcol & 0b0000001111100000) >> 5;
+						objgreen = (objgreen << 3) | (objgreen >> 2);
+						int objblue = (objcol & 0b0111110000000000) >> 10;
+						objblue = (objblue << 3) | (objblue >> 2);
 
-					vec3 res = { (float)red / 32.0f,(float)green / 32.0f,(float)blue / 32.0f };
-					m_backBuffer[pixelIdx] = res;
+						vec3 objres = { (float)objred / 255.0f,(float)objgreen / 255.0f,(float)objblue / 255.0f };
+						m_backBuffer[pixelIdx] = objres;
+					}
 				}
 
-				m_spriteFIFO[i] = 0;
+				m_spriteFIFO[i] = 255;
 				m_backgroundFIFO[i] = 0;
 				m_spritePaletteIndices[i] = 0;
 				m_backgroundPaletteIndices[i] = 0;
 				m_spriteAboveBackground[i] = 0;
+				m_backgroundPriority[i] = 0;
 			}
 
 			curLine++;
@@ -205,6 +215,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		uint8_t tilePalette = 0;
 		bool yFlip = false;
 		bool xFlip = false;
+		bool backgroundPriority = false;
 
 		if (!m_bus->getInCompatibilityMode())
 		{
@@ -213,6 +224,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 			tilePalette = (m_tileAttributes & 0b00000111);
 			yFlip = (m_tileAttributes & 0b01000000) >> 6;
 			xFlip = (m_tileAttributes & 0b00100000) >> 5;
+			backgroundPriority = (m_tileAttributes & 0b10000000) >> 7;
 		}
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
@@ -238,8 +250,13 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		}
 
 		uint8_t colIdx = (colHigher << 1) | colLower;
+
+		if(m_bus->getInCompatibilityMode())
+			colIdx = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
+
 		m_backgroundFIFO[column] = colIdx;
 		m_backgroundPaletteIndices[column] = tilePalette;
+		m_backgroundPriority[column] = backgroundPriority;
 	}
 
 }
@@ -312,6 +329,9 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		}
 
 		uint8_t colIdx = (colHigher << 1) | colLower;
+		if(m_bus->getInCompatibilityMode())
+			colIdx = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
+
 		m_backgroundFIFO[std::min(column + winX,159)] = colIdx;
 		m_backgroundPaletteIndices[std::min(column + winX, 259)] = tilePalette;
 	}
@@ -341,13 +361,17 @@ void PPU::m_renderSprites(uint8_t line)
 		auto spritePriority = (attributes & 0b10000000) >> 7;
 		auto yFlip = (attributes & 0b01000000) >> 6;
 		auto xFlip = (attributes & 0b00100000) >> 5;
-		auto paletteIdx = (attributes & 0b00000111);
+		uint8_t paletteIdx = (attributes & 0b00000111);
 		auto tileBank = (attributes & 0b00001000) >> 3;
+
+		uint8_t paletteData = 0;
 
 		if (m_bus->getInCompatibilityMode())
 		{
-			//tileBank = 0;
-			paletteIdx = ((attributes & 0b00010000) >> 4) ;
+			tileBank = 0;
+			uint16_t obpAddr = (((attributes & 0b00010000) >> 4)==1) ? 0xFF49 : 0xFF48;
+			uint8_t grayscalePalette = m_bus->read(obpAddr);
+			paletteData = grayscalePalette;
 		}
 
 		uint8_t lowerBound = (m_spriteIs8x8() ? 8 : 16);
@@ -387,8 +411,17 @@ void PPU::m_renderSprites(uint8_t line)
 			uint8_t colLower = (byte1 >> byteShift) & 0b1;
 			uint8_t colHigher = (byte2 >> byteShift) & 0b1;
 			uint8_t colIdx = (colHigher << 1) | colLower;
+
 			if (colIdx == 0)
 				continue;
+
+			if (m_bus->getInCompatibilityMode())
+			{
+				uint8_t tmpcolIdx = m_getColourFromPaletteIdx(colIdx, paletteData);
+				colIdx = tmpcolIdx;
+				paletteIdx = 0;
+			}
+
 			m_spriteFIFO[column] = colIdx;
 			m_spritePaletteIndices[column] = paletteIdx;
 			m_spriteAboveBackground[column] = !spritePriority;
@@ -443,8 +476,7 @@ bool PPU::m_getWindowTileMapDisplaySelect()
 
 bool PPU::m_getBackgroundEnabled()
 {
-	return true;
-	//return ((m_bus->read(REG_LCDC))) & 0b1;
+	return ((m_bus->read(REG_LCDC))) & 0b1;
 }
 
 bool PPU::m_getWindowEnabled()

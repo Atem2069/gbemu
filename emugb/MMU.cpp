@@ -25,5 +25,5 @@ uint8_t MMU::read(uint16_t address)
 
 void MMU::write(uint16_t address, uint8_t value)
 {
-	Logger::getInstance()->msg(LoggerSeverity::Warn, "Write to cartridge space on unmapped ROM! Potential game bug.");
+	//Logger::getInstance()->msg(LoggerSeverity::Warn, "Write to cartridge space on unmapped ROM! Potential game bug.");
 }
