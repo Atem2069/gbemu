@@ -434,13 +434,13 @@ void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool
 		col = m_bus->readObjColor(paletteIndex, colIndex);
 
 	int red = (col & 0b0000000000011111);
-	//red = (red << 3) | (red >> 2);
+	red = (red << 3) | (red >> 2);
 	int green = (col & 0b0000001111100000) >> 5;
-	//green = (green << 3) | (green >> 2);
+	green = (green << 3) | (green >> 2);
 	int blue = (col & 0b0111110000000000) >> 10;
-	//blue = (blue << 3) | (blue >> 2);
+	blue = (blue << 3) | (blue >> 2);
 
-	vec3 res = { (float)red / 32.0f,(float)green / 32.0f,(float)blue / 32.0f };
+	vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
 	int pixelIdx = (y*160)+x;
 	m_backBuffer[pixelIdx] = res;
 }
