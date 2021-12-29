@@ -280,7 +280,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		uint8_t tilePalette = 0;
 		bool xFlip = false;
 		bool yFlip = false;
-		bool windowPriority = true;
+		bool windowPriority = false;
 
 		if (!m_bus->getInCompatibilityMode())
 		{
@@ -335,6 +335,7 @@ void PPU::m_renderSprites(uint8_t line)
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("sprites"))
 		return;
+
 
 	int m_posAtPixel[160] = {};				//store the x-origin of each sprite at each pixel coord we check
 	std::fill(m_posAtPixel, m_posAtPixel + 160, 255);	//set to impossible value initially
@@ -392,8 +393,11 @@ void PPU::m_renderSprites(uint8_t line)
 			if (x + k < 0)
 				continue;
 			int column = std::min(x + k, 159);
-			if (m_posAtPixel[column] <= x)		//if a sprite is already drawn, and has a lower than or equal x-origin than current sprite, then the current sprite isn't drawn there.
+			if (m_posAtPixel[column] <= x && m_bus->getInCompatibilityMode())			//DMG: x-coord priority
 				continue;
+			if (m_spriteFIFO[column].shouldDraw && !m_bus->getInCompatibilityMode())	//CGB: OAM priority
+				continue;
+
 			int pixelIdx = (line * 160) + column;
 			uint8_t byteShift = (7 - (k % 8));
 			if (xFlip)
