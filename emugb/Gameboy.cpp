@@ -24,12 +24,10 @@ void GameBoy::run()
 		}
 	}
 
+	m_lastTime = std::chrono::high_resolution_clock::now();
+
 	while (m_shouldRun)
 	{
-		LARGE_INTEGER freq;
-		QueryPerformanceFrequency(&freq);
-		LARGE_INTEGER start;
-		QueryPerformanceCounter(&start);
 
 		if (Config::getInstance()->getValue<bool>("reset"))
 		{
@@ -52,29 +50,26 @@ void GameBoy::run()
 		m_inputManager->tick(m_inputState);
 		m_timer->tick(m_cpu->getCycleCount());
 
-		//auto curTime = std::chrono::high_resolution_clock::now();
-		unsigned long cycleCountDiff = m_cpu->getCycleCount() - lastCycleCount;
-		double timePeriod = 0.000952 * (double)cycleCountDiff;	//cpu clocks are measured in machine cycles (1.05MHz). 1 m-cycle is 0.000952 milliseconds
-		if (m_cpu->getInDoubleSpeedMode())
-			timePeriod = 0.000476 * (double)cycleCountDiff;
 
-		LARGE_INTEGER stop;
-		QueryPerformanceCounter(&stop);
-
-		double timeDiff = (((double)(stop.QuadPart - start.QuadPart) * 1000.0) + m_timeMissedLastFrame) / (double)freq.QuadPart;
-
-		bool m_resetCatchup = false;
-		if (timeDiff > timePeriod)
-			m_timeMissedLastFrame = timeDiff - timePeriod;
-		else
-			m_resetCatchup = true;
-		while (timeDiff < timePeriod)
+		m_cyclesSinceLastVblank += (m_cpu->getCycleCount() - lastCycleCount);
+		if ((!m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 17556) || (m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 35112))
 		{
-			QueryPerformanceCounter(&stop);
-			timeDiff = (((double)(stop.QuadPart - start.QuadPart) * 1000.0) + m_timeMissedLastFrame) / (double)freq.QuadPart;
+			//wait
+			auto curTime = std::chrono::high_resolution_clock::now();
+
+			double waitTime = 16.7427062988;
+
+			double diffms = 0;
+			while (diffms <= waitTime)
+			{
+				curTime = std::chrono::high_resolution_clock::now();
+				diffms = std::chrono::duration<double, std::milli>(curTime - m_lastTime).count();
+			}
+
+			m_lastTime = curTime;
+			m_cyclesSinceLastVblank = 0;
+
 		}
-		if (m_resetCatchup)
-			m_timeMissedLastFrame = 0;
 
 	}
 	m_dispWorkerThread.join();

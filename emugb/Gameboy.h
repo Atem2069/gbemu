@@ -41,7 +41,8 @@ private:
 	bool m_shouldRun = true;
 	bool m_initialized = false;
 
-	double m_timeMissedLastFrame = 0;
+	std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTime;
+	unsigned int m_cyclesSinceLastVblank = 0;
 
 	void displayWorker();
 };
