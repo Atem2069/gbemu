@@ -35,7 +35,7 @@ public:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
 private:
-	uint8_t m_bankNumber = 0, m_higherBankBits = 0;
+	uint8_t m_bankNumber = 1, m_higherBankBits = 0;
 	uint8_t m_ramBankNumber = 0;
 	bool m_RAMBanking = false;
 	bool m_SRAMEnabled = false;
@@ -54,7 +54,7 @@ public:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
 private:
-	uint16_t m_bankNumber = 0;
+	uint16_t m_bankNumber = 1;
 	uint8_t m_ramBankNumber = 0;
 	uint8_t m_lastLatchWrite = 0xff;	//writing 0 then 1 toggles latching/unlatching rtc
 	bool m_rtcLatched = false;
@@ -72,7 +72,7 @@ public:
 	uint8_t read(uint16_t address);
 	void write(uint16_t address, uint8_t value);
 private:
-	uint16_t m_bankNumber = 0;
+	uint16_t m_bankNumber = 1;
 	uint16_t m_bankNumberHighBit = 0;
 	uint8_t m_ramBankNumber = 0;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;	

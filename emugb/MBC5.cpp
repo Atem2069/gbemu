@@ -18,18 +18,17 @@ MBC5::~MBC5()
 uint8_t MBC5::read(uint16_t address)
 {
 
-	if (address >= 0x4000 && address < 0x8000 && m_bankNumber)
+	if (address >= 0x4000 && address < 0x8000)
 	{
 		int offset = ((int)address) - 0x4000;
 		return m_ROMBanks[m_bankNumber][offset];
 	}
-	if (address >= 0x4000 && address < 0x8000 && m_bankNumber == 0)
-		return m_ROMBanks[1][(int)address - 0x4000];
 
 	if (address >= 0xA000 && address <= 0xBFFF)
 		return m_RAMBanks[0][address - 0xA000];
 
-	return m_ROMBanks[0][address];
+	if(address <= 0x3FFF)
+		return m_ROMBanks[0][address];
 }
 
 void MBC5::write(uint16_t address, uint8_t value)
@@ -37,20 +36,20 @@ void MBC5::write(uint16_t address, uint8_t value)
 	if (address >= 0x0000 && address <= 0x1fff)
 	{
 		//Logger::getInstance()->msg(LoggerSeverity::Error, "Attempt to enable RAM in MBC. Unsupported");
-		return;
+		//return;
 	}
 
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
 		m_ramBankNumber = value;
-		return;
+		//return;
 	}
 
 
 	if (address >= 0x2000 && address <= 0x2FFF)
 	{
 		m_bankNumber = (m_bankNumberHighBit << 8) | value;
-		return;
+		//return;
 	}
 
 	if (address >= 0x3000 && address <= 0x3FFF)

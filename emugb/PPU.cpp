@@ -63,55 +63,27 @@ void PPU::step(unsigned long cycleCount)
 			m_renderWindowScanline(curLine);
 			m_renderSprites(curLine);
 
-			uint8_t priority = m_bus->read(REG_LCDC) & 0b1;
-
 			for (int i = 0; i < 160; i++)
 			{
 
 				unsigned int pixelIdx = (curLine * 160) + i;
-				unsigned int bgIndex = m_backgroundFIFO[i];
-				unsigned int spriteIndex = m_spriteFIFO[i];
-				//m_backBuffer[pixelIdx] = m_getColourFromPaletteIdx(bgIndex, m_bus->read(0xFF47));
+				Pixel backgroundPixel = m_backgroundFIFO[i];
+				Pixel spritePixel = m_spriteFIFO[i];
+				if(backgroundPixel.shouldDraw)
+					m_plotPixel(i, curLine, backgroundPixel.colIndex, backgroundPixel.paletteIndex, false);
 
-				uint8_t backgroundPaletteIdx = m_backgroundPaletteIndices[i];
-				uint16_t col = m_bus->readBgColor(backgroundPaletteIdx, bgIndex);
-
-				int red = (col & 0b0000000000011111);
-				red = (red << 3) | (red >> 2);
-				int green = (col & 0b0000001111100000) >> 5;
-				green = (green << 3) | (green >> 2);
-				int blue = (col & 0b0111110000000000) >> 10;
-				blue = (blue << 3) | (blue >> 2);
-
-				vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
-
-				m_backBuffer[pixelIdx] = res;
-
-				//if (spriteIndex != 0 && ( !priority || m_spriteAboveBackground[i] || (!m_spriteAboveBackground[i] && m_backgroundFIFO[i]==0)))
-				if (!m_backgroundPriority[i])
+				//if(spritePixel.shouldDraw && (spritePixel.priority || backgroundPixel.colIndex==0 || (!backgroundPixel.priority && spritePixel.priority)))
+				//{
+				//	m_plotPixel(i, curLine, spritePixel.colIndex, spritePixel.paletteIndex, true);
+				//}
+				if (spritePixel.shouldDraw)
 				{
-					if ((spriteIndex != 255 && m_spriteAboveBackground[i]) || (spriteIndex != 255 && !m_spriteAboveBackground[i] && bgIndex == 0) || (spriteIndex != 255 && !priority))
-					{
-						uint8_t spritePaletteIdx = m_spritePaletteIndices[i];
-						uint16_t objcol = m_bus->readObjColor(spritePaletteIdx, spriteIndex);
-						int objred = (objcol & 0b0000000000011111);
-						objred = (objred << 3) | (objred >> 2);
-						int objgreen = (objcol & 0b0000001111100000) >> 5;
-						objgreen = (objgreen << 3) | (objgreen >> 2);
-						int objblue = (objcol & 0b0111110000000000) >> 10;
-						objblue = (objblue << 3) | (objblue >> 2);
-
-						vec3 objres = { (float)objred / 255.0f,(float)objgreen / 255.0f,(float)objblue / 255.0f };
-						m_backBuffer[pixelIdx] = objres;
-					}
+					if ((!backgroundPixel.priority && spritePixel.priority) || (backgroundPixel.priority && backgroundPixel.colIndex == 0) || backgroundPixel.colIndex == 0)
+						m_plotPixel(i, curLine, spritePixel.colIndex, spritePixel.paletteIndex, true);
 				}
 
-				m_spriteFIFO[i] = 255;
-				m_backgroundFIFO[i] = 0;
-				m_spritePaletteIndices[i] = 0;
-				m_backgroundPaletteIndices[i] = 0;
-				m_spriteAboveBackground[i] = 0;
-				m_backgroundPriority[i] = 0;
+				m_backgroundFIFO[i] = {};
+				m_spriteFIFO[i] = {};
 			}
 
 			curLine++;
@@ -203,7 +175,7 @@ void PPU::step(unsigned long cycleCount)
 
 void PPU::m_renderBackgroundScanline(uint8_t line)	
 {
-	if (line < 0 || line > 143 || !m_getBackgroundEnabled())
+	if (line < 0 || line > 143 || (!m_getMasterPriority() && m_bus->getInCompatibilityMode()))	//In CGB mode: LCDC bit 0 is master priority. In DMG mode, it is bg enable/disable
 		return;
 	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("background"))
 		return;
@@ -233,6 +205,8 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 			yFlip = (m_tileAttributes & 0b01000000) >> 6;
 			xFlip = (m_tileAttributes & 0b00100000) >> 5;
 			backgroundPriority = (m_tileAttributes & 0b10000000) >> 7;
+			if (!m_getMasterPriority())
+				backgroundPriority = false;
 		}
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
@@ -246,7 +220,6 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 			tileMemLocation += (7 - ((line + scrollY) % 8)) * 2;
 		uint8_t tileData1 = m_bus->readVRAM(tileBank,tileMemLocation);		//extract two bytes that make up the tile
 		uint8_t tileData2 = m_bus->readVRAM(tileBank,tileMemLocation + 1);
-		//m_backgroundFIFO[column] = m_plotPixel(column, line, scrollX, tileData1, tileData2);
 		uint8_t scr_column = column + (scrollX % 8);
 		uint8_t colLower = (tileData1 >> (7 - (scr_column % 8))) & 0b1;
 		uint8_t colHigher = (tileData2 >> (7 - (scr_column % 8))) & 0b1;
@@ -262,9 +235,12 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 		if(m_bus->getInCompatibilityMode())
 			colIdx = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
 
-		m_backgroundFIFO[column] = colIdx;
-		m_backgroundPaletteIndices[column] = tilePalette;
-		m_backgroundPriority[column] = backgroundPriority;
+		Pixel px = {};
+		px.colIndex = colIdx;
+		px.paletteIndex = tilePalette;
+		px.priority = backgroundPriority;
+		px.shouldDraw = true;
+		m_backgroundFIFO[column] = px;
 	}
 
 }
@@ -304,6 +280,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		uint8_t tilePalette = 0;
 		bool xFlip = false;
 		bool yFlip = false;
+		bool windowPriority = true;
 
 		if (!m_bus->getInCompatibilityMode())
 		{
@@ -312,6 +289,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 			tilePalette = (m_tileAttributes & 0b00000111);
 			yFlip = (m_tileAttributes & 0b01000000) >> 6;
 			xFlip = (m_tileAttributes & 0b00100000) >> 5;
+			windowPriority = (m_tileAttributes & 0b10000000) >> 7;
 		}
 
 		uint16_t tileMemLocation = (m_getTileDataSelect()) ? 0x8000 : 0x8800;
@@ -339,9 +317,13 @@ void PPU::m_renderWindowScanline(uint8_t line)
 		uint8_t colIdx = (colHigher << 1) | colLower;
 		if(m_bus->getInCompatibilityMode())
 			colIdx = m_getColourFromPaletteIdx(colIdx, m_bus->read(0xFF47));
-
-		m_backgroundFIFO[std::min(column + winX,159)] = colIdx;
-		m_backgroundPaletteIndices[std::min(column + winX, 259)] = tilePalette;
+		
+		Pixel px = {};
+		px.colIndex = colIdx;
+		px.paletteIndex = tilePalette;
+		px.priority = windowPriority;
+		px.shouldDraw = true;
+		m_backgroundFIFO[std::min(column + winX, 159)] = px;
 	}
 	m_windowLineCount += 1;
 }
@@ -430,9 +412,12 @@ void PPU::m_renderSprites(uint8_t line)
 				paletteIdx = 0;
 			}
 
-			m_spriteFIFO[column] = colIdx;
-			m_spritePaletteIndices[column] = paletteIdx;
-			m_spriteAboveBackground[column] = !spritePriority;
+			Pixel px = {};
+			px.colIndex = colIdx;
+			px.paletteIndex = paletteIdx;
+			px.priority = !spritePriority;
+			px.shouldDraw = true;
+			m_spriteFIFO[column] = px;
 			m_posAtPixel[column] = x;			//if sprite pixel is not blank, update pos data (otherwise transparency breaks in sprite-sprite interactions)
 		}
 
@@ -440,14 +425,24 @@ void PPU::m_renderSprites(uint8_t line)
 	}
 }
 
-unsigned int PPU::m_plotPixel(int x, int y, int scroll, uint8_t byteHigh, uint8_t byteLow)
+void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool useObjPalette)
 {
-	int pixelIdx = (y * 160) + x;
-	x += (scroll % 8);
-	uint8_t colLower = (byteHigh >> (7 - (x%8))) & 0b1;
-	uint8_t colHigher = (byteLow >> (7 - (x % 8))) & 0b1;
-	uint8_t colIdx = (colHigher << 1) | colLower;
-	return colIdx;
+	uint16_t col = 0;
+	if (!useObjPalette)									//there exist two palette memory areas - one for just background/window tiles, and one for sprites
+		col = m_bus->readBgColor(paletteIndex, colIndex);
+	else
+		col = m_bus->readObjColor(paletteIndex, colIndex);
+
+	int red = (col & 0b0000000000011111);
+	//red = (red << 3) | (red >> 2);
+	int green = (col & 0b0000001111100000) >> 5;
+	//green = (green << 3) | (green >> 2);
+	int blue = (col & 0b0111110000000000) >> 10;
+	//blue = (blue << 3) | (blue >> 2);
+
+	vec3 res = { (float)red / 32.0f,(float)green / 32.0f,(float)blue / 32.0f };
+	int pixelIdx = (y*160)+x;
+	m_backBuffer[pixelIdx] = res;
 }
 
 unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
@@ -482,7 +477,7 @@ bool PPU::m_getWindowTileMapDisplaySelect()
 	return ((m_bus->read(REG_LCDC)) >> 6) & 0b00000001;
 }
 
-bool PPU::m_getBackgroundEnabled()
+bool PPU::m_getMasterPriority()
 {
 	return ((m_bus->read(REG_LCDC))) & 0b1;
 }
