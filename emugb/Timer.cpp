@@ -24,6 +24,7 @@ void Timer::tick(unsigned long cycleDiff)
 	//unsigned long cycleDiff = cycleCount - lastCycleCount;
 	//unsigned long divCycleDiff = cycleCount - divLastCycleCount;
 	//for div register:
+	m_divCycleCount += cycleDiff;
 	while (m_divCycleCount >= 64)
 	{
 		uint8_t ticks = 1;
