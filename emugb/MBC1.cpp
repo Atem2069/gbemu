@@ -15,6 +15,12 @@ MBC1::MBC1(std::vector<uint8_t> ROM)
 	if (cartType == 3)
 		m_shouldSave = true;
 
+	m_maxROMBanks = (uint8_t)std::pow(2, (double)ROM[CART_ROMSIZE] + 1);	
+	
+	//need lookup table for RAM banks..
+	uint8_t ramBanks[6] = { 0, 1, 1, 4, 16, 8 };
+	m_maxRAMBanks = ramBanks[ROM[CART_RAMSIZE] % 6];
+
 	if (m_shouldSave)
 	{
 		//load save file into RAM bank 0 (only if cart has battery)
@@ -95,7 +101,7 @@ void MBC1::write(uint16_t address, uint8_t value)
 		if (!m_RAMBanking)
 			m_higherBankBits = (value & 0b00000011);
 		else
-			m_ramBankNumber = (value & 0b00000011);
+			m_ramBankNumber = (value & 0b00000011) % m_maxRAMBanks;
 		return;
 	}
 
@@ -107,7 +113,10 @@ void MBC1::write(uint16_t address, uint8_t value)
 			m_ramBankNumber = 0;
 		}
 		if ((value & 0b1) == 1)
+		{
+			m_higherBankBits = 0;
 			m_RAMBanking = true;
+		}
 
 		return;
 	}
@@ -117,12 +126,14 @@ void MBC1::write(uint16_t address, uint8_t value)
 		value = value & 0b00011111;
 		if (!value)
 			value = 1;
-		m_bankNumber = (m_higherBankBits << 5) | value;
+		m_bankNumber = ((m_higherBankBits << 5) | value) % m_maxROMBanks;
 		return;
 	}
 
 	if (address >= 0xa000 && address <= 0xbfff)
 	{
+		if (!m_SRAMEnabled)
+			return;
 		int offset = ((int)address - 0xa000);
 		m_RAMBanks[m_ramBankNumber][offset] = value;
 	}

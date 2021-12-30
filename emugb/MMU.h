@@ -37,6 +37,7 @@ public:
 private:
 	uint8_t m_bankNumber = 1, m_higherBankBits = 0;
 	uint8_t m_ramBankNumber = 0;
+	uint8_t m_maxROMBanks = 0, m_maxRAMBanks = 0;
 	bool m_RAMBanking = false;
 	bool m_SRAMEnabled = false;
 	bool m_shouldSave = false;
