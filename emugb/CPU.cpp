@@ -1174,8 +1174,6 @@ void CPU::_addPairAddressCarry(uint8_t& regA, Register& regB)
 	regA += val + lastCarryFlag;
 	m_setZeroFlag(regA == 0);
 	m_cycleCount += 2;
-
-	m_cycleCount += 2;
 }
 
 void CPU::_addValue(uint8_t& reg)
@@ -1621,7 +1619,6 @@ void CPU::_RL(Register& reg)
 	m_setCarryFlag(msb);
 	m_setSubtractFlag(false);
 	m_setHalfCarryFlag(false);
-	m_cycleCount += 2;
 
 	m_bus->write(reg.reg, val);
 	m_cycleCount += 4;

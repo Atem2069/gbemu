@@ -18,22 +18,25 @@ Timer::~Timer()
 
 }
 
-void Timer::tick(unsigned long cycleCount)
+void Timer::tick(unsigned long cycleDiff)
 {
 
-	unsigned long cycleDiff = cycleCount - lastCycleCount;
-	unsigned long divCycleDiff = cycleCount - divLastCycleCount;
+	//unsigned long cycleDiff = cycleCount - lastCycleCount;
+	//unsigned long divCycleDiff = cycleCount - divLastCycleCount;
 	//for div register:
-	if (divCycleDiff >= 64)
+	while (m_divCycleCount >= 64)
 	{
-		uint8_t ticks = divCycleDiff / 64;
+		uint8_t ticks = 1;
 		m_bus->write(0xFF04, m_bus->read(REG_DIV) + ticks);
-		divLastCycleCount = cycleCount;
+		m_divCycleCount -= 64;
 	}
 
 	uint8_t timerControl = m_bus->read(REG_TAC);
 	if ((timerControl >> 2) & 0b1)
 	{
+
+		m_cycleCount += cycleDiff;
+
 		unsigned long tickThreshold = 0;
 		switch (timerControl & 0b11)
 		{
@@ -43,7 +46,7 @@ void Timer::tick(unsigned long cycleCount)
 		case 0b11:tickThreshold = (256 / 4); break;
 		}
 
-		while (cycleDiff >= tickThreshold)
+		while (m_cycleCount >= tickThreshold)
 		{
 			uint8_t ticks = 1;
 			uint8_t curTimerValue = m_bus->read(REG_TIMA);
@@ -55,11 +58,7 @@ void Timer::tick(unsigned long cycleCount)
 			}
 			else
 				m_bus->write(REG_TIMA, newTimerValue);
-			cycleDiff -= tickThreshold;
-			lastCycleCount = cycleCount;
+			m_cycleCount -= tickThreshold;
 		}
 	}
-	else
-		lastCycleCount = cycleCount;
-
 }

@@ -15,11 +15,11 @@ public:
 	Timer(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interruptManager);
 	~Timer();
 
-	void tick(unsigned long cycleCount);
+	void tick(unsigned long cycleDiff);
 
 private:
-	unsigned long lastCycleCount = 0;
-	unsigned long divLastCycleCount = 0;
+	unsigned long m_cycleCount;
+	unsigned long m_divCycleCount;
 	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	std::chrono::steady_clock::time_point m_lastTime, m_divLastTime;

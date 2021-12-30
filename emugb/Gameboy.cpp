@@ -48,7 +48,7 @@ void GameBoy::run()
 		m_cpu->step();
 		m_ppu->step(ppuSteps);
 		m_inputManager->tick(m_inputState);
-		m_timer->tick(m_cpu->getCycleCount());
+		m_timer->tick(m_cpu->getCycleCount() - lastCycleCount);
 
 
 		m_cyclesSinceLastVblank += (m_cpu->getCycleCount() - lastCycleCount);
