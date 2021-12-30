@@ -700,7 +700,7 @@ void CPU::_loadImmPairRegister(Register& reg)
 void CPU::_loadImmRegister(uint8_t& reg)
 {
 	reg = m_fetch();
-	m_cycleCount += 3;
+	m_cycleCount += 2;
 }
 
 void CPU::_loadImmFromRegister(uint8_t& regA, uint8_t& regB)
@@ -1451,6 +1451,7 @@ void CPU::_stop()
 	}
 	else
 		Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
+	m_cycleCount += 1;
 }
 
 void CPU::_halt()
@@ -1486,7 +1487,7 @@ void CPU::_adjustBCD()
 	m_setHalfCarryFlag(false);
 	m_setZeroFlag(!AF.high);
 
-	m_cycleCount += 2;
+	m_cycleCount += 1;
 }
 
 void CPU::_loadHLStackIdx()

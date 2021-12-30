@@ -48,7 +48,7 @@ void Timer::tick(unsigned long cycleCount)
 			uint8_t ticks = 1;
 			uint8_t curTimerValue = m_bus->read(REG_TIMA);
 			uint8_t newTimerValue = curTimerValue + ticks;
-			if (newTimerValue < curTimerValue)
+			if (curTimerValue==255)
 			{
 				m_interruptManager->requestInterrupt(InterruptType::Timer);
 				m_bus->write(REG_TIMA, m_bus->read(REG_TMA));
