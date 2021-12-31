@@ -68,6 +68,8 @@ uint8_t Bus::read(uint16_t address)
 			return m_objPaletteMemory[m_objPaletteIndex];
 		if (address == 0xFF26)		//<---HACK!! Zelda oracle games won't boot unless NR52 is disabled by length counter. Must fix with proper APU implementation!!
 			return 0;
+		if (address == 0xFF02)		//Tie SC (FF02) to FF. it is never used as this emu doesn't do serial link, however some fan-games use this to check if the emu is visual boy advance (terrible broken emulator), and if so lock up
+			return 0xFF;
 		return m_IORegisters[address - 0xFF00];
 	}
 	if (address >= 0xFF80 && address <= 0xFFFF)
