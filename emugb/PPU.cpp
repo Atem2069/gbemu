@@ -69,6 +69,7 @@ void PPU::step(unsigned long cycleCount)
 			{
 
 				unsigned int pixelIdx = (curLine * 160) + i;
+				m_backBuffer[pixelIdx] = {1,1,1};	
 				Pixel backgroundPixel = m_backgroundFIFO[i];
 				Pixel spritePixel = m_spriteFIFO[i];
 				if(backgroundPixel.shouldDraw)
