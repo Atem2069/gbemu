@@ -67,18 +67,13 @@ void PPU::step(unsigned long cycleCount)
 
 			for (int i = 0; i < 160; i++)
 			{
-
 				unsigned int pixelIdx = (curLine * 160) + i;
-				m_backBuffer[pixelIdx] = {1,1,1};	
+				m_plotPixel(i, curLine, 0, 0, false);
 				Pixel backgroundPixel = m_backgroundFIFO[i];
 				Pixel spritePixel = m_spriteFIFO[i];
 				if(backgroundPixel.shouldDraw)
 					m_plotPixel(i, curLine, backgroundPixel.colIndex, backgroundPixel.paletteIndex, false);
 
-				//if(spritePixel.shouldDraw && (spritePixel.priority || backgroundPixel.colIndex==0 || (!backgroundPixel.priority && spritePixel.priority)))
-				//{
-				//	m_plotPixel(i, curLine, spritePixel.colIndex, spritePixel.paletteIndex, true);
-				//}
 				if (spritePixel.shouldDraw)
 				{
 					if ((!backgroundPixel.priority && spritePixel.priority) || (backgroundPixel.priority && backgroundPixel.colIndex == 0) || backgroundPixel.colIndex == 0)

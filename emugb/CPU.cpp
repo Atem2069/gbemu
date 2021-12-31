@@ -574,14 +574,46 @@ void CPU::m_executePrefixedInstruction()
 
 void CPU::m_initIO()
 {
-	//https://gbdev.io/pandocs/Power_Up_Sequence.html (Hardware registers)
-	AF.reg = 0x0100;
-	BC.reg = 0xFF13;
-	DE.reg = 0x00C1;
-	HL.reg = 0x8403;
-	SP.reg = 0xFFFE;
-	PC = 0;
+	bool disableBootRom = Config::getInstance()->getValue<bool>("BootRom");
+	if (disableBootRom)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Boot ROM was disabled - initializing directly. Custom DMG palettes will not work.");
+		m_bus->write(0xFF50, 1);
+		bool cartIsCGB = (m_bus->read(CART_COMPAT) == 0xC0 || m_bus->read(CART_COMPAT) == 0x80);	//0xC0: CGB only. 0x80: CGB and DMG
 
+		if (cartIsCGB)
+		{
+			//https://gbdev.io/pandocs/Power_Up_Sequence.html (Hardware registers)
+			AF.reg = 0x1180;
+			BC.reg = 0x0000;
+			DE.reg = 0xFF56;
+			HL.reg = 0x000D;
+		}
+		else
+		{
+			m_bus->write(REG_KEY0, 0x04);	//enable dmg compatibility mode
+			AF.reg = 0x01B0;
+			BC.reg = 0x0013;
+			DE.reg = 0x00D8;
+			HL.reg = 0x014D;
+
+			//init custom palette
+			uint8_t paletteData[] = { 0b00001111,0b00001010,0b11101011,0b00100001,0b01100111,0b00100101,0b00000101,0b00011101 };	//dmg palette converted to RGB555(+1)
+			m_bus->write(REG_BGPI, 0b10000000);	//set auto increment 
+			m_bus->write(REG_OBPI, 0b10000000);
+			for (int i = 0; i < sizeof(paletteData) / sizeof(uint8_t); i++)
+			{
+				m_bus->write(REG_BGPD, paletteData[i]);
+				m_bus->write(REG_OBPD, paletteData[i]);
+			}
+		}
+		
+		SP.reg = 0xFFFE;
+		PC = 0x100;
+	}
+
+
+	//IO registers always inited, even if boot rom executes
 	m_bus->write(REG_JOYPAD, 0xCF);
 	m_bus->write(REG_DIV, 0xAB);
 	m_bus->write(REG_TIMA, 0x00);

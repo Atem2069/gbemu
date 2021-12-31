@@ -17,3 +17,5 @@ const uint16_t REG_BGPI = 0xFF68;
 const uint16_t REG_BGPD = 0xFF69;
 const uint16_t REG_OBPI = 0xFF6A;
 const uint16_t REG_OBPD = 0xFF6B;
+
+const uint16_t CART_COMPAT = 0x0143;	//cgb compatibility byte

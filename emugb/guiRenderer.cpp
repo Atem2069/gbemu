@@ -25,15 +25,22 @@ void GuiRenderer::render()
 			ImGui::MenuItem("Exit", nullptr, nullptr);
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Debug"))
+		if (ImGui::BeginMenu("System"))
 		{
-			ImGui::MenuItem("CPU State",nullptr,&m_showCPUDialog);
-			ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
-			ImGui::MenuItem("Pause emulation",nullptr,nullptr);
+			ImGui::MenuItem("Pause emulation", nullptr, nullptr);
 			bool reset = false;
 			ImGui::MenuItem("Reset", nullptr, &reset);
 			if (reset)
 				Config::getInstance()->setValue<bool>("reset", true);
+			bool bootrom = Config::getInstance()->getValue<bool>("BootRom");
+			ImGui::MenuItem("Disable Boot Rom", nullptr, &bootrom);
+			Config::getInstance()->setValue<bool>("BootRom", bootrom);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Debug"))
+		{
+			ImGui::MenuItem("CPU State",nullptr,&m_showCPUDialog);
+			ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
 			bool serial = Config::getInstance()->getValue<bool>("serialDebug");
 			ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
 			Config::getInstance()->setValue<bool>("serialDebug", serial);

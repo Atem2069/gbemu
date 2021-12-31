@@ -13,7 +13,7 @@ void main()
 {
 	vec3 col = texture(texSampler,texcoord).xyz;
 	fragColor = vec4(col,1.0f);
-	fragColor.rgb = pow(fragColor.rgb,vec3(1.0/2.2));
+	//fragColor.rgb = pow(fragColor.rgb,vec3(1.0/2.2));
 }
 
 
