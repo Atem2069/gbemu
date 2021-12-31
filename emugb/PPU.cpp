@@ -52,54 +52,8 @@ void PPU::step(unsigned long cycleCount)
 			if (HBLankSTAT)
 				m_interruptManager->requestInterrupt(InterruptType::STAT);
 			status &= 0b11111100;	//set lower two bits to 0 (00)
-
-			if (m_bus->getHDMA() && !m_HDMAInProgress)
-			{
-				m_bus->acknowledgeHDMA();
-				m_hdmaLength = (m_bus->read(REG_HDMA5)) & 0b01111111;
-				m_HDMAInProgress = true;
-			}
-			if (m_HDMAInProgress)
-			{
-				if (!m_bus->getHDMAInProgress())
-				{
-					m_HDMAInProgress = false;
-					//m_hdmaTransferBytes = 0;
-				}
-				else
-				{
-					if (m_hdmaTransferBytes >= (int)((m_hdmaLength + 1) * 16))
-					{
-						m_bus->finishHDMA();
-						m_HDMAInProgress = false;
-						m_hdmaTransferBytes = 0;
-						m_bus->writeIORegister(REG_HDMA5, 0xFF);
-					}
-					else
-					{
-						uint8_t srcHigh = m_bus->read(REG_HDMA1);
-						uint8_t srcLow = m_bus->read(REG_HDMA2) & 0xF0;
-						uint16_t src = (srcHigh << 8) | srcLow;
-
-						uint8_t dstHigh = m_bus->read(REG_HDMA3) & 0b00011111;
-						uint8_t dstLow = m_bus->read(REG_HDMA4) & 0xF0;
-						uint16_t dst = 0x8000 + ((dstHigh << 8) | dstLow);
-
-						std::cout << "hdma " << std::hex << (int)src+m_hdmaTransferBytes << " " << (int)dst+m_hdmaTransferBytes << '\n';
-
-						for (int i = 0; i < 16; i++)
-						{
-							m_bus->write(dst + m_hdmaTransferBytes + i, m_bus->read(src + m_hdmaTransferBytes + i));
-							if (m_hdmaTransferBytes + i >= (int)((m_hdmaLength + 1) * 16))
-								break;
-						}
-						m_hdmaTransferBytes += 16;
-						uint16_t remainingLength = ((m_hdmaLength - m_hdmaTransferBytes) / 16) - 1;
-						m_bus->writeIORegister(REG_HDMA5, remainingLength & 0b01111111);
-					}
-				}
-			}
-
+			//m_HDMATransfer();
+			m_bus->HDMATransfer();
 		}
 		break;
 	case 0:  //hblank
@@ -466,6 +420,7 @@ unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 
 	return colIdx;
 }
+
 
 vec3* PPU::getDisplay()
 {

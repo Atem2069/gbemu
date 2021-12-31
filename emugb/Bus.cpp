@@ -116,11 +116,15 @@ void Bus::write(uint16_t address, uint8_t value)
 		if (address == REG_HDMA5)
 		{
 			if ((value >> 7) & 0b1)
-				m_HDMARequested = true;
-			else if (((value >> 7) & 0b1) == 0 && m_HDMAInProgress)
+			{
+				m_IORegisters[REG_HDMA5 - 0xFF00] = value & 0b01111111;
+				m_hdmaInProgress = true;
+				return;
+			}
+			else if (((value >> 7) & 0b1) == 0 && m_hdmaInProgress)
 			{
 				m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;
-				m_HDMAInProgress = false;
+				m_hdmaInProgress = false;
 				return;
 			}
 			else
@@ -211,29 +215,6 @@ uint16_t Bus::readObjColor(uint8_t paletteIndex, uint8_t colorIndex)
 	return col;
 }
 
-bool Bus::getHDMA()
-{
-	return m_HDMARequested;
-}
-
-bool Bus::getHDMAInProgress()
-{
-	return m_HDMAInProgress;
-}
-
-void Bus::acknowledgeHDMA()
-{
-	m_HDMARequested = false;
-	m_HDMAInProgress = true;
-	m_IORegisters[REG_HDMA5 - 0xFF00] &= 0b01111111;	//DMA in progress (bit 7 cleared)
-}
-
-void Bus::finishHDMA()
-{
-	m_HDMAInProgress = false;
-	m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;	//DMA completed (bit 7 set)
-}
-
 bool Bus::getInCompatibilityMode()
 {
 	return m_isInCompatibilityMode;
@@ -246,6 +227,44 @@ void Bus::m_DMATransfer(uint8_t base)
 	{
 		write(0xFE00 + i, read(newAddr + i));
 	}
+}
+
+void Bus::HDMATransfer()
+{
+	if (!m_hdmaInProgress)
+		return;
+	uint8_t srcHigh = read(REG_HDMA1);
+	uint8_t srcLow = read(REG_HDMA2) & 0xF0;
+	uint16_t src = (srcHigh << 8) | srcLow;
+
+	uint8_t dstHigh = read(REG_HDMA3) & 0b00011111;
+	uint8_t dstLow = read(REG_HDMA4) & 0xF0;
+	uint16_t dst = 0x8000 + ((dstHigh << 8) | dstLow);
+
+	for (int i = 0; i < 16; i++)
+		write(dst + i, read(src + i));
+
+	src += 16;
+	dst += 16;
+
+	if (src == 0x8000)
+		src = 0xA000;
+	if (dst == 0xa000)
+		dst = 0x8000;
+
+	write(REG_HDMA1, (src & 0xFF00) >> 8);
+	write(REG_HDMA2, (src & 0x00FF) & 0xF0);
+	write(REG_HDMA3, ((dst & 0xFF00) >> 8) & 0b00011111);
+	write(REG_HDMA4, (dst & 0x00FF) & 0xF0);
+
+	uint8_t hdmaStat = m_IORegisters[REG_HDMA5 - 0xFF00];
+	hdmaStat -= 1;
+	if (hdmaStat == 0xFF)
+	{
+		m_hdmaInProgress = false;
+	}
+	m_IORegisters[REG_HDMA5 - 0xFF00] = hdmaStat;
+
 }
 
 void Bus::m_GDMATransfer(uint8_t length)
@@ -263,6 +282,11 @@ void Bus::m_GDMATransfer(uint8_t length)
 
 	src += (int)(length + 1) * 16;
 	dst += (int)(length + 1) * 16;
+
+	if (src == 0x8000)
+		src = 0xA000;
+	if (dst == 0xa000)
+		dst = 0x8000;
 
 	write(REG_HDMA1, (src & 0xFF00) >> 8);
 	write(REG_HDMA2,(src & 0x00FF) & 0xF0);

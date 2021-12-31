@@ -35,7 +35,6 @@ private:
 
 	bool m_HDMAInProgress = false;
 	uint16_t m_hdmaTransferBytes = 0;
-	uint16_t m_hdmaLength = 0;
 
 	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
 	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler
@@ -48,6 +47,8 @@ private:
 	void m_renderSprites(uint8_t line);
 	void m_plotPixel(int x, int y, uint8_t colIdx, uint8_t paletteIdx, bool useObjPalette);
 	unsigned int m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette);
+
+	//void m_HDMATransfer();
 
 	bool m_getDisplayEnabled();
 	bool m_getTileDataSelect();

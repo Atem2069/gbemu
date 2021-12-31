@@ -29,17 +29,13 @@ public:
 	uint16_t readBgColor(uint8_t paletteIndex, uint8_t colorIndex);
 	uint16_t readObjColor(uint8_t paletteIndex, uint8_t colorIndex);
 
-	bool getHDMA();
-	bool getHDMAInProgress();
-	void acknowledgeHDMA();
-	void finishHDMA();
+	void HDMATransfer();
 
 	bool getInCompatibilityMode();
 private:
 	std::shared_ptr<MMU> m_mbc;
 	bool m_isInBootRom = true;
-	bool m_HDMARequested = false;
-	bool m_HDMAInProgress = false;
+	bool m_hdmaInProgress = false;
 	void m_DMATransfer(uint8_t base);
 	void m_GDMATransfer(uint8_t length);
 
