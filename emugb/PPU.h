@@ -34,7 +34,8 @@ private:
 	uint8_t m_windowLineCount = 0;
 
 	bool m_HDMAInProgress = false;
-	uint8_t m_hdmaTransferBytes = 0;
+	uint16_t m_hdmaTransferBytes = 0;
+	uint16_t m_hdmaLength = 0;
 
 	vec3 m_backBuffer[160*144] = {};	//scratchpad buffer used while rendering frame
 	vec3 m_dispBuffer[160*144] = {};	//buffer that is only updated per vblank, which is returned to the display handler

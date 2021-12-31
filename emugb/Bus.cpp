@@ -118,7 +118,11 @@ void Bus::write(uint16_t address, uint8_t value)
 			if ((value >> 7) & 0b1)
 				m_HDMARequested = true;
 			else if (((value >> 7) & 0b1) == 0 && m_HDMAInProgress)
+			{
+				m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;
 				m_HDMAInProgress = false;
+				return;
+			}
 			else
 				m_GDMATransfer(value & 0b01111111);
 		}
@@ -180,6 +184,11 @@ uint8_t Bus::readVRAM(uint8_t bank, uint16_t address)
 void Bus::writeVRAM(uint8_t bank, uint16_t address, uint8_t value)
 {
 	m_VRAM[bank][address - 0x8000] = value;
+}
+
+void Bus::writeIORegister(uint16_t address, uint8_t value)
+{
+	m_IORegisters[address - 0xFF00] = value;
 }
 
 uint16_t Bus::readBgColor(uint8_t paletteIndex, uint8_t colorIndex)
@@ -252,5 +261,14 @@ void Bus::m_GDMATransfer(uint8_t length)
 	for (int i = 0; i < (int)(length+1)*16; i++)
 		write(dst + i, read(src + i));
 
-	m_IORegisters[REG_HDMA5 - 0xFF00] |= 0b10000000;
+	src += (int)(length + 1) * 16;
+	dst += (int)(length + 1) * 16;
+
+	write(REG_HDMA1, (src & 0xFF00) >> 8);
+	write(REG_HDMA2,(src & 0x00FF) & 0xF0);
+	write(REG_HDMA3, ((dst & 0xFF00) >> 8) & 0b00011111);
+	write(REG_HDMA4, (dst & 0x00FF) & 0xF0);
+
+
+	m_IORegisters[REG_HDMA5 - 0xFF00] =0xFF;
 }
