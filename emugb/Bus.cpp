@@ -66,6 +66,8 @@ uint8_t Bus::read(uint16_t address)
 			return m_paletteMemory[m_paletteIndex];
 		if (address == REG_OBPD)
 			return m_objPaletteMemory[m_objPaletteIndex];
+		if (address == 0xFF26)		//<---HACK!! Zelda oracle games won't boot unless NR52 is disabled by length counter. Must fix with proper APU implementation!!
+			return 0;
 		return m_IORegisters[address - 0xFF00];
 	}
 	if (address >= 0xFF80 && address <= 0xFFFF)
