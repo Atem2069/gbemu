@@ -42,18 +42,25 @@ uint8_t MBC3::read(uint16_t address)
 	if (address >= 0x4000 && address < 0x8000 && m_bankNumber == 0)
 		return m_ROMBanks[1][(int)address - 0x4000];
 
-	if (address >= 0xA000 && address <= 0xBFFF)
-		return m_RAMBanks[0][address - 0xA000];
+	if (address >= 0xA000 && address <= 0xBFFF && m_ramBankNumber < 0x08)
+	{
+		if(m_SRAMEnabled)
+			return m_RAMBanks[m_ramBankNumber][address - 0xA000];
+		return 0xFF;
+	}
 
-	return m_ROMBanks[0][address];
+	if(address <= 0x3FFF)
+		return m_ROMBanks[0][address];
 }
 
 void MBC3::write(uint16_t address, uint8_t value)
 {
 	if (address >= 0x0000 && address <= 0x1fff)
 	{
-		//Logger::getInstance()->msg(LoggerSeverity::Error, "Attempt to enable RAM in MBC. Unsupported");
-		return;
+		if (value == 0x0A)
+			m_SRAMEnabled = true;
+		else if (value == 0x00)
+			m_SRAMEnabled = false;
 	}
 
 	if (address >= 0x4000 && address <= 0x5fff)
@@ -76,8 +83,11 @@ void MBC3::write(uint16_t address, uint8_t value)
 		return;
 	}
 
-	if (address >= 0xA000 && address <= 0xBFFF)
-		m_RAMBanks[0][address - 0xA000] = value;
+	if (address >= 0xA000 && address <= 0xBFFF && m_ramBankNumber < 0x08)
+	{
+		if(m_SRAMEnabled)
+			m_RAMBanks[m_ramBankNumber][address - 0xA000] = value;
+	}
 
 	//m_memory[address] = value;
 

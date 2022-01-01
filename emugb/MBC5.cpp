@@ -8,6 +8,7 @@ MBC5::MBC5(std::vector<uint8_t> ROM)
 		std::copy(ROM.begin() + i, ROM.begin() + i + 16384, curROMBank.begin());
 		m_ROMBanks.push_back(curROMBank);
 	}
+	m_ramBankNumber = 0;
 }
 
 MBC5::~MBC5()
@@ -25,7 +26,11 @@ uint8_t MBC5::read(uint16_t address)
 	}
 
 	if (address >= 0xA000 && address <= 0xBFFF)
-		return m_RAMBanks[0][address - 0xA000];
+	{
+		if (m_SRAMEnabled)
+			return m_RAMBanks[m_ramBankNumber][address - 0xA000];
+		return 0xFF;
+	}
 
 	if(address <= 0x3FFF)
 		return m_ROMBanks[0][address];
@@ -35,21 +40,21 @@ void MBC5::write(uint16_t address, uint8_t value)
 {
 	if (address >= 0x0000 && address <= 0x1fff)
 	{
-		//Logger::getInstance()->msg(LoggerSeverity::Error, "Attempt to enable RAM in MBC. Unsupported");
-		//return;
+		if (value == 0x0A)
+			m_SRAMEnabled = true;
+		else if (value == 0x00)
+			m_SRAMEnabled = false;	//ignore all other values, only 0a enables and 00 disables
 	}
 
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
-		m_ramBankNumber = value;
-		//return;
+		m_ramBankNumber = 0;// value % 8;
 	}
 
 
 	if (address >= 0x2000 && address <= 0x2FFF)
 	{
 		m_bankNumber = (m_bankNumberHighBit << 8) | value;
-		//return;
 	}
 
 	if (address >= 0x3000 && address <= 0x3FFF)
@@ -58,7 +63,10 @@ void MBC5::write(uint16_t address, uint8_t value)
 	}
 
 	if (address >= 0xA000 && address <= 0xBFFF)
-		m_RAMBanks[0][address - 0xA000] = value;
+	{
+		if(m_SRAMEnabled)
+			m_RAMBanks[m_ramBankNumber][address - 0xA000] = value;
+	}
 	//MMUState curState = { m_isInBIOS,m_bankNumber,m_ramBankNumber };
 	//Config::getInstance()->setValue<MMUState>("MMUState", curState);
 }

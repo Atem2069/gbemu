@@ -59,6 +59,7 @@ private:
 	uint8_t m_ramBankNumber = 0;
 	uint8_t m_lastLatchWrite = 0xff;	//writing 0 then 1 toggles latching/unlatching rtc
 	bool m_rtcLatched = false;
+	bool m_SRAMEnabled = false;
 	std::chrono::steady_clock::time_point m_rtcStart, m_rtcLast;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
 	std::array<std::array<uint8_t, 8192>, 8> m_RAMBanks;
@@ -76,6 +77,7 @@ private:
 	uint16_t m_bankNumber = 1;
 	uint16_t m_bankNumberHighBit = 0;
 	uint8_t m_ramBankNumber = 0;
+	bool m_SRAMEnabled = false;
 	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;	
 	std::array<std::array<uint8_t, 8192>, 8> m_RAMBanks;
 };
