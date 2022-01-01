@@ -27,7 +27,9 @@ void GuiRenderer::render()
 		}
 		if (ImGui::BeginMenu("System"))
 		{
-			ImGui::MenuItem("Pause emulation", nullptr, nullptr);
+			bool pause = Config::getInstance()->getValue<bool>("pause");
+			ImGui::MenuItem("Pause emulation", nullptr, &pause);
+			Config::getInstance()->setValue<bool>("pause", pause);
 			bool reset = false;
 			ImGui::MenuItem("Reset", nullptr, &reset);
 			if (reset)

@@ -37,6 +37,10 @@ void GameBoy::run()
 			m_bufAccessLock.unlock();
 		}
 
+		while (Config::getInstance()->getValue<bool>("pause"))
+		{
+			//do nothing until unpaused..
+		}
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		unsigned long lastCycleCount = m_cpu->getCycleCount();
 
