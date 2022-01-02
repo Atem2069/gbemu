@@ -15,21 +15,21 @@ Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM)
 	else if (ROMType >= 0x19 && ROMType <= 0x1E)
 		m_mbc = std::make_shared<MBC5>(ROM);
 
-	for (int i = 0; i < m_VRAM.size(); i++)
+	for (int i = 0; i < 2; i++)
 	{
-		for (int j = 0; j < m_VRAM[i].size(); j++)
+		for (int j = 0; j < 8192; j++)
 			m_VRAM[i][j] = 0xFF;
 	}
-	for (int i = 0; i < m_workRAM.size(); i++)
+	for (int i = 0; i < 8; i++)
 	{
-		for (int j = 0; j < m_workRAM[i].size(); j++)
+		for (int j = 0; j < 8192; j++)
 			m_workRAM[i][j] = 0xFF;
 	}
-	for (int i = 0; i < m_IORegisters.size(); i++)
+	for (int i = 0; i < 128; i++)
 		m_IORegisters[i] = 0xFF;
-	for (int i = 0; i < m_HRAM.size(); i++)
+	for (int i = 0; i < 128; i++)
 		m_HRAM[i] = 0xFF;
-	for (int i = 0; i < m_OAM.size(); i++)
+	for (int i = 0; i < 160; i++)
 		m_OAM[i] = 0xFF;
 
 }

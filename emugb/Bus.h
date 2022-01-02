@@ -41,16 +41,17 @@ private:
 
 	std::vector<uint8_t> m_bootRom;
 
-	std::array<std::array<uint8_t, 4096>, 8> m_workRAM;
-	std::array<std::array<uint8_t, 8192>,2> m_VRAM;
-	std::array<uint8_t, 160> m_OAM;
-	std::array<uint8_t, 128> m_IORegisters;
-	std::array<uint8_t, 128> m_HRAM;
-	std::array<uint8_t, 64> m_paletteMemory;
+	uint8_t m_workRAM[8][4096];
+	uint8_t m_VRAM[2][8192];
+	uint8_t m_OAM[160];
+	uint8_t m_IORegisters[128];
+	uint8_t m_HRAM[128];
+
+	uint8_t m_paletteMemory[64];
 	uint8_t m_paletteIndex = 0;
 	bool m_incrementPaletteIndex = false;
 
-	std::array<uint8_t, 64> m_objPaletteMemory;
+	uint8_t m_objPaletteMemory[64];
 	uint8_t m_objPaletteIndex = 0;
 	bool m_incrementObjPaletteIndex = false;
 
