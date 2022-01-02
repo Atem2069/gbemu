@@ -579,7 +579,7 @@ void CPU::m_initIO()
 	{
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Boot ROM was disabled - initializing directly. Custom DMG palettes will not work.");
 		m_bus->write(0xFF50, 1);
-		bool cartIsCGB = (m_bus->read(CART_COMPAT) == 0xC0 || m_bus->read(CART_COMPAT) == 0x80);	//0xC0: CGB only. 0x80: CGB and DMG
+		bool cartIsCGB = (m_bus->read(CART_COMPAT) == 0xC0 || (m_bus->read(CART_COMPAT) == 0x80 && !Config::getInstance()->getValue<bool>("DmgMode")));	//0xC0: CGB only. 0x80: CGB and DMG
 
 		if (cartIsCGB)
 		{

@@ -30,13 +30,20 @@ void GuiRenderer::render()
 			bool pause = Config::getInstance()->getValue<bool>("pause");
 			ImGui::MenuItem("Pause emulation", nullptr, &pause);
 			Config::getInstance()->setValue<bool>("pause", pause);
+
 			bool reset = false;
 			ImGui::MenuItem("Reset", nullptr, &reset);
 			if (reset)
 				Config::getInstance()->setValue<bool>("reset", true);
+
 			bool bootrom = Config::getInstance()->getValue<bool>("BootRom");
 			ImGui::MenuItem("Disable Boot Rom", nullptr, &bootrom);
 			Config::getInstance()->setValue<bool>("BootRom", bootrom);
+
+			bool dmgMode = Config::getInstance()->getValue<bool>("DmgMode");
+			ImGui::MenuItem("Prefer DMG Mode (Boot ROM must be disabled!)", nullptr, &dmgMode);
+			Config::getInstance()->setValue<bool>("DmgMode", dmgMode);
+
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Debug"))
