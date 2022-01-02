@@ -22,6 +22,9 @@ void PPU::step(unsigned long cycleCount)
 	}
 
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
+	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
+		return;
+
 	uint8_t curLine = m_bus->read(REG_LY);
 	uint8_t status = m_bus->read(REG_STAT);
 
@@ -35,7 +38,6 @@ void PPU::step(unsigned long cycleCount)
 	switch (m_displayMode)
 	{
 	case 2:
-		if (cycleDiff >= 20)
 		{
 			m_lastCycleCount = cycleCount;
 			m_displayMode = 3;
@@ -45,7 +47,6 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 3:
-		if (cycleDiff >= 43)
 		{
 			m_lastCycleCount = cycleCount;
 			m_displayMode = 0;
@@ -57,7 +58,6 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 0:  //hblank
-		if (cycleDiff >= 51)
 		{
 			m_lastCycleCount = cycleCount;
 
@@ -103,7 +103,6 @@ void PPU::step(unsigned long cycleCount)
 		}
 		break;
 	case 1:
-		if (cycleDiff >= 114)
 		{
 			m_lastCycleCount = cycleCount;
 			curLine++;

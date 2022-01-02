@@ -25,6 +25,7 @@ public:
 
 	vec3* getDisplay();
 private:
+	uint8_t m_ppuCycleDiffs[4] = { 51, 114, 20, 43 };
 	int m_displayMode = 0;
 	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;

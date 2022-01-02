@@ -1,7 +1,7 @@
 #pragma once
 
 #include<iostream>
-#include<map>
+#include<unordered_map>
 #include<any>
 
 class Config
@@ -24,5 +24,5 @@ public:
 private:
 	static Config* instance;
 	Config();
-	std::map<std::string, std::any> m_config;
+	std::unordered_map<std::string, std::any> m_config;
 };
