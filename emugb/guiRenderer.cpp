@@ -57,7 +57,6 @@ void GuiRenderer::render()
 			{
 				m_menuItemSelected = true;
 				ImGui::MenuItem("CPU State", nullptr, &m_showCPUDialog);
-				ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
 				bool serial = Config::getInstance()->getValue<bool>("serialDebug");
 				ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
 				Config::getInstance()->setValue<bool>("serialDebug", serial);
@@ -98,27 +97,6 @@ void GuiRenderer::render()
 		std::string cpuDebug = std::format("SHARP LR35902\nPC={:#x}\nStack pointer={:#x}\nAF={:#x}\nBC={:#x}\nDE={:#x}\nHL={:#x}\nInterrupts are enabled? {}\n", (int)curState.PC, (int)curState.AF, (int)curState.BC, (int)curState.DE, (int)curState.HL, (int)curState.SP, interruptsEnabled);
 		cpuDebug += std::format("Carry: {}  Half Carry: {}\nZero: {}  Subtract: {}", curState.carry, curState.halfCarry, curState.zero, curState.subtract);
 		ImGui::Text(cpuDebug.c_str());
-		ImGui::End();
-	}
-
-	if (m_showIODialog)
-	{
-		ImGui::Begin("IO Registers", &m_showIODialog, ImGuiWindowFlags_NoCollapse);
-		ImGui::Text("Memory Mapped IO/MMU registers");
-		ImGui::Separator();
-		ImGui::Columns(2);
-		ImGui::BeginChild(1,ImVec2(00,00));
-		IOState curState = Config::getInstance()->getValue<IOState>("IOState");
-		std::string ioDebug = std::format("{:#x} JOYPAD: {:#x}\n{:#x} DIV: {:#x}\n{:#x} TIMA: {:#x}\n{:#x} TMA: {:#x}\n{:#x} TAC: {:#x}\n{:#x} IF: {:#x}\n{:#x} STAT: {:#x}\n{:#x} SCX: {:#x}\n", REG_JOYPAD, curState.JOYPAD, REG_DIV, curState.DIV, REG_TIMA, curState.TIMA, REG_TMA, curState.TMA, REG_TAC, curState.TAC, REG_IFLAGS, curState.IFLAGS, REG_STAT, curState.STAT, REG_SCX, curState.SCX);
-		ioDebug += std::format("{:#x} SCY: {:#x}\n{:#x} LY: {:#x}\n{:#x} LYC: {:#x}\n{:#x} DMA: {:#x}\n{:#x} WX: {:#x}\n{:#x} WY: {:#x}\n{:#x} IE: {:#x}", REG_SCY, curState.SCY, REG_LY, curState.LY, REG_LYC, curState.LYC, REG_DMA, curState.DMA, REG_WX, curState.WX, REG_WY, curState.WY, REG_IE, curState.IE);
-		ImGui::Text(ioDebug.c_str());
-		ImGui::EndChild();
-		ImGui::NextColumn();
-		ImGui::BeginChild(2, ImVec2(00,00));
-		MMUState mmuState = Config::getInstance()->getValue<MMUState>("MMUState");
-		std::string mmuDebug = std::format("In BIOS? {}\nROM Bank Number: {:#x}\nRAM Bank Number: {:#x}", mmuState.inBIOS, mmuState.romBankNumber, mmuState.ramBankNumber);
-		ImGui::Text(mmuDebug.c_str());
-		ImGui::EndChild();
 		ImGui::End();
 	}
 
@@ -189,6 +167,5 @@ bool GuiRenderer::m_showAboutDialog = false;
 bool GuiRenderer::m_showCPUDialog = false;
 bool GuiRenderer::m_openFileDialog = false;
 bool GuiRenderer::m_showPPUDialog = false;
-bool GuiRenderer::m_showIODialog = false;
 bool GuiRenderer::m_autoHideMenu = false;
 bool GuiRenderer::m_menuItemSelected = false;

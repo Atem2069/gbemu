@@ -42,7 +42,7 @@ private:
 	bool m_SRAMEnabled = false;
 	bool m_shouldSave = false;
 	std::string m_saveName;
-	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
+	std::array<std::array<uint8_t, 16384>,128> m_ROMBanks;
 	std::array<std::array<uint8_t, 8192>,4> m_RAMBanks;
 };
 
@@ -61,7 +61,7 @@ private:
 	bool m_rtcLatched = false;
 	bool m_SRAMEnabled = false;
 	std::chrono::steady_clock::time_point m_rtcStart, m_rtcLast;
-	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;
+	std::array<std::array<uint8_t, 16384>,128> m_ROMBanks;
 	std::array<std::array<uint8_t, 8192>, 8> m_RAMBanks;
 };
 
@@ -78,6 +78,6 @@ private:
 	uint16_t m_bankNumberHighBit = 0;
 	uint8_t m_ramBankNumber = 0;
 	bool m_SRAMEnabled = false;
-	std::vector<std::array<uint8_t, 16384>> m_ROMBanks;	
+	std::array<std::array<uint8_t, 16384>,512> m_ROMBanks;	
 	std::array<std::array<uint8_t, 8192>, 8> m_RAMBanks;
 };

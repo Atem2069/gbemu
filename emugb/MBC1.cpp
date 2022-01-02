@@ -2,12 +2,12 @@
 
 MBC1::MBC1(std::vector<uint8_t> ROM)
 {
-
+	int count = 0;
 	for (int i = 0; i < ROM.size() - 16384; i += 16384)
 	{
 		std::array<uint8_t, 16384> curROMBank;
 		std::copy(ROM.begin() + i, ROM.begin() + i + 16384, curROMBank.begin());
-		m_ROMBanks.push_back(curROMBank);
+		m_ROMBanks[count++] = curROMBank;
 	}
 
 

@@ -637,24 +637,6 @@ void CPU::m_setDebugInfo()
 	CPUState curCPUState = {};
 	curCPUState = { AF.reg,BC.reg,DE.reg,HL.reg,SP.reg,PC,m_interruptManager->getInterruptsEnabled(), m_getHalfCarryFlag(),m_getCarryFlag(),m_getZeroFlag(),m_getSubtractFlag() };
 	Config::getInstance()->setValue<CPUState>("CPUState",curCPUState);
-
-	IOState curIOState;
-	curIOState.JOYPAD = m_bus->read(REG_JOYPAD);
-	curIOState.DIV = m_bus->read(REG_DIV);
-	curIOState.TIMA = m_bus->read(REG_TIMA);
-	curIOState.TMA = m_bus->read(REG_TMA);
-	curIOState.TAC = m_bus->read(REG_TAC);
-	curIOState.IFLAGS = m_bus->read(REG_IFLAGS);
-	curIOState.STAT = m_bus->read(REG_STAT);
-	curIOState.SCX = m_bus->read(REG_SCX);
-	curIOState.SCY = m_bus->read(REG_SCY);
-	curIOState.LY = m_bus->read(REG_LY);
-	curIOState.LYC = m_bus->read(REG_LYC);
-	curIOState.DMA = m_bus->read(REG_DMA);
-	curIOState.WX = m_bus->read(REG_WX);
-	curIOState.WY = m_bus->read(REG_WY);
-	curIOState.IE = m_bus->read(REG_IE);
-	Config::getInstance()->setValue<IOState>("IOState", curIOState);
 }
 
 unsigned long CPU::getCycleCount() { return m_cycleCount; }
