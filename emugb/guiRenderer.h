@@ -23,4 +23,6 @@ private:
 	static bool m_openFileDialog;
 	static bool m_showPPUDialog;
 	static bool m_showIODialog;
+	static bool m_autoHideMenu;
+	static bool m_menuItemSelected;
 };

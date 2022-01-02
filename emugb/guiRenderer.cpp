@@ -17,58 +17,69 @@ void GuiRenderer::prepareFrame()
 
 void GuiRenderer::render()
 {
-	if (ImGui::BeginMainMenuBar())
+	ImVec2 cursorPos = ImGui::GetIO().MousePos;
+	bool showMenuOverride = (cursorPos.x >= 0 && cursorPos.y >= 0) && (cursorPos.y <= 25);
+	if ((m_autoHideMenu && showMenuOverride) || !m_autoHideMenu || m_menuItemSelected)
 	{
-		if (ImGui::BeginMenu("File"))
+		if (ImGui::BeginMainMenuBar())
 		{
-			ImGui::MenuItem("Open...", nullptr, &m_openFileDialog);
-			ImGui::MenuItem("Exit", nullptr, nullptr);
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("System"))
-		{
-			bool pause = Config::getInstance()->getValue<bool>("pause");
-			ImGui::MenuItem("Pause emulation", nullptr, &pause);
-			Config::getInstance()->setValue<bool>("pause", pause);
+			m_menuItemSelected = false;
+			if (ImGui::BeginMenu("File"))
+			{
+				m_menuItemSelected = true;
+				ImGui::MenuItem("Open...", nullptr, &m_openFileDialog);
+				ImGui::MenuItem("Exit", nullptr, nullptr);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("System"))
+			{
+				m_menuItemSelected = true;
+				bool pause = Config::getInstance()->getValue<bool>("pause");
+				ImGui::MenuItem("Pause emulation", nullptr, &pause);
+				Config::getInstance()->setValue<bool>("pause", pause);
 
-			bool reset = false;
-			ImGui::MenuItem("Reset", nullptr, &reset);
-			if (reset)
-				Config::getInstance()->setValue<bool>("reset", true);
+				bool reset = false;
+				ImGui::MenuItem("Reset", nullptr, &reset);
+				if (reset)
+					Config::getInstance()->setValue<bool>("reset", true);
 
-			bool bootrom = Config::getInstance()->getValue<bool>("BootRom");
-			ImGui::MenuItem("Disable Boot Rom", nullptr, &bootrom);
-			Config::getInstance()->setValue<bool>("BootRom", bootrom);
+				bool bootrom = Config::getInstance()->getValue<bool>("BootRom");
+				ImGui::MenuItem("Disable Boot Rom", nullptr, &bootrom);
+				Config::getInstance()->setValue<bool>("BootRom", bootrom);
 
-			bool dmgMode = Config::getInstance()->getValue<bool>("DmgMode");
-			ImGui::MenuItem("Prefer DMG Mode (Boot ROM must be disabled!)", nullptr, &dmgMode);
-			Config::getInstance()->setValue<bool>("DmgMode", dmgMode);
+				bool dmgMode = Config::getInstance()->getValue<bool>("DmgMode");
+				ImGui::MenuItem("Prefer DMG Mode (Boot ROM must be disabled!)", nullptr, &dmgMode);
+				Config::getInstance()->setValue<bool>("DmgMode", dmgMode);
 
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Debug"))
-		{
-			ImGui::MenuItem("CPU State",nullptr,&m_showCPUDialog);
-			ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
-			bool serial = Config::getInstance()->getValue<bool>("serialDebug");
-			ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
-			Config::getInstance()->setValue<bool>("serialDebug", serial);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Debug"))
+			{
+				m_menuItemSelected = true;
+				ImGui::MenuItem("CPU State", nullptr, &m_showCPUDialog);
+				ImGui::MenuItem("Memory/IO State Viewer", nullptr, &m_showIODialog);
+				bool serial = Config::getInstance()->getValue<bool>("serialDebug");
+				ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
+				Config::getInstance()->setValue<bool>("serialDebug", serial);
 
-			ImGui::EndMenu();
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("View"))
+			{
+				m_menuItemSelected = true;
+				ImGui::MenuItem("PPU Settings", nullptr, &m_showPPUDialog);
+				ImGui::MenuItem("Auto hide Menubar", nullptr, &m_autoHideMenu);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Help"))
+			{
+				m_menuItemSelected = true;
+				ImGui::MenuItem("About gbemu", nullptr, &m_showAboutDialog);
+				ImGui::EndMenu();
+			}
 		}
-		if (ImGui::BeginMenu("View"))
-		{
-			ImGui::MenuItem("PPU Settings", nullptr, &m_showPPUDialog);
-			ImGui::MenuItem("Hide Menubar", nullptr, nullptr);
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Help"))
-		{
-			ImGui::MenuItem("About gbemu", nullptr, &m_showAboutDialog);
-			ImGui::EndMenu();
-		}
+		ImGui::EndMainMenuBar();
 	}
-	ImGui::EndMainMenuBar();
 
 	if (m_showAboutDialog)
 	{
@@ -179,3 +190,5 @@ bool GuiRenderer::m_showCPUDialog = false;
 bool GuiRenderer::m_openFileDialog = false;
 bool GuiRenderer::m_showPPUDialog = false;
 bool GuiRenderer::m_showIODialog = false;
+bool GuiRenderer::m_autoHideMenu = false;
+bool GuiRenderer::m_menuItemSelected = false;
