@@ -29,7 +29,7 @@ void GameBoy::run()
 	while (m_shouldRun)
 	{
 
-		if (Config::getInstance()->getValue<bool>("reset"))
+		if (Config::GB.System.reset)
 		{
 			m_bufAccessLock.lock();
 			m_destroy();
@@ -37,9 +37,10 @@ void GameBoy::run()
 			m_bufAccessLock.unlock();
 		}
 
-		while (Config::getInstance()->getValue<bool>("pause"))
+		while (Config::GB.System.pause)
 		{
 			//do nothing until unpaused..
+			Sleep(1);
 		}
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		unsigned long lastCycleCount = m_cpu->getCycleCount();
@@ -107,14 +108,14 @@ void GameBoy::displayWorker()
 
 void GameBoy::m_initialise()
 {
-	std::string cart = Config::getInstance()->getValue<std::string>("RomName");
+	std::string cart = Config::GB.System.RomName;
 	if (cart.empty())
 		return;
 
 	if (!m_loadCartridge(cart, m_bus))
 	{
 		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
-		Config::getInstance()->setValue<std::string>("RomName", "");
+		Config::GB.System.RomName = "";
 		return;
 	}
 
@@ -127,7 +128,7 @@ void GameBoy::m_initialise()
 	m_timer = std::make_shared<Timer>(m_bus, m_interruptManager);
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Initialized new Game Boy instance!");
-	Config::getInstance()->setValue<bool>("reset", false);
+	Config::GB.System.reset = false;
 	m_initialized = true;
 
 }

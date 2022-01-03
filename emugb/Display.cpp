@@ -122,7 +122,7 @@ void Display::draw()
 {
 	glfwPollEvents();	//poll window event messages
 	std::string title = "GBEmu - ";
-	title += Config::getInstance()->getValue<std::string>("RomName");
+	title += Config::GB.System.RomName;
 	if (title.length() == 8)	//weird hack to see if no rom is set
 		title += "Not playing";
 	glfwSetWindowTitle(m_window, title.c_str());
@@ -133,8 +133,6 @@ void Display::draw()
 	glBindVertexArray(m_VAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);	//redundant?
-
-	glUniform1i(0, Config::getInstance()->getValue<int>("paletteIdx"));	//set palette index constant in frag shader (so display can take on different colours).
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);	//draw quad made up of 6 vertices (3 tris)
 

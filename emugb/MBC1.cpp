@@ -24,7 +24,7 @@ MBC1::MBC1(std::vector<uint8_t> ROM)
 	if (m_shouldSave)
 	{
 		//load save file into RAM bank 0 (only if cart has battery)
-		m_saveName = Config::getInstance()->getValue<std::string>("RomName");
+		m_saveName = Config::GB.System.RomName;
 		m_saveName.resize(m_saveName.size() - 2);
 		m_saveName += "sav";
 		std::ifstream ramReadHandle(m_saveName, std::ios::in | std::ios::binary);

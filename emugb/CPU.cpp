@@ -574,12 +574,12 @@ void CPU::m_executePrefixedInstruction()
 
 void CPU::m_initIO()
 {
-	bool disableBootRom = Config::getInstance()->getValue<bool>("BootRom");
+	bool disableBootRom = Config::GB.System.useBootRom;
 	if (disableBootRom)
 	{
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Boot ROM was disabled - initializing directly. Custom DMG palettes will not work.");
 		m_bus->write(0xFF50, 1);
-		bool cartIsCGB = (m_bus->read(CART_COMPAT) == 0xC0 || (m_bus->read(CART_COMPAT) == 0x80 && !Config::getInstance()->getValue<bool>("DmgMode")));	//0xC0: CGB only. 0x80: CGB and DMG
+		bool cartIsCGB = (m_bus->read(CART_COMPAT) == 0xC0 || (m_bus->read(CART_COMPAT) == 0x80 && !Config::GB.System.DmgMode));	//0xC0: CGB only. 0x80: CGB and DMG
 
 		if (cartIsCGB)
 		{
@@ -636,7 +636,7 @@ void CPU::m_setDebugInfo()
 {
 	CPUState curCPUState = {};
 	curCPUState = { AF.reg,BC.reg,DE.reg,HL.reg,SP.reg,PC,m_interruptManager->getInterruptsEnabled(), m_getHalfCarryFlag(),m_getCarryFlag(),m_getZeroFlag(),m_getSubtractFlag() };
-	Config::getInstance()->setValue<CPUState>("CPUState",curCPUState);
+	Config::GB.cpuState = curCPUState;
 }
 
 unsigned long CPU::getCycleCount() { return m_cycleCount; }

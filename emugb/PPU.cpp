@@ -137,7 +137,7 @@ void PPU::m_renderBackgroundScanline(uint8_t line)
 {
 	if (line < 0 || line > 143 || (!m_getMasterPriority() && m_bus->getInCompatibilityMode()))	//In CGB mode: LCDC bit 0 is master priority. In DMG mode, it is bg enable/disable
 		return;
-	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("background"))
+	if (Config::GB.PPU.debugOverride && !Config::GB.PPU.background)
 		return;
 	uint8_t scrollY = (m_bus->read(REG_SCY));// % 256;		//these wrap around (tilemap in memory is 256x256, only a 160x144 portion is actually rendered)
 	uint8_t scrollX = (m_bus->read(REG_SCX));// % 256;
@@ -209,7 +209,7 @@ void PPU::m_renderWindowScanline(uint8_t line)
 {
 	if (line < 0 || line > 143 || !m_getWindowEnabled())
 		return;
-	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("window"))
+	if (Config::GB.PPU.debugOverride && !Config::GB.PPU.window)
 		return;
 	int8_t winX = m_bus->read(REG_WX)-7;	//winx register starts at 7
 	uint8_t winY = m_bus->read(REG_WY);
@@ -293,7 +293,7 @@ void PPU::m_renderSprites(uint8_t line)
 	//return if sprites not enabled otherwise we'll read garbage from OAM
 	if (!m_getSpritesEnabled())
 		return;
-	if (Config::getInstance()->getValue<bool>("ppuDebugOverride") && !Config::getInstance()->getValue<bool>("sprites"))
+	if (Config::GB.PPU.debugOverride && !Config::GB.PPU.sprites)
 		return;
 
 

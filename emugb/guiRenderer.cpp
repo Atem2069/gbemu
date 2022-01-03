@@ -34,22 +34,22 @@ void GuiRenderer::render()
 			if (ImGui::BeginMenu("System"))
 			{
 				m_menuItemSelected = true;
-				bool pause = Config::getInstance()->getValue<bool>("pause");
+				bool pause = Config::GB.System.pause;
 				ImGui::MenuItem("Pause emulation", nullptr, &pause);
-				Config::getInstance()->setValue<bool>("pause", pause);
+				Config::GB.System.pause = pause;
 
 				bool reset = false;
 				ImGui::MenuItem("Reset", nullptr, &reset);
 				if (reset)
-					Config::getInstance()->setValue<bool>("reset", true);
+					Config::GB.System.reset = true;
 
-				bool bootrom = Config::getInstance()->getValue<bool>("BootRom");
+				bool bootrom = Config::GB.System.useBootRom;
 				ImGui::MenuItem("Disable Boot Rom", nullptr, &bootrom);
-				Config::getInstance()->setValue<bool>("BootRom", bootrom);
+				Config::GB.System.useBootRom = bootrom;
 
-				bool dmgMode = Config::getInstance()->getValue<bool>("DmgMode");
+				bool dmgMode = Config::GB.System.DmgMode;
 				ImGui::MenuItem("Prefer DMG Mode (Boot ROM must be disabled!)", nullptr, &dmgMode);
-				Config::getInstance()->setValue<bool>("DmgMode", dmgMode);
+				Config::GB.System.DmgMode = dmgMode;
 
 				ImGui::EndMenu();
 			}
@@ -57,9 +57,9 @@ void GuiRenderer::render()
 			{
 				m_menuItemSelected = true;
 				ImGui::MenuItem("CPU State", nullptr, &m_showCPUDialog);
-				bool serial = Config::getInstance()->getValue<bool>("serialDebug");
+				bool serial = false;	//TODO: FIX
 				ImGui::MenuItem("Serial Debug Output", nullptr, &serial);
-				Config::getInstance()->setValue<bool>("serialDebug", serial);
+				//Config::getInstance()->setValue<bool>("serialDebug", serial);
 
 				ImGui::EndMenu();
 			}
@@ -92,7 +92,7 @@ void GuiRenderer::render()
 	if (m_showCPUDialog)
 	{
 		ImGui::Begin("CPU", &m_showCPUDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
-		CPUState curState = Config::getInstance()->getValue<CPUState>("CPUState");
+		CPUState curState = Config::GB.cpuState;
 		std::string interruptsEnabled = (curState.IME) ? "Yes" : "No ";
 		std::string cpuDebug = std::format("SHARP LR35902\nPC={:#x}\nStack pointer={:#x}\nAF={:#x}\nBC={:#x}\nDE={:#x}\nHL={:#x}\nInterrupts are enabled? {}\n", (int)curState.PC, (int)curState.AF, (int)curState.BC, (int)curState.DE, (int)curState.HL, (int)curState.SP, interruptsEnabled);
 		cpuDebug += std::format("Carry: {}  Half Carry: {}\nZero: {}  Subtract: {}", curState.carry, curState.halfCarry, curState.zero, curState.subtract);
@@ -105,30 +105,30 @@ void GuiRenderer::render()
 		ImGui::Begin("PPU", &m_showPPUDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 
 		ImGui::Text("Display palette");
-		int paletteIdx = Config::getInstance()->getValue<int>("paletteIdx");
+		int paletteIdx = 0;// Config::getInstance()->getValue<int>("paletteIdx");
 		ImGui::RadioButton("Classic", &paletteIdx, 0);
 		ImGui::RadioButton("Pocket", &paletteIdx, 1);
-		Config::getInstance()->setValue<int>("paletteIdx", paletteIdx);
+		//Config::getInstance()->setValue<int>("paletteIdx", paletteIdx);	//TODO: fix
 
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Debug settings");
-		bool ppuOverride = Config::getInstance()->getValue<bool>("ppuDebugOverride");
+		bool ppuOverride = Config::GB.PPU.debugOverride;
 		ImGui::Checkbox("Override default behaviour", &ppuOverride);
-		Config::getInstance()->setValue<bool>("ppuDebugOverride", ppuOverride);
+		Config::GB.PPU.debugOverride = ppuOverride;
 
 		if (ppuOverride)
 		{
-			bool showSprites = Config::getInstance()->getValue<bool>("sprites");
-			bool showBackground = Config::getInstance()->getValue<bool>("background");
-			bool showWindow = Config::getInstance()->getValue<bool>("window");
+			bool showSprites = Config::GB.PPU.sprites;
+			bool showBackground = Config::GB.PPU.background;
+			bool showWindow = Config::GB.PPU.window;
 
 			ImGui::Checkbox("Draw background layer", &showBackground);
 			ImGui::Checkbox("Draw window layer", &showWindow);
 			ImGui::Checkbox("Show sprites", &showSprites);
 
-			Config::getInstance()->setValue<bool>("sprites", showSprites);
-			Config::getInstance()->setValue<bool>("background", showBackground);
-			Config::getInstance()->setValue<bool>("window", showWindow);
+			Config::GB.PPU.sprites = showSprites;
+			Config::GB.PPU.background = showBackground;
+			Config::GB.PPU.window = showWindow;
 		}
 		ImGui::End();
 	}
@@ -152,8 +152,8 @@ void GuiRenderer::render()
 		if (GetOpenFileNameA(&ofn) == TRUE)
 		{
 			std::string filename = szFile;
-			Config::getInstance()->setValue<std::string>("RomName", filename);
-			Config::getInstance()->setValue<bool>("reset", true);
+			Config::GB.System.RomName = filename;
+			Config::GB.System.reset = true;
 		}
 
 		m_openFileDialog = false;

@@ -1,28 +1,35 @@
 #pragma once
 
 #include<iostream>
-#include<unordered_map>
-#include<any>
+
+#include"debugStates.h"
+
+struct PPUConfig
+{
+	bool debugOverride;
+	bool background;
+	bool window;
+	bool sprites;
+};
+
+struct SystemConfig
+{
+	std::string RomName;
+	bool useBootRom;
+	bool reset;
+	bool pause;
+	bool DmgMode;
+};
+
+struct GBConfig
+{
+	CPUState cpuState;
+	PPUConfig PPU;
+	SystemConfig System;
+};
 
 class Config
 {
 public:
-	static Config* getInstance();
-	template<typename T>				//template methods have to be implemented in class body
-	T getValue(const std::string& key)
-	{
-		T value = T();
-		if (m_config.find(key) == m_config.end())	//if doesn't exist return default value
-			return value;
-		return std::any_cast<T>(m_config[key]);
-	}
-	template<typename T>
-	void setValue(const std::string& key, T value)
-	{
-		m_config[key] = value;
-	}
-private:
-	static Config* instance;
-	Config();
-	std::unordered_map<std::string, std::any> m_config;
+	static GBConfig GB;
 };
