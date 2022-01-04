@@ -121,11 +121,21 @@ bool Display::shouldClose()
 void Display::draw()
 {
 	glfwPollEvents();	//poll window event messages
+
 	std::string title = "GBEmu - ";
 	title += Config::GB.System.RomName;
 	if (title.length() == 8)	//weird hack to see if no rom is set
 		title += "Not playing";
 	glfwSetWindowTitle(m_window, title.c_str());
+
+	if (Config::GB.Display.resize)
+	{
+		Config::GB.Display.resize = false;
+		int scale = Config::GB.Display.displayScale;
+		glfwSetWindowSize(m_window, 160 * scale, 144 * scale);
+		glViewport(0, 0, 160 * scale, 144 * scale);
+	}
+
 	GuiRenderer::prepareFrame();
 	glClear(GL_COLOR_BUFFER_BIT);
 

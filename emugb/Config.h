@@ -21,11 +21,18 @@ struct SystemConfig
 	bool DmgMode;
 };
 
+struct DisplayConfig
+{
+	int displayScale;
+	bool resize;
+};
+
 struct GBConfig
 {
 	CPUState cpuState;
 	PPUConfig PPU;
 	SystemConfig System;
+	DisplayConfig Display;
 };
 
 class Config

@@ -84,7 +84,13 @@ void GameBoy::displayWorker()
 {
 
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Display worker: starting. .");
-	Display m_disp(160 * 5, 144 * 5);
+
+	if (Config::GB.Display.displayScale == 0)
+		Config::GB.Display.displayScale = 5;
+
+	int dispScale = Config::GB.Display.displayScale;
+
+	Display m_disp(160 * dispScale, 144 * dispScale);
 
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{

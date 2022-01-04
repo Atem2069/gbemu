@@ -66,7 +66,7 @@ void GuiRenderer::render()
 			if (ImGui::BeginMenu("View"))
 			{
 				m_menuItemSelected = true;
-				ImGui::MenuItem("PPU Settings", nullptr, &m_showPPUDialog);
+				ImGui::MenuItem("Display Settings", nullptr, &m_showPPUDialog);
 				ImGui::MenuItem("Auto hide Menubar", nullptr, &m_autoHideMenu);
 				ImGui::EndMenu();
 			}
@@ -104,11 +104,10 @@ void GuiRenderer::render()
 	{
 		ImGui::Begin("PPU", &m_showPPUDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 
-		ImGui::Text("Display palette");
-		int paletteIdx = 0;// Config::getInstance()->getValue<int>("paletteIdx");
-		ImGui::RadioButton("Classic", &paletteIdx, 0);
-		ImGui::RadioButton("Pocket", &paletteIdx, 1);
-		//Config::getInstance()->setValue<int>("paletteIdx", paletteIdx);	//TODO: fix
+		int lastScale = Config::GB.Display.displayScale;
+		ImGui::SliderInt("Display Scale", &Config::GB.Display.displayScale, 1, 5);
+		if (lastScale != Config::GB.Display.displayScale)
+			Config::GB.Display.resize = true;
 
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Debug settings");
