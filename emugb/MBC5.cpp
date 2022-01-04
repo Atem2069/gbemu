@@ -10,11 +10,63 @@ MBC5::MBC5(std::vector<uint8_t> ROM)
 		m_ROMBanks[count++] = curROMBank;
 	}
 	m_ramBankNumber = 0;
+
+	uint8_t cartType = ROM[CART_TYPE];
+	if (cartType == 0x1B || cartType == 0x1E)
+		m_shouldSave = true;
+
+	//need lookup table for RAM banks..
+	uint8_t ramBanks[6] = { 0, 1, 1, 4, 16, 8 };
+	m_maxRAMBanks = ramBanks[ROM[CART_RAMSIZE] % 6];
+
+	if (m_shouldSave)
+	{
+		//load save file into RAM bank 0 (only if cart has battery)
+		m_saveName = Config::GB.System.RomName;
+		if (m_saveName[m_saveName.size() - 1] == 'b')
+			m_saveName.resize(m_saveName.size() - 2);
+		else
+			m_saveName.resize(m_saveName.size() - 3);
+		m_saveName += "sav";
+		std::ifstream ramReadHandle(m_saveName, std::ios::in | std::ios::binary);
+		if (!ramReadHandle)
+		{
+			Logger::getInstance()->msg(LoggerSeverity::Info, "No save file exists for current ROM - file will be created upon unload!");
+		}
+		else
+		{
+			ramReadHandle >> std::noskipws;
+			int i = 0;
+			int bank = 0;
+			while (!ramReadHandle.eof())
+			{
+				unsigned char curByte;
+				ramReadHandle.read((char*)&curByte, sizeof(uint8_t));
+				m_RAMBanks[bank][i] = (uint8_t)curByte;
+				i++;
+				if (i == 8192)
+				{
+					i = 0;
+					bank += 1;
+				}
+			}
+
+			ramReadHandle.close();
+		}
+	}
+
 }
 
 MBC5::~MBC5()
 {
-
+	if (m_shouldSave)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Info, "Saving game memory..");
+		std::ofstream ramWriteHandle(m_saveName, std::ios::out | std::ios::binary);
+		for (int i = 0; i < m_maxRAMBanks; i++)
+			ramWriteHandle.write((const char*)m_RAMBanks[i].data(), m_RAMBanks[i].size());
+		ramWriteHandle.close();
+	}
 }
 
 uint8_t MBC5::read(uint16_t address)

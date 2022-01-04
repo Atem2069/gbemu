@@ -25,7 +25,10 @@ MBC1::MBC1(std::vector<uint8_t> ROM)
 	{
 		//load save file into RAM bank 0 (only if cart has battery)
 		m_saveName = Config::GB.System.RomName;
-		m_saveName.resize(m_saveName.size() - 2);
+		if (m_saveName[m_saveName.size() - 1] == 'b')
+			m_saveName.resize(m_saveName.size() - 2);
+		else
+			m_saveName.resize(m_saveName.size() - 3);
 		m_saveName += "sav";
 		std::ifstream ramReadHandle(m_saveName, std::ios::in | std::ios::binary);
 		if (!ramReadHandle)
@@ -36,12 +39,18 @@ MBC1::MBC1(std::vector<uint8_t> ROM)
 		{
 			ramReadHandle >> std::noskipws;
 			int i = 0;
+			int bank = 0;
 			while (!ramReadHandle.eof())
 			{
 				unsigned char curByte;
 				ramReadHandle.read((char*)&curByte, sizeof(uint8_t));
-				m_RAMBanks[0][i] = (uint8_t)curByte;
+				m_RAMBanks[bank][i] = (uint8_t)curByte;
 				i++;
+				if (i == 8192)
+				{
+					i = 0;
+					bank += 1;
+				}
 			}
 
 			ramReadHandle.close();
@@ -56,7 +65,8 @@ MBC1::~MBC1()
 	{
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Saving game memory..");
 		std::ofstream ramWriteHandle(m_saveName, std::ios::out | std::ios::binary);
-		ramWriteHandle.write((const char*)m_RAMBanks[0].data(), m_RAMBanks[0].size());
+		for(int i = 0; i < m_maxRAMBanks; i++)
+			ramWriteHandle.write((const char*)m_RAMBanks[i].data(), m_RAMBanks[i].size());
 		ramWriteHandle.close();
 	}
 }
