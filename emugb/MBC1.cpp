@@ -57,6 +57,7 @@ MBC1::MBC1(std::vector<uint8_t> ROM)
 		}
 	}
 
+	m_bankNumber = 1;
 }
 
 MBC1::~MBC1()
@@ -74,7 +75,7 @@ MBC1::~MBC1()
 uint8_t MBC1::read(uint16_t address)
 {
 
-	if (address >= 0x4000 && address < 0x8000 && m_bankNumber)
+	if (address >= 0x4000 && address < 0x8000)
 	{
 		int offset = ((int)address) - 0x4000;
 		return m_ROMBanks[m_bankNumber][offset];
@@ -88,9 +89,10 @@ uint8_t MBC1::read(uint16_t address)
 		return m_RAMBanks[m_ramBankNumber][offset];
 	}
 	
-	if (address >= 0x4000 && address < 0x8000 && m_bankNumber == 0)
-		return m_ROMBanks[1][(int)address - 0x4000];
-	return m_ROMBanks[0][address];
+	//if (address >= 0x4000 && address < 0x8000 && m_bankNumber == 0)
+	//	return m_ROMBanks[1][(int)address - 0x4000];
+	if(address <= 0x3fff)
+		return m_ROMBanks[0][address];
 
 }
 
@@ -110,7 +112,7 @@ void MBC1::write(uint16_t address, uint8_t value)
 	{
 		if (!m_RAMBanking)
 			m_higherBankBits = (value & 0b00000011);
-		else
+		else if(m_maxRAMBanks)
 			m_ramBankNumber = (value & 0b00000011) % m_maxRAMBanks;
 		return;
 	}
@@ -126,6 +128,7 @@ void MBC1::write(uint16_t address, uint8_t value)
 		{
 			m_higherBankBits = 0;
 			m_RAMBanking = true;
+			m_bankNumber &= 0b00011111;
 		}
 
 		return;
