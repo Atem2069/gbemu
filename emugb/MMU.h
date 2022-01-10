@@ -80,7 +80,7 @@ private:
 	uint16_t m_bankNumber = 1;
 	uint16_t m_bankNumberHighBit = 0;
 	uint8_t m_ramBankNumber = 0;
-	uint8_t m_maxRAMBanks;
+	uint16_t m_maxROMBanks, m_maxRAMBanks;
 	bool m_SRAMEnabled = false;
 	bool m_shouldSave = false;
 	std::string m_saveName;

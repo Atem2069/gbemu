@@ -15,6 +15,8 @@ MBC5::MBC5(std::vector<uint8_t> ROM)
 	if (cartType == 0x1B || cartType == 0x1E)
 		m_shouldSave = true;
 
+	m_maxROMBanks = (uint16_t)std::pow(2, (double)ROM[CART_ROMSIZE] + 1);
+
 	//need lookup table for RAM banks..
 	uint8_t ramBanks[6] = { 0, 1, 1, 4, 16, 8 };
 	m_maxRAMBanks = ramBanks[ROM[CART_RAMSIZE] % 6];
@@ -101,13 +103,13 @@ void MBC5::write(uint16_t address, uint8_t value)
 
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
-		m_ramBankNumber = 0;// value % 8;
+		m_ramBankNumber = value % m_maxRAMBanks;
 	}
 
 
 	if (address >= 0x2000 && address <= 0x2FFF)
 	{
-		m_bankNumber = (m_bankNumberHighBit << 8) | value;
+		m_bankNumber = ((m_bankNumberHighBit << 8) | value) % m_maxROMBanks;
 	}
 
 	if (address >= 0x3000 && address <= 0x3FFF)
