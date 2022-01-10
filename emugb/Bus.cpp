@@ -150,6 +150,7 @@ void Bus::write(uint16_t address, uint8_t value)
 			m_paletteMemory[m_paletteIndex] = value;
 			if (m_incrementPaletteIndex)
 				m_paletteIndex += 1;
+			m_paletteIndex %= 64;
 		}
 
 		if (address == REG_OBPI)
@@ -167,6 +168,7 @@ void Bus::write(uint16_t address, uint8_t value)
 			m_objPaletteMemory[m_objPaletteIndex] = value;
 			if (m_incrementObjPaletteIndex)
 				m_objPaletteIndex += 1;
+			m_objPaletteIndex %= 64;
 		}
 
 		if (address == REG_KEY0)
