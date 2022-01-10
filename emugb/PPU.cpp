@@ -106,7 +106,7 @@ void PPU::step(unsigned long cycleCount)
 		{
 			m_lastCycleCount = cycleCount;
 			curLine++;
-			if (curLine > 154)
+			if (curLine > 153)
 			{
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
