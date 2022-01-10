@@ -112,7 +112,7 @@ void PPU::step(unsigned long cycleCount)
 				status &= 0b11111100; status |= 0b00000010;
 				curLine = 0;
 				m_windowLineCount = 0;
-				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(vec3));	//copy over backbuffer to display buffer
+				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(uint32_t));	//copy over backbuffer to display buffer
 			}
 		}
 		break;
@@ -404,7 +404,10 @@ void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool
 	int blue = (col & 0b0111110000000000) >> 10;
 	blue = (blue << 3) | (blue >> 2);
 
-	vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
+	//vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
+
+	uint32_t res = (red << 24) | (green << 16) | (blue << 8) | 0x000000FF;
+
 	int pixelIdx = (y*160)+x;
 	m_backBuffer[pixelIdx] = res;
 }
@@ -417,7 +420,7 @@ unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 }
 
 
-vec3* PPU::getDisplay()
+uint32_t* PPU::getDisplay()
 {
 	return m_dispBuffer;
 }
