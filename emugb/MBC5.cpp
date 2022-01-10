@@ -103,6 +103,8 @@ void MBC5::write(uint16_t address, uint8_t value)
 
 	if (address >= 0x4000 && address <= 0x5fff)
 	{
+		if (!m_maxRAMBanks)
+			return;
 		m_ramBankNumber = value % m_maxRAMBanks;
 	}
 
