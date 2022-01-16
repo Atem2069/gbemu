@@ -75,6 +75,15 @@ void GameBoy::run()
 			m_lastTime = curTime;
 			m_cyclesSinceLastVblank = 0;
 
+			//update sound
+			bool stereo = m_apu->end_frame(m_cpu->getCycleCount());
+			m_buf.end_frame(m_cpu->getCycleCount(), stereo);
+
+			if (m_buf.samples_avail() >= 4096)
+			{
+				//size_t count = m_buf.read_samples(m_outBuf);
+				//play samples
+			}
 		}
 
 	}
@@ -119,7 +128,14 @@ void GameBoy::m_initialise()
 	if (cart.empty())
 		return;
 
+	//init apu first as needed by bus, alongside buffer for audio output
+	m_outBuf.resize(4096);
 	m_apu = std::make_shared<Gb_Apu>();
+	m_buf.set_sample_rate(44100);
+	m_buf.clock_rate(4194304);
+	//m_apu->output(m_buf.center(), m_buf.left(), m_buf.right());
+		
+
 	if (!m_loadCartridge(cart, m_bus))
 	{
 		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
