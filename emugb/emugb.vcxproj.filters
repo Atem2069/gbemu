@@ -40,6 +40,9 @@
     <Filter Include="Source Files\Config/Logging">
       <UniqueIdentifier>{550a98b7-46ad-4f83-bf8a-944ad5aa3a29}</UniqueIdentifier>
     </Filter>
+    <Filter Include="blargg gb_apu">
+      <UniqueIdentifier>{5dd5a0c4-f326-4ca7-8435-bd66c345dd3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,6 +113,24 @@
     </ClCompile>
     <ClCompile Include="Bus.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Blip_Buffer.cpp">
+      <Filter>blargg gb_apu</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Blip_Impulse_.cpp">
+      <Filter>blargg gb_apu</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Gb_Apu.cpp">
+      <Filter>blargg gb_apu</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Gb_Oscs.cpp">
+      <Filter>blargg gb_apu</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Multi_Buffer.cpp">
+      <Filter>blargg gb_apu</Filter>
+    </ClCompile>
+    <ClCompile Include="gb_apu\Stereo_Buffer.cpp">
+      <Filter>blargg gb_apu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +217,42 @@
     </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\blargg_common.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\blargg_source.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Blip_Buffer.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\blip_eq_t.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Blip_Impulse_.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Blip_Reader.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Blip_Synth.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Blip_Wave.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Gb_Apu.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Gb_Oscs.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Multi_Buffer.h">
+      <Filter>blargg gb_apu</Filter>
+    </ClInclude>
+    <ClInclude Include="gb_apu\Stereo_Buffer.h">
+      <Filter>blargg gb_apu</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

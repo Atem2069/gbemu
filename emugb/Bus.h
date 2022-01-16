@@ -11,11 +11,14 @@
 #include"dmgRegisters.h"
 #include"cgbRegisters.h"
 #include"debugStates.h"
+#include"gb_apu/Gb_Apu.h"
+#include"gb_apu/Multi_Buffer.h"
+
 
 class Bus
 {
 public:
-	Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM);
+	Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM, std::shared_ptr<Gb_Apu> apu);
 	~Bus();
 
 	uint8_t read(uint16_t address);
@@ -34,6 +37,7 @@ public:
 	bool getInCompatibilityMode();
 private:
 	std::shared_ptr<MMU> m_mbc;
+	std::shared_ptr<Gb_Apu> m_apu;
 	bool m_isInBootRom = true;
 	bool m_hdmaInProgress = false;
 	void m_DMATransfer(uint8_t base);

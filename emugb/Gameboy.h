@@ -15,6 +15,8 @@
 #include"BIOS/biosdump.h"
 #include"Config.h"
 #include"dmgRegisters.h"
+#include"gb_apu/Gb_Apu.h"
+#include"gb_apu/Multi_Buffer.h"
 
 class GameBoy
 {
@@ -35,6 +37,8 @@ private:
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	std::shared_ptr<InputManager> m_inputManager;
 	std::shared_ptr<Timer> m_timer;
+
+	std::shared_ptr<Gb_Apu> m_apu;
 
 	InputState m_inputState = {};
 
