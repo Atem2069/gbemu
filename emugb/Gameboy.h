@@ -17,7 +17,6 @@
 #include"dmgRegisters.h"
 #include"gb_apu/Gb_Apu.h"
 #include"gb_apu/Multi_Buffer.h"
-#include"gb_apu/Stereo_Buffer.h"
 
 class GameBoy
 {
@@ -40,8 +39,6 @@ private:
 	std::shared_ptr<Timer> m_timer;
 
 	std::shared_ptr<Gb_Apu> m_apu;
-	Stereo_Buffer m_buf;
-	std::vector<int16_t> m_outBuf;
 
 	InputState m_inputState = {};
 
