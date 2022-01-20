@@ -1,8 +1,8 @@
 #include"Bus.h"
 
-Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM, std::shared_ptr<Gb_Apu> apu)
+Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM)
 {
-	m_apu = apu;
+
 	m_bootRom = bootRom;
 
 	uint8_t ROMType = ROM[CART_TYPE];
@@ -62,11 +62,6 @@ uint8_t Bus::read(uint16_t address)
 		return m_OAM[address - 0xFE00];
 	if (address >= 0xFF00 && address <= 0xFF7F)
 	{
-
-		//apu reads
-		if (address >= 0xFF10 && address <= 0xFF3F)
-			return m_apu->read_register(address);
-
 		if (address == REG_BGPD)
 			return m_paletteMemory[m_paletteIndex];
 		if (address == REG_OBPD)
@@ -103,13 +98,6 @@ void Bus::write(uint16_t address, uint8_t value)
 		m_OAM[address - 0xFE00] = value;
 	if (address >= 0xFF00 && address <= 0xFF7F)
 	{
-
-		//apu writes
-		if (address >= 0xFF10 && address <= 0xFF3F)
-		{
-			m_apu->write_register(address, value);
-			return;
-		}
 
 		if (address == 0xFF50)
 		{

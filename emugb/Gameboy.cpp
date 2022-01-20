@@ -54,7 +54,6 @@ void GameBoy::run()
 		m_ppu->step(ppuSteps);
 		m_inputManager->tick(m_inputState);
 		m_timer->tick(m_cpu->getCycleCount() - lastCycleCount);
-		m_apu->update_time(m_cpu->getCycleCount());
 
 
 		m_cyclesSinceLastVblank += (m_cpu->getCycleCount() - lastCycleCount);
@@ -119,7 +118,6 @@ void GameBoy::m_initialise()
 	if (cart.empty())
 		return;
 
-	m_apu = std::make_shared<Gb_Apu>();
 	if (!m_loadCartridge(cart, m_bus))
 	{
 		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
@@ -151,7 +149,6 @@ void GameBoy::m_destroy()
 	m_cpu.reset();
 	m_interruptManager.reset();
 	m_bus.reset();
-	m_apu.reset();
 }
 
 bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
@@ -194,7 +191,7 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 	if(ramSizeIdx)
 		Logger::getInstance()->msg(LoggerSeverity::Info, "Cartridge contains an additional " + std::to_string(ramLookup[ramSizeIdx]) + " KB of RAM");
 
-	bus = std::make_shared<Bus>(m_bios, cartData,m_apu);
+	bus = std::make_shared<Bus>(m_bios, cartData);
 
 
 	return true;
