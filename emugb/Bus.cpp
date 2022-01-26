@@ -107,12 +107,18 @@ void Bus::write(uint16_t address, uint8_t value)
 
 		if (address == REG_SVBK)
 		{
+			if (m_isInCompatibilityMode)
+				return;
 			m_WRAMBank = value & 0b00000111;	//set wram bank
 			if (m_WRAMBank == 0)
 				m_WRAMBank = 1;
 		}
 		if (address == REG_VBK)
+		{
+			if (m_isInCompatibilityMode)
+				return;
 			m_VRAMBank = value & 0b1;			//set vram bank
+		}
 
 		if (address == 0xFF46)
 			m_DMATransfer(value);
