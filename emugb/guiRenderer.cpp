@@ -108,6 +108,7 @@ void GuiRenderer::render()
 		ImGui::SliderInt("Display Scale", &Config::GB.Display.displayScale, 1, 5);
 		if (lastScale != Config::GB.Display.displayScale)
 			Config::GB.Display.resize = true;
+		ImGui::Checkbox("Color correction", &Config::GB.Display.colorCorrect);
 
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Debug settings");

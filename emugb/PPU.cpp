@@ -5,6 +5,7 @@ PPU::PPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interrupt
 	m_bus = bus;
 	m_interruptManager = interruptManager;
 
+	Config::GB.Display.colorCorrect = true;
 }
 
 PPU::~PPU()
@@ -397,14 +398,29 @@ void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool
 	else
 		col = m_bus->readObjColor(paletteIndex, colIndex);
 
-	int red = (col & 0b0000000000011111);
-	red = (red << 3) | (red >> 2);
-	int green = (col & 0b0000001111100000) >> 5;
-	green = (green << 3) | (green >> 2);
-	int blue = (col & 0b0111110000000000) >> 10;
-	blue = (blue << 3) | (blue >> 2);
+	int r = (col & 0b0000000000011111);
+	int g = (col & 0b0000001111100000) >> 5;
+	int b = (col & 0b0111110000000000) >> 10;
 
-	//vec3 res = { (float)red / 255.0f,(float)green / 255.0f,(float)blue / 255.0f };
+	int red = 0, green = 0, blue = 0;
+	if (Config::GB.Display.colorCorrect)
+	{
+		//https://near.sh/articles/video/color-emulation (color correction to match the game boy color lcd)
+		red = (r * 26 + g * 4 + b * 2);
+		green = (g * 24 + b * 8);
+		blue = (r * 6 + g * 4 + b * 22);
+
+		red = std::min(960, red) >> 2;
+		green = std::min(960, green) >> 2;
+		blue = std::min(960, blue) >> 2;
+	}
+	else
+	{
+		//just do straight up rgb555->rgb888 conversion
+		red = (r << 3) | (r >> 2);
+		green = (g << 3) | (g >> 2);
+		blue = (b << 3) | (b >> 2);
+	}
 
 	uint32_t res = (red << 24) | (green << 16) | (blue << 8) | 0x000000FF;
 
