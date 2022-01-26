@@ -26,6 +26,7 @@ struct DisplayConfig
 	int displayScale;
 	bool resize;
 	bool colorCorrect;
+	bool frameBlend;
 };
 
 struct GBConfig

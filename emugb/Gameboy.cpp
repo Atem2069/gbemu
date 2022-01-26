@@ -95,8 +95,13 @@ void GameBoy::displayWorker()
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
 		m_bufAccessLock.lock();
-		if(m_ppu.get())
-			m_disp.upload((void*)m_ppu->getDisplay());
+		if (m_ppu.get())
+		{
+			bool newData = false;
+			void* dataPtr = m_ppu->getDisplay(newData);
+			m_disp.upload(dataPtr, newData);
+			//m_disp.upload((void*)m_ppu->getDisplay());
+		}
 		m_bufAccessLock.unlock();
 		m_disp.draw();
 

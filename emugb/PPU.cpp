@@ -6,6 +6,7 @@ PPU::PPU(std::shared_ptr<Bus>& bus, std::shared_ptr<InterruptManager>& interrupt
 	m_interruptManager = interruptManager;
 
 	Config::GB.Display.colorCorrect = true;
+	Config::GB.Display.frameBlend = true;
 }
 
 PPU::~PPU()
@@ -114,6 +115,7 @@ void PPU::step(unsigned long cycleCount)
 				curLine = 0;
 				m_windowLineCount = 0;
 				memcpy((void*)m_dispBuffer, (void*)m_backBuffer, 160 * 144 * sizeof(uint32_t));	//copy over backbuffer to display buffer
+				m_dataIsNew = true;
 			}
 		}
 		break;
@@ -392,6 +394,8 @@ void PPU::m_renderSprites(uint8_t line)
 
 void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool useObjPalette)
 {
+	int pixelIdx = (y * 160) + x;
+
 	uint16_t col = 0;
 	if (!useObjPalette)									//there exist two palette memory areas - one for just background/window tiles, and one for sprites
 		col = m_bus->readBgColor(paletteIndex, colIndex);
@@ -421,10 +425,8 @@ void PPU::m_plotPixel(int x, int y, uint8_t colIndex, uint8_t paletteIndex, bool
 		green = (g << 3) | (g >> 2);
 		blue = (b << 3) | (b >> 2);
 	}
-
 	uint32_t res = (red << 24) | (green << 16) | (blue << 8) | 0x000000FF;
 
-	int pixelIdx = (y*160)+x;
 	m_backBuffer[pixelIdx] = res;
 }
 
@@ -436,8 +438,11 @@ unsigned int PPU::m_getColourFromPaletteIdx(uint8_t idx, uint8_t palette)
 }
 
 
-uint32_t* PPU::getDisplay()
+uint32_t* PPU::getDisplay(bool& isNew)
 {
+	bool ret = m_dataIsNew;
+	isNew = ret;
+	m_dataIsNew = false;
 	return m_dispBuffer;
 }
 

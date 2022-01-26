@@ -102,6 +102,14 @@ Display::Display(int width, int height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	glGenTextures(1, &m_prevFrameTexHandle);
+	glBindTexture(GL_TEXTURE_2D, m_prevFrameTexHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 160, 144, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 	GuiRenderer::init(m_window);
 
 	m_initialized = true;
@@ -142,7 +150,11 @@ void Display::draw()
 	glUseProgram(m_program);
 	glBindVertexArray(m_VAO);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texHandle);	//redundant?
+	glBindTexture(GL_TEXTURE_2D, m_texHandle);	
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_prevFrameTexHandle);
+
+	glUniform1i(0, Config::GB.Display.frameBlend);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);	//draw quad made up of 6 vertices (3 tris)
 
@@ -152,8 +164,10 @@ void Display::draw()
 	glfwSwapBuffers(m_window);
 }
 
-void Display::upload(void* data)
+void Display::upload(void* data, bool isNew)
 {
+	if (isNew)
+		glCopyImageSubData(m_texHandle, GL_TEXTURE_2D, 0, 0, 0, 0, m_prevFrameTexHandle, GL_TEXTURE_2D, 0, 0, 0, 0, 160, 144, 1);
 	glBindTexture(GL_TEXTURE_2D, m_texHandle);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 160, 144, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
 }
