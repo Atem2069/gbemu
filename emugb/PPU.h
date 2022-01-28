@@ -32,7 +32,7 @@ private:
 	unsigned long m_lastCycleCount = 0;
 
 	bool m_statIRQActive = false;
-	//uint8_t lastLY = 0;
+	uint8_t lastLY = 0;
 	uint8_t m_windowLineCount = 0;
 
 	bool m_HDMAInProgress = false;

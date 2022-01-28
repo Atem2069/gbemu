@@ -41,8 +41,9 @@ void PPU::step(unsigned long cycleCount)
 		statConditionTrue = true;
 	if (VBlankSTAT && m_displayMode == 1)
 		statConditionTrue = true;
-	if (LYCSTAT)
+	if (LYCSTAT && curLine != lastLY)
 	{
+		lastLY = curLine;
 		uint8_t LYC = m_bus->read(REG_LYC);
 		if (curLine == LYC)
 		{
