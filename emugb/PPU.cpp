@@ -23,11 +23,10 @@ void PPU::step(unsigned long cycleCount)
 		return;
 	}
 
-	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
-	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
-		return;
-
 	uint8_t curLine = m_bus->read(REG_LY);
+
+	//set STAT IRQs even inbetween modes
+	bool statConditionTrue = false;
 	uint8_t status = m_bus->read(REG_STAT);
 
 	//reading out flags which can trigger STAT interrupt
@@ -36,6 +35,33 @@ void PPU::step(unsigned long cycleCount)
 	bool VBlankSTAT = (status >> 4) & 0b1;	//Triggered when entering vblank
 	bool LYCSTAT = (status >> 6) & 0b1;		//Triggered due to some comparison between LY and LYC
 
+	if (OAMSTAT && m_displayMode == 2)
+		statConditionTrue = true;
+	if (HBLankSTAT && m_displayMode == 0)
+		statConditionTrue = true;
+	if (VBlankSTAT && m_displayMode == 1)
+		statConditionTrue = true;
+	if (LYCSTAT)
+	{
+		uint8_t LYC = m_bus->read(REG_LYC);
+		if (curLine == LYC)
+		{
+			status |= 0b00000100;	//set LYC coincidence flag
+			statConditionTrue = true;
+		}
+	}
+
+	if (statConditionTrue && !m_statIRQActive)
+	{
+		m_interruptManager->requestInterrupt(InterruptType::STAT);
+		m_bus->write(REG_STAT, status);
+	}
+
+	m_statIRQActive = statConditionTrue;
+
+	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
+	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
+		return;
 
 	switch (m_displayMode)
 	{
@@ -43,8 +69,6 @@ void PPU::step(unsigned long cycleCount)
 		{
 			m_lastCycleCount = cycleCount;
 			m_displayMode = 3;
-			if (OAMSTAT)
-				m_interruptManager->requestInterrupt(InterruptType::STAT);
 			status |= 0b00000011;	//set lower two bits to 3 (11)
 		}
 		break;
@@ -52,8 +76,6 @@ void PPU::step(unsigned long cycleCount)
 		{
 			m_lastCycleCount = cycleCount;
 			m_displayMode = 0;
-			if (HBLankSTAT)
-				m_interruptManager->requestInterrupt(InterruptType::STAT);
 			status &= 0b11111100;	//set lower two bits to 0 (00)
 			//m_HDMATransfer();
 			m_bus->HDMATransfer();
@@ -93,8 +115,6 @@ void PPU::step(unsigned long cycleCount)
 				m_displayMode = 1;
 				status &= 0b11111100; status |= 0b00000001;
 				m_interruptManager->requestInterrupt(InterruptType::VBlank);
-				if (VBlankSTAT)
-					m_interruptManager->requestInterrupt(InterruptType::STAT);
 			}
 			else
 			{
@@ -121,17 +141,6 @@ void PPU::step(unsigned long cycleCount)
 		break;
 	}
 
-	if (LYCSTAT)
-	{
-		uint8_t LYC = m_bus->read(REG_LYC);
-		if (curLine == LYC && curLine != lastLY)
-		{
-			status |= 0b00000100;	//set LYC coincidence flag
-			m_interruptManager->requestInterrupt(InterruptType::STAT);
-		}
-	}
-
-	lastLY = curLine;
 	m_bus->write(REG_STAT, status);	//update ppu registers (status and cur line)
 	m_bus->write(REG_LY, curLine);
 }
