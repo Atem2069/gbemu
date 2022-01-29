@@ -66,6 +66,13 @@ void PPU::step(unsigned long cycleCount)
 		m_doVBlankIRQ = false;
 	}
 
+	//ly=153 bug
+	if (curLine == 153)
+	{
+		curLine = 0;
+		m_bus->write(REG_LY, curLine);
+	}
+
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
 		return;
@@ -135,7 +142,7 @@ void PPU::step(unsigned long cycleCount)
 		{
 			m_lastCycleCount = cycleCount;
 			curLine++;
-			if (curLine > 153)
+			if (curLine == 1)
 			{
 				m_displayMode = 2;
 				status &= 0b11111100; status |= 0b00000010;
