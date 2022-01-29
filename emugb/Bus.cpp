@@ -6,14 +6,14 @@ Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM)
 	m_bootRom = bootRom;
 
 	uint8_t ROMType = ROM[CART_TYPE];
-	if (ROMType == 0)
-		m_mbc = std::make_shared<MMU>(ROM);
-	else if (ROMType >= 0x01 && ROMType <= 0x03)
+	if (ROMType >= 0x01 && ROMType <= 0x03)
 		m_mbc = std::make_shared<MBC1>(ROM);
 	else if (ROMType >= 0x0F && ROMType <= 0x13)
 		m_mbc = std::make_shared<MBC3>(ROM);
 	else if (ROMType >= 0x19 && ROMType <= 0x1E)
 		m_mbc = std::make_shared<MBC5>(ROM);
+	else
+		m_mbc = std::make_shared<MMU>(ROM);
 
 	for (int i = 0; i < 2; i++)
 	{

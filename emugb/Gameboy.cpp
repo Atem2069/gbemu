@@ -166,7 +166,7 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 		return false;
 	}
 	romReadHandle >> std::noskipws;
-	while (!romReadHandle.eof())
+	while (!romReadHandle.eof() && cartData.size() <= (8*1024*1024))
 	{
 		unsigned char curByte;
 		romReadHandle.read((char*)&curByte, sizeof(uint8_t));
@@ -175,7 +175,7 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 
 	std::string title = "";
 	uint8_t i = 0;
-	while(cartData[CART_TITLE + i])					//read until zero terminated
+	while(cartData[CART_TITLE + i] && i<16)					//read until zero terminated
 		title += (char)cartData[CART_TITLE + i++];
 	Logger::getInstance()->msg(LoggerSeverity::Info, "ROM Title: " + title);
 
