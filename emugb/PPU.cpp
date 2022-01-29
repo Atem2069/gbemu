@@ -86,11 +86,6 @@ void PPU::step(unsigned long cycleCount)
 			status &= 0b11111100;	//set lower two bits to 0 (00)
 			//m_HDMATransfer();
 			m_bus->HDMATransfer();
-		}
-		break;
-	case 0:  //hblank
-		{
-			m_lastCycleCount = cycleCount;
 
 			m_renderBackgroundScanline(curLine);
 			m_renderWindowScanline(curLine);
@@ -102,7 +97,7 @@ void PPU::step(unsigned long cycleCount)
 				m_plotPixel(i, curLine, 0, 0, false);
 				Pixel backgroundPixel = m_backgroundFIFO[i];
 				Pixel spritePixel = m_spriteFIFO[i];
-				if(backgroundPixel.shouldDraw)
+				if (backgroundPixel.shouldDraw)
 					m_plotPixel(i, curLine, backgroundPixel.colIndex, backgroundPixel.paletteIndex, false);
 
 				if (spritePixel.shouldDraw)
@@ -115,6 +110,11 @@ void PPU::step(unsigned long cycleCount)
 				m_spriteFIFO[i] = {};
 			}
 
+		}
+		break;
+	case 0:  //hblank
+		{
+			m_lastCycleCount = cycleCount;
 			curLine++;
 			if (curLine == 144)
 			{
