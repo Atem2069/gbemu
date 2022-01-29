@@ -60,6 +60,12 @@ void PPU::step(unsigned long cycleCount)
 
 	m_statIRQActive = statConditionTrue;
 
+	if (m_doVBlankIRQ && (cycleCount-m_lastCycleCount) > 4)
+	{
+		m_interruptManager->requestInterrupt(InterruptType::VBlank);
+		m_doVBlankIRQ = false;
+	}
+
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
 		return;
@@ -115,7 +121,7 @@ void PPU::step(unsigned long cycleCount)
 				//enter vblank
 				m_displayMode = 1;
 				status &= 0b11111100; status |= 0b00000001;
-				m_interruptManager->requestInterrupt(InterruptType::VBlank);
+				m_doVBlankIRQ = true;
 			}
 			else
 			{
