@@ -67,7 +67,7 @@ void PPU::step(unsigned long cycleCount)
 	}
 
 	//ly=153 bug
-	if (curLine == 153)
+	if (curLine == 153 && (cycleCount-m_lastCycleCount) > 4)
 	{
 		curLine = 0;
 		m_bus->write(REG_LY, curLine);
