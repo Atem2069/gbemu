@@ -12,6 +12,7 @@
 #include"InterruptManager.h"
 #include"Input.h"
 #include"Timer.h"
+#include"APU.h"
 #include"BIOS/biosdump.h"
 #include"Config.h"
 #include"dmgRegisters.h"
@@ -35,6 +36,7 @@ private:
 	std::shared_ptr<InterruptManager> m_interruptManager;
 	std::shared_ptr<InputManager> m_inputManager;
 	std::shared_ptr<Timer> m_timer;
+	std::shared_ptr<APU> m_apu;
 
 	InputState m_inputState = {};
 

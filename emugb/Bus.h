@@ -6,6 +6,7 @@
 #include<chrono>
 
 #include"MMU.h"
+#include"APU.h"
 #include"Logger.h"
 #include"Config.h"
 #include"dmgRegisters.h"
@@ -15,7 +16,7 @@
 class Bus
 {
 public:
-	Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM);
+	Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM, std::shared_ptr<APU>& apu);
 	~Bus();
 
 	uint8_t read(uint16_t address);
@@ -34,6 +35,7 @@ public:
 	bool getInCompatibilityMode();
 private:
 	std::shared_ptr<MMU> m_mbc;
+	std::shared_ptr<APU> m_apu;
 	bool m_isInBootRom = true;
 	bool m_hdmaInProgress = false;
 	void m_DMATransfer(uint8_t base);

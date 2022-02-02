@@ -1,8 +1,8 @@
 #include"Bus.h"
 
-Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM)
+Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM, std::shared_ptr<APU>& apu)
 {
-
+	m_apu = apu;
 	m_bootRom = bootRom;
 
 	uint8_t ROMType = ROM[CART_TYPE];
@@ -62,12 +62,12 @@ uint8_t Bus::read(uint16_t address)
 		return m_OAM[address - 0xFE00];
 	if (address >= 0xFF00 && address <= 0xFF7F)
 	{
+		if (address >= 0xFF10 && address <= 0xFF3F)
+			return m_apu->readIORegister(address);
 		if (address == REG_BGPD)
 			return m_paletteMemory[m_paletteIndex];
 		if (address == REG_OBPD)
 			return m_objPaletteMemory[m_objPaletteIndex];
-		if (address == 0xFF26)		//<---HACK!! Zelda oracle games won't boot unless NR52 is disabled by length counter. Must fix with proper APU implementation!!
-			return 0;
 		if (address == 0xFF02)		//Tie SC (FF02) to FF. it is never used as this emu doesn't do serial link, however some fan-games use this to check if the emu is visual boy advance (terrible broken emulator), and if so lock up
 			return 0xFF;
 		return m_IORegisters[address - 0xFF00];
@@ -98,7 +98,11 @@ void Bus::write(uint16_t address, uint8_t value)
 		m_OAM[address - 0xFE00] = value;
 	if (address >= 0xFF00 && address <= 0xFF7F)
 	{
-
+		if (address >= 0xFF10 && address <= 0xFF3F)
+		{
+			m_apu->writeIORegister(address, value);
+			return;
+		}
 		if (address == 0xFF50)
 		{
 			Logger::getInstance()->msg(LoggerSeverity::Info, "Unmapping boot ROM. .");
