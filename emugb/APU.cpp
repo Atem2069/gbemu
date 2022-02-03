@@ -18,7 +18,57 @@ APU::~APU()
 
 void APU::step(unsigned long cycleDiff)
 {
-	//todo
+	//Channel 2:
+	chan2_freqTimer -= (cycleDiff * 4);	//cycle diff is measured in m-cycles, but frequency timer decrements per t-cycle.
+	if (chan2_freqTimer <= 0)			//todo: account for when the timer goes negative (subtract difference)
+	{
+		uint8_t freqLow = m_channels[1].r[3];
+		uint8_t freqHigh = m_channels[1].r[4] & 0b00000111;
+		int newFreq = ((int)freqHigh << 8) | freqLow;
+		chan2_freqTimer = (2048 - newFreq) * 4;
+
+		chan2_waveDutyPosition++;		//new duty selected when frequency timer is reloaded.
+	}
+
+	int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
+	chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
+
+	//frame sequencer: 2048 m-cycles.
+	frameSeq_cycleDiff += cycleDiff;
+	if (frameSeq_cycleDiff >= 2048)
+		frameSeq_cycleDiff -= 2048;
+
+	if (frameSeq_cycleDiff % 2 == 0)
+	{
+		//clock length counters
+		bool chan2_lengthEnabled = (m_channels[1].r[4] >> 6) & 0b1;
+		if (chan2_lengthEnabled)
+		{
+			if (chan2_lengthCounter != 0)
+				chan2_lengthCounter--;
+			if (chan2_lengthCounter == 0)
+			{
+				NR52 &= 0b11111101;	//clear channel 2 enabled bit
+			}
+		}
+
+		bool chan3_lengthEnabled = (m_channels[2].r[4] >> 6) & 0b1;
+		if (chan3_lengthEnabled)
+		{
+			if (chan3_lengthCounter != 0)
+				chan3_lengthCounter--;
+			if (chan3_lengthCounter == 0)
+			{
+				NR52 &= 0b11111011;	//clear chan 3 bit
+			}
+		}
+	}
+
+	//have to clock other components (see nightshade)
+	//length counter: 256 hz
+	//volume envelope: 64 hz
+	//sweep: 128 hz
+
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)
@@ -26,9 +76,19 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 	if (address >= 0xFF10 && address <= 0xFF14)
 		m_channels[0].r[address - 0xFF10] = value;
 	if (address >= 0xFF15 && address <= 0xFF19)
+	{
+		if (address - 0xFF15 == 1)
+			chan2_lengthCounter = 64 - (value & 0b00111111);
 		m_channels[1].r[address - 0xFF15] = value;
+	}
 	if (address >= 0xFF1A && address <= 0xFF1E)
+	{
+		if (address - 0xFF1A == 1)
+			chan3_lengthCounter = 256 - value;	//chan 3 uses full 8-bit value for length load
+		if ((address - 0xFF1A) == 0 && ((value >> 7) & 0b1) ==0)	//DAC=0 disables channel in NR52
+			NR52 &= 0b11111011;
 		m_channels[2].r[address - 0xFF1A] = value;
+	}
 	if (address >= 0xFF1F && address <= 0xFF23)
 		m_channels[3].r[address - 0xFF1F] = value;
 	if (address == 0xFF24)
@@ -55,6 +115,6 @@ uint8_t APU::readIORegister(uint16_t address)
 	if (address == 0xFF25)
 		return NR51;
 	if (address == 0xFF26)
-		return 0;	//HACK: when length counters are properly implemented this is no longer necessary.
+		return NR52;	//HACK: when length counters are properly implemented this is no longer necessary.
 	return 0xFF;
 }
