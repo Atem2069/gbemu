@@ -18,7 +18,7 @@ APU::~APU()
 
 void APU::step(unsigned long cycleDiff)
 {
-	//Channel 2:
+	//sort out duty position
 	chan2_freqTimer -= (cycleDiff * 4);	//cycle diff is measured in m-cycles, but frequency timer decrements per t-cycle.
 	if (chan2_freqTimer <= 0)			//todo: account for when the timer goes negative (subtract difference)
 	{
@@ -29,9 +29,6 @@ void APU::step(unsigned long cycleDiff)
 
 		chan2_waveDutyPosition++;		//new duty selected when frequency timer is reloaded.
 	}
-
-	int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
-	chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
 
 	//frame sequencer: 2048 m-cycles.
 	frameSeq_cycleDiff += cycleDiff;
@@ -65,10 +62,32 @@ void APU::step(unsigned long cycleDiff)
 	}
 
 	//have to clock other components (see nightshade)
-	//length counter: 256 hz
 	//volume envelope: 64 hz
 	//sweep: 128 hz
 
+
+	//after doing all timing and stuff, get amplitudes
+	//Channel 2:
+	int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
+	chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
+
+
+	//mixing
+	mixer_cycleDiff += (44100 * cycleDiff);
+	if (mixer_cycleDiff >= (1048576))
+	{
+		mixer_cycleDiff -= 1048576;
+		sampleIndex = (sampleIndex + 1) % 735;	//wrap around
+		if (chan2_amplitude == 1)				//dumb hack lol, fix
+			samples[sampleIndex] = 0xFFFF;
+		else
+			samples[sampleIndex] = 0x0000;
+	}
+}
+
+void APU::playSamples()
+{
+	//todo
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)

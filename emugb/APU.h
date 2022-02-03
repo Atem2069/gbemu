@@ -15,6 +15,7 @@ public:
 	~APU();
 
 	void step(unsigned long cycleDiff);
+	void playSamples();
 
 	void writeIORegister(uint16_t address, uint8_t value);
 	uint8_t readIORegister(uint16_t address);
@@ -44,4 +45,9 @@ private:
 
 	//frame sequencer
 	unsigned long frameSeq_cycleDiff = 0;
+
+	//mixing/sampling
+	unsigned long mixer_cycleDiff = 0;
+	uint16_t samples[735] = {};
+	int sampleIndex = 0;
 };
