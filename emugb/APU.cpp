@@ -9,11 +9,22 @@ APU::APU()
 			m_channels[i].r[j] = {};
 	}
 
+	SDL_Init(SDL_INIT_AUDIO);
+
+	SDL_AudioSpec desiredSpec = {}, obtainedSpec = {};
+	desiredSpec.freq = 44100;
+	desiredSpec.format = AUDIO_U16;
+	desiredSpec.channels = 1;	//the game boy is stereo but we're just outputting mono channel 2 for now (completely wrong lol)
+	desiredSpec.silence = 0;
+	desiredSpec.samples = 735;	//one frame's worth of samples if we sample at 44100hz.
+	mixer_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
+	SDL_PauseAudioDevice(mixer_audioDevice, 1);
+
 }
 
 APU::~APU()
 {
-
+	SDL_Quit();
 }
 
 void APU::step(unsigned long cycleDiff)
@@ -68,26 +79,38 @@ void APU::step(unsigned long cycleDiff)
 
 	//after doing all timing and stuff, get amplitudes
 	//Channel 2:
-	int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
-	chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
+	bool chan2_enabled = (NR52 >> 1) & 0b1;
+	if (chan2_enabled)
+	{
+		int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
+		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
+	}
+	else
+		chan2_amplitude = 0;
 
 
 	//mixing
-	mixer_cycleDiff += (44100 * cycleDiff);
-	if (mixer_cycleDiff >= (1048576))
+	mixer_cycleDiff += cycleDiff;
+	if (mixer_cycleDiff >= 24)
 	{
-		mixer_cycleDiff -= 1048576;
-		sampleIndex = (sampleIndex + 1) % 735;	//wrap around
+		mixer_cycleDiff -= 24;
 		if (chan2_amplitude == 1)				//dumb hack lol, fix
-			samples[sampleIndex] = 0xFFFF;
+			samples[sampleIndex] = 0x0010;
 		else
 			samples[sampleIndex] = 0x0000;
+		sampleIndex += 1;
+		if (sampleIndex == 734)
+		{
+			sampleIndex = 0;
+			playSamples();
+		}
 	}
 }
 
 void APU::playSamples()
 {
-	//todo
+	return;
+	SDL_QueueAudio(mixer_audioDevice, (void*)samples, 735);
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)
@@ -98,6 +121,15 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 	{
 		if (address - 0xFF15 == 1)
 			chan2_lengthCounter = 64 - (value & 0b00111111);
+		if (address - 0xFF15 == 4)
+		{
+			if ((value >> 7) & 0b1)
+			{
+				NR52 |= 0b00000010;	//re-enable channel
+				chan2_lengthCounter = 64 - (m_channels[1].r[1] & 0b00111111);	//reload length counter, kinda crappy code but oh well
+			}
+
+		}
 		m_channels[1].r[address - 0xFF15] = value;
 	}
 	if (address >= 0xFF1A && address <= 0xFF1E)

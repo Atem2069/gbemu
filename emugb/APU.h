@@ -1,6 +1,8 @@
 #pragma once
 
 #include<iostream>
+#include<SDL.h>
+#undef main		//sdl sucks
 #include"Logger.h"
 
 struct Channel
@@ -50,4 +52,5 @@ private:
 	unsigned long mixer_cycleDiff = 0;
 	uint16_t samples[735] = {};
 	int sampleIndex = 0;
+	SDL_AudioDeviceID mixer_audioDevice = {};
 };
