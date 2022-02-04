@@ -18,7 +18,7 @@ APU::APU()
 	desiredSpec.silence = 0;
 	desiredSpec.samples = 735;	//one frame's worth of samples if we sample at 44100hz.
 	mixer_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
-	SDL_PauseAudioDevice(mixer_audioDevice, 1);
+	SDL_PauseAudioDevice(mixer_audioDevice, 0);
 
 }
 
@@ -39,6 +39,8 @@ void APU::step(unsigned long cycleDiff)
 		chan2_freqTimer = (2048 - newFreq) * 4;
 
 		chan2_waveDutyPosition++;		//new duty selected when frequency timer is reloaded.
+		if (chan2_waveDutyPosition == 8)
+			chan2_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
 	}
 
 	//frame sequencer: 2048 m-cycles.
@@ -109,7 +111,6 @@ void APU::step(unsigned long cycleDiff)
 
 void APU::playSamples()
 {
-	return;
 	SDL_QueueAudio(mixer_audioDevice, (void*)samples, 735);
 }
 
