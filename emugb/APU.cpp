@@ -59,6 +59,18 @@ void APU::step(unsigned long cycleCount)
 			chan1_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
 	}
 
+	chan3_freqTimer -= (cycleDiff * 4);
+	if (chan3_freqTimer <= 0)
+	{
+		uint8_t freqLow = m_channels[2].r[3];
+		uint8_t freqHigh = m_channels[2].r[4] & 0b00000111;
+		uint16_t newFreq = (freqHigh << 8) | freqLow;
+		chan3_freqTimer = (2048 - newFreq) * 2;
+		chan3_samplePosition++;
+		if (chan3_samplePosition == 32)
+			chan3_samplePosition = 0;
+	}
+
 	//frame sequencer: 2048 m-cycles.
 	frameSeq_cycleDiff += cycleDiff;
 	if (frameSeq_cycleDiff >= 2048)
@@ -87,8 +99,9 @@ void APU::step(unsigned long cycleCount)
 		mixer_cycleDiff -= 1048576;
 		float chan1Out = chan1_getOutput();
 		float chan2Out = chan2_getOutput();
-		bool DACEnabled = (((NR52 >> 1) & 0b1) | (NR52 & 0b1));
-		float res = highPass((chan1Out + chan2Out) / 2.0f, DACEnabled);
+		float chan3Out = chan3_getOutput();
+		bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
+		float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
 		samples[sampleIndex] = res * 0.025f;
 		sampleIndex += 1;
 		if (sampleIndex == 799)
@@ -156,7 +169,17 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 			if ((value >> 7) & 0b1)
 			{
 				NR52 |= 0b00000010;	//re-enable channel
-				chan2_lengthCounter = 64 - (m_channels[1].r[1] & 0b00111111);	//reload length counter, kinda crappy code but oh well
+				if (chan2_lengthCounter == 0)
+					chan2_lengthCounter = 64;
+				uint8_t freqLow = m_channels[1].r[3];
+				uint8_t freqHigh = m_channels[1].r[4] & 0b00000111;
+				uint16_t newFreq = (freqHigh << 8) | freqLow;
+				chan2_freqTimer = (2048 - newFreq) * 4;
+				chan2_volume = ((m_channels[1].r[2] >> 4) & 0b1111);
+				chan2_envelopeTimer = chan2_envelopePeriod;
+
+				if (!(((m_channels[1].r[2]) >> 5) & 0b11111))
+					NR52 &= 0b11111101;
 			}
 
 		}
@@ -169,6 +192,20 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 			chan3_lengthCounter = 256 - value;	//chan 3 uses full 8-bit value for length load
 		if ((address - 0xFF1A) == 0 && ((value >> 7) & 0b1) ==0)	//DAC=0 disables channel in NR52
 			NR52 &= 0b11111011;
+		if ((address - 0xFF1A) == 2)
+		{
+			chan3_volume = (value >> 5) & 0b11;
+		}
+		if ((address - 0xFF1A) == 4 && ((value >> 7) & 0b1))
+		{
+			NR52 |= 0b00000100;
+			if (chan3_lengthCounter == 0)
+				chan3_lengthCounter = 256;
+			uint8_t freqLow = m_channels[2].r[3];
+			uint8_t freqHigh = m_channels[2].r[4] & 0b00000111;
+			uint16_t newFreq = (freqHigh << 8) | freqLow;
+			chan3_freqTimer = (2048 - newFreq) * 4;
+		}
 		m_channels[2].r[address - 0xFF1A] = value;
 	}
 	if (address >= 0xFF1F && address <= 0xFF23)
@@ -301,6 +338,42 @@ float APU::chan1_getOutput()
 		int chan1_dutyIdx = (m_channels[0].r[1] & 0b11000000) >> 6;
 		chan1_amplitude = (m_dutyTable[chan1_dutyIdx] >> (chan1_waveDutyPosition)) & 0b1;
 		float dac_input = chan1_amplitude * chan1_volume;
+		return (dac_input / 7.5) - 1.0;
+	}
+	return 0.0f;
+}
+
+float APU::chan3_getOutput()
+{
+	bool chan3_enabled = (NR52 >> 2) & 0b1;
+	if (chan3_enabled)
+	{
+		//get 4-bit sample
+		int waveTblIdx = chan3_samplePosition / 2;
+		uint8_t sample = 0;
+		uint8_t waveTblEntry = m_waveRAM[waveTblIdx];
+		if (waveTblIdx % 2 == 0)
+		{
+			sample = (waveTblEntry >> 4) & 0xF;
+		}
+		else
+		{
+			sample = waveTblEntry & 0xF;
+		}
+
+		switch (chan3_volume)	//no envelope in channel 3!
+		{
+		case 0b00:
+			sample >>= 4; break;
+		case 0b01:
+			break;
+		case 0b10:
+			sample >>= 1; break;
+		case 0b11:
+			sample >>= 2; break;
+		}
+
+		float dac_input = sample * 1.f;//hack, use volume
 		return (dac_input / 7.5) - 1.0;
 	}
 	return 0.0f;

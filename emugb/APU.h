@@ -64,8 +64,12 @@ private:
 	uint8_t chan2_envelopePeriod = 0;
 	uint8_t chan2_envelopeTimer = 0;
 
-	//chan 3:
-	uint8_t chan3_lengthCounter = 0;
+	//channel 3
+	float chan3_getOutput();
+	int chan3_freqTimer = 0;
+	uint8_t chan3_samplePosition = 0;
+	uint16_t chan3_lengthCounter = 0;
+	uint8_t chan3_volume = 0;
 
 	//frame sequencer
 	unsigned long frameSeq_cycleDiff = 0;
