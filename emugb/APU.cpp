@@ -13,13 +13,14 @@ APU::APU()
 
 	SDL_AudioSpec desiredSpec = {}, obtainedSpec = {};
 	desiredSpec.freq = 44100;
-	desiredSpec.format = AUDIO_U16;
+	desiredSpec.format = AUDIO_S8;
 	desiredSpec.channels = 1;	//the game boy is stereo but we're just outputting mono channel 2 for now (completely wrong lol)
 	desiredSpec.silence = 0;
-	desiredSpec.samples = 735;	//one frame's worth of samples if we sample at 44100hz.
+	desiredSpec.samples = 1024;	//one frame's worth of samples if we sample at 44100hz.
 	mixer_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
 	SDL_PauseAudioDevice(mixer_audioDevice, 0);
 
+	mixer_cycleDiff = 0;
 }
 
 APU::~APU()
@@ -27,17 +28,18 @@ APU::~APU()
 	SDL_Quit();
 }
 
-void APU::step(unsigned long cycleDiff)
+void APU::step(unsigned long cycleCount)
 {
+	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
+	m_lastCycleCount = cycleCount;
 	//sort out duty position
 	chan2_freqTimer -= (cycleDiff * 4);	//cycle diff is measured in m-cycles, but frequency timer decrements per t-cycle.
 	if (chan2_freqTimer <= 0)			//todo: account for when the timer goes negative (subtract difference)
 	{
 		uint8_t freqLow = m_channels[1].r[3];
 		uint8_t freqHigh = m_channels[1].r[4] & 0b00000111;
-		int newFreq = ((int)freqHigh << 8) | freqLow;
+		uint16_t newFreq = (freqHigh << 8) | freqLow;
 		chan2_freqTimer = (2048 - newFreq) * 4;
-
 		chan2_waveDutyPosition++;		//new duty selected when frequency timer is reloaded.
 		if (chan2_waveDutyPosition == 8)
 			chan2_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
@@ -46,9 +48,12 @@ void APU::step(unsigned long cycleDiff)
 	//frame sequencer: 2048 m-cycles.
 	frameSeq_cycleDiff += cycleDiff;
 	if (frameSeq_cycleDiff >= 2048)
+	{
 		frameSeq_cycleDiff -= 2048;
+		frameSeq_count++;
+	}
 
-	if (frameSeq_cycleDiff % 2 == 0)
+	if (frameSeq_count % 2 == 0)
 	{
 		//clock length counters
 		bool chan2_lengthEnabled = (m_channels[1].r[4] >> 6) & 0b1;
@@ -85,25 +90,26 @@ void APU::step(unsigned long cycleDiff)
 	if (chan2_enabled)
 	{
 		int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
-		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> chan2_waveDutyPosition) & 0b1;
+		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> (chan2_waveDutyPosition)) & 0b1;
 	}
 	else
 		chan2_amplitude = 0;
 
 
 	//mixing
-	mixer_cycleDiff += cycleDiff;
-	if (mixer_cycleDiff >= 24)
+	mixer_cycleDiff += (cycleDiff*44100);
+	while (mixer_cycleDiff >= 1048576)
 	{
-		mixer_cycleDiff -= 24;
+		mixer_cycleDiff -= 1048576;
 		if (chan2_amplitude == 1)				//dumb hack lol, fix
-			samples[sampleIndex] = 0x0010;
+			samples[sampleIndex] = 0x10;
 		else
-			samples[sampleIndex] = 0x0000;
+			samples[sampleIndex] = 0x00;
 		sampleIndex += 1;
-		if (sampleIndex == 734)
+		if (sampleIndex == 1023)
 		{
 			sampleIndex = 0;
+			memcpy((void*)curPlayingSamples, (void*)samples, 1024);
 			playSamples();
 		}
 	}
@@ -111,7 +117,7 @@ void APU::step(unsigned long cycleDiff)
 
 void APU::playSamples()
 {
-	SDL_QueueAudio(mixer_audioDevice, (void*)samples, 735);
+	SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 1024);
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)
@@ -132,6 +138,7 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 
 		}
 		m_channels[1].r[address - 0xFF15] = value;
+
 	}
 	if (address >= 0xFF1A && address <= 0xFF1E)
 	{

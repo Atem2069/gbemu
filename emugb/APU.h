@@ -16,13 +16,14 @@ public:
 	APU();
 	~APU();
 
-	void step(unsigned long cycleDiff);
+	void step(unsigned long cycleCount);
 	void playSamples();
 
 	void writeIORegister(uint16_t address, uint8_t value);
 	uint8_t readIORegister(uint16_t address);
 
 private:
+	unsigned long m_lastCycleCount = 0;
 	Channel m_channels[4];
 	uint8_t NR50 = 0;
 	uint8_t NR51 = 0;
@@ -47,10 +48,12 @@ private:
 
 	//frame sequencer
 	unsigned long frameSeq_cycleDiff = 0;
+	unsigned long frameSeq_count = 0;
 
 	//mixing/sampling
 	unsigned long mixer_cycleDiff = 0;
-	uint16_t samples[735] = {};
+	uint8_t samples[1024] = {};
+	uint8_t curPlayingSamples[1024] = {};
 	int sampleIndex = 0;
 	SDL_AudioDeviceID mixer_audioDevice = {};
 };
