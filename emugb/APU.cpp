@@ -179,7 +179,8 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		NR51 = value;
 	if (address == 0xFF26)
 		NR52 = value;
-	//todo: wave table read/writes
+	if (address >= 0xFF30 && address <= 0xFF3F)
+		m_waveRAM[address - 0xFF30] = value;
 }
 
 uint8_t APU::readIORegister(uint16_t address)
@@ -197,7 +198,9 @@ uint8_t APU::readIORegister(uint16_t address)
 	if (address == 0xFF25)
 		return NR51;
 	if (address == 0xFF26)
-		return NR52;	//HACK: when length counters are properly implemented this is no longer necessary.
+		return NR52;	
+	if (address >= 0xFF30 && address <= 0xFF3F)
+		return m_waveRAM[address - 0xFF30];
 	return 0xFF;
 }
 

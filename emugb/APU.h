@@ -29,6 +29,8 @@ private:
 	uint8_t NR51 = 0;
 	uint8_t NR52 = 0;
 
+	uint8_t m_waveRAM[32] = {};
+
 	uint8_t m_dutyTable[4] =	//hardware predefined square wave duties
 	{	
 		0b00000001,				//12.5%
