@@ -44,6 +44,9 @@ private:
 	int chan1_amplitude = 0;
 	uint8_t chan1_lengthCounter = 0;
 	uint8_t chan1_volume = 0;
+	bool chan1_envelopeAdd = false;
+	uint8_t chan1_envelopePeriod = 0;
+	uint8_t chan1_envelopeTimer = 0;
 
 	//channel 2
 	float chan2_getOutput();
@@ -54,6 +57,7 @@ private:
 	uint8_t chan2_volume = 0;
 	bool chan2_envelopeAdd = false;
 	uint8_t chan2_envelopePeriod = 0;
+	uint8_t chan2_envelopeTimer = 0;
 
 	//chan 3:
 	uint8_t chan3_lengthCounter = 0;
@@ -61,6 +65,7 @@ private:
 	//frame sequencer
 	unsigned long frameSeq_cycleDiff = 0;
 	unsigned long frameSeq_count = 0;
+	bool frameSeq_clockIsNew = false;
 
 	//mixing/sampling
 	unsigned long mixer_cycleDiff = 0;

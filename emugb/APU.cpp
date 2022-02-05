@@ -30,6 +30,8 @@ APU::~APU()
 
 void APU::step(unsigned long cycleCount)
 {
+	if(!((NR52 >> 7) & 0b1))
+		return;
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 	m_lastCycleCount = cycleCount;
 	//sort out duty position
@@ -63,9 +65,10 @@ void APU::step(unsigned long cycleCount)
 	{
 		frameSeq_cycleDiff -= 2048;
 		frameSeq_count++;
+		frameSeq_clockIsNew = true;
 	}
 
-	if (frameSeq_count % 2 == 0)	//length counters
+	if (frameSeq_count % 2 == 0 && frameSeq_clockIsNew)	//length counters
 	{
 		//clock length counters
 		bool chan1_lengthEnabled = (m_channels[0].r[4] >> 6) & 0b1;
@@ -102,12 +105,44 @@ void APU::step(unsigned long cycleCount)
 		}
 	}
 
-	if (frameSeq_count % 8 == 7)	//envelope function
+	if (frameSeq_count % 8 == 7 && frameSeq_clockIsNew)	//envelope function
 	{
+		//chan 1:
+		bool chan1_enabled = NR52 & 0b1;
+		if (chan1_enabled)
+		{
+			if (chan1_envelopePeriod != 0)
+			{
+				chan1_envelopeTimer--;
+				if (chan1_envelopeTimer == 0)
+				{
+					chan1_envelopeTimer = chan1_envelopePeriod;
+					if (chan1_envelopeAdd && chan1_volume < 15)
+						chan1_volume++;
+					if (!chan1_envelopeAdd && chan1_volume > 0)
+						chan1_volume--;
+				}
+			}
+		}
 		//chan 2:
-		//todo
+		bool chan2_enabled = (NR52 >> 1) & 0b1;
+		if (chan2_enabled)
+		{
+			if (chan2_envelopePeriod != 0)
+			{
+				chan2_envelopeTimer--;
+				if (chan2_envelopeTimer == 0)
+				{
+					chan2_envelopeTimer = chan2_envelopePeriod;
+					if (chan2_envelopeAdd && chan2_volume < 15)
+						chan2_volume++;
+					if (!chan2_envelopeAdd && chan2_volume > 0)
+						chan2_volume--;
+				}
+			}
+		}
 	}
-
+	frameSeq_clockIsNew = false;
 	//have to clock other components (see nightshade)
 	//sweep: 128 hz
 
@@ -122,7 +157,7 @@ void APU::step(unsigned long cycleCount)
 		float chan2Out = chan2_getOutput();
 		bool DACEnabled = (((NR52 >> 1) & 0b1) | (NR52 & 0b1));
 		float res = highPass((chan1Out + chan2Out) / 2.0f, DACEnabled);
-		samples[sampleIndex] = res * 0.01f;
+		samples[sampleIndex] = res * 0.025f;
 		sampleIndex += 1;
 		if (sampleIndex == 799)
 		{
@@ -147,14 +182,27 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		if (address - 0xFF10 == 2)
 		{
 			chan1_volume = ((value >> 4) & 0xF);
-			//todo: envelope, envelope add mode/period etc.
+			chan1_envelopePeriod = value & 0b111;
+			chan1_envelopeTimer = chan1_envelopePeriod;
+			chan1_envelopeAdd = ((value >> 3) & 0b1);
 		}
 		if (address - 0xFF10 == 4)
 		{
 			if ((value >> 7) & 0b1)
 			{
 				NR52 |= 0b00000001;	//re-enable channel
-				chan1_lengthCounter = 64 - (m_channels[0].r[1] & 0b00111111);	//reload length counter, kinda crappy code but oh well
+				if (chan1_lengthCounter == 0)
+					chan1_lengthCounter = 64;
+				uint8_t freqLow = m_channels[0].r[3];
+				uint8_t freqHigh = m_channels[0].r[4] & 0b00000111;
+				uint16_t newFreq = (freqHigh << 8) | freqLow;
+				chan1_freqTimer = (2048 - newFreq) * 4;
+				chan1_volume = ((m_channels[0].r[2] >> 4) & 0b1111);
+				chan1_envelopeTimer = chan1_envelopePeriod;
+
+				if (!(((m_channels[0].r[2]) >> 5) & 0b11111))
+					NR52 &= 0b11111110;
+
 			}
 
 		}
@@ -167,7 +215,9 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		if (address - 0xFF15 == 2)
 		{
 			chan2_volume = ((value >> 4) & 0xF);
-			//todo: envelope, envelope add mode/period etc.
+			chan2_envelopePeriod = value & 0b111;
+			chan2_envelopeTimer = chan2_envelopePeriod;
+			chan2_envelopeAdd = ((value >> 3) & 0b1);
 		}
 		if (address - 0xFF15 == 4)
 		{
