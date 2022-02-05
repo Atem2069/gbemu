@@ -45,6 +45,18 @@ void APU::step(unsigned long cycleCount)
 			chan2_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
 	}
 
+	chan1_freqTimer -= (cycleDiff * 4);
+	if (chan1_freqTimer <= 0)
+	{
+		uint8_t freqLow = m_channels[0].r[3];
+		uint8_t freqHigh = m_channels[0].r[4] & 0b00000111;
+		uint16_t newFreq = (freqHigh << 8) | freqLow;
+		chan1_freqTimer = (2048 - newFreq) * 4;
+		chan1_waveDutyPosition++;		//new duty selected when frequency timer is reloaded.
+		if (chan1_waveDutyPosition == 8)
+			chan1_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
+	}
+
 	//frame sequencer: 2048 m-cycles.
 	frameSeq_cycleDiff += cycleDiff;
 	if (frameSeq_cycleDiff >= 2048)
@@ -53,9 +65,20 @@ void APU::step(unsigned long cycleCount)
 		frameSeq_count++;
 	}
 
-	if (frameSeq_count % 2 == 0)
+	if (frameSeq_count % 2 == 0)	//length counters
 	{
 		//clock length counters
+		bool chan1_lengthEnabled = (m_channels[0].r[4] >> 6) & 0b1;
+		if (chan1_lengthEnabled)
+		{
+			if (chan1_lengthCounter != 0)
+				chan1_lengthCounter--;
+			if (chan1_lengthCounter == 0)
+			{
+				NR52 &= 0b11111110;	//clear channel 2 enabled bit
+			}
+		}
+
 		bool chan2_lengthEnabled = (m_channels[1].r[4] >> 6) & 0b1;
 		if (chan2_lengthEnabled)
 		{
@@ -79,13 +102,14 @@ void APU::step(unsigned long cycleCount)
 		}
 	}
 
+	if (frameSeq_count % 8 == 7)	//envelope function
+	{
+		//chan 2:
+		//todo
+	}
+
 	//have to clock other components (see nightshade)
-	//volume envelope: 64 hz
 	//sweep: 128 hz
-
-
-	//after doing all timing and stuff, get amplitudes
-	//Channel 2:
 
 
 
@@ -94,7 +118,11 @@ void APU::step(unsigned long cycleCount)
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
-		samples[sampleIndex] = highPass(chan2_getOutput(),(NR52 >> 1) & 0b1) * 0.01f;
+		float chan1Out = chan1_getOutput();
+		float chan2Out = chan2_getOutput();
+		bool DACEnabled = (((NR52 >> 1) & 0b1) | (NR52 & 0b1));
+		float res = highPass((chan1Out + chan2Out) / 2.0f, DACEnabled);
+		samples[sampleIndex] = res * 0.01f;
 		sampleIndex += 1;
 		if (sampleIndex == 799)
 		{
@@ -113,7 +141,25 @@ void APU::playSamples()
 void APU::writeIORegister(uint16_t address, uint8_t value)
 {
 	if (address >= 0xFF10 && address <= 0xFF14)
+	{
+		if (address - 0xFF10 == 1)
+			chan1_lengthCounter = 64 - (value & 0b00111111);
+		if (address - 0xFF10 == 2)
+		{
+			chan1_volume = ((value >> 4) & 0xF);
+			//todo: envelope, envelope add mode/period etc.
+		}
+		if (address - 0xFF10 == 4)
+		{
+			if ((value >> 7) & 0b1)
+			{
+				NR52 |= 0b00000001;	//re-enable channel
+				chan1_lengthCounter = 64 - (m_channels[0].r[1] & 0b00111111);	//reload length counter, kinda crappy code but oh well
+			}
+
+		}
 		m_channels[0].r[address - 0xFF10] = value;
+	}
 	if (address >= 0xFF15 && address <= 0xFF19)
 	{
 		if (address - 0xFF15 == 1)
@@ -182,6 +228,19 @@ float APU::chan2_getOutput()
 		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> (chan2_waveDutyPosition)) & 0b1;
 		//set DAC output of channel 2 (amplitude * volume)
 		float dac_input = chan2_amplitude * chan2_volume;
+		return (dac_input / 7.5) - 1.0;
+	}
+	return 0.0f;
+}
+
+float APU::chan1_getOutput()
+{
+	bool chan1_enabled = (NR52 & 0b1);
+	if (chan1_enabled)
+	{
+		int chan1_dutyIdx = (m_channels[0].r[1] & 0b11000000) >> 6;
+		chan1_amplitude = (m_dutyTable[chan1_dutyIdx] >> (chan1_waveDutyPosition)) & 0b1;
+		float dac_input = chan1_amplitude * chan1_volume;
 		return (dac_input / 7.5) - 1.0;
 	}
 	return 0.0f;

@@ -37,6 +37,14 @@ private:
 		0b11111100				//75%
 	};
 
+	//channel 1
+	float chan1_getOutput();
+	int chan1_freqTimer = 0;
+	uint8_t chan1_waveDutyPosition = 0;
+	int chan1_amplitude = 0;
+	uint8_t chan1_lengthCounter = 0;
+	uint8_t chan1_volume = 0;
+
 	//channel 2
 	float chan2_getOutput();
 	int chan2_freqTimer = 0;
@@ -44,6 +52,8 @@ private:
 	int chan2_amplitude = 0;
 	uint8_t chan2_lengthCounter = 0;
 	uint8_t chan2_volume = 0;
+	bool chan2_envelopeAdd = false;
+	uint8_t chan2_envelopePeriod = 0;
 
 	//chan 3:
 	uint8_t chan3_lengthCounter = 0;
