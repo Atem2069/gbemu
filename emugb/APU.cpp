@@ -69,79 +69,11 @@ void APU::step(unsigned long cycleCount)
 	}
 
 	if (frameSeq_count % 2 == 0 && frameSeq_clockIsNew)	//length counters
-	{
-		//clock length counters
-		bool chan1_lengthEnabled = (m_channels[0].r[4] >> 6) & 0b1;
-		if (chan1_lengthEnabled)
-		{
-			if (chan1_lengthCounter != 0)
-				chan1_lengthCounter--;
-			if (chan1_lengthCounter == 0)
-			{
-				NR52 &= 0b11111110;	//clear channel 2 enabled bit
-			}
-		}
-
-		bool chan2_lengthEnabled = (m_channels[1].r[4] >> 6) & 0b1;
-		if (chan2_lengthEnabled)
-		{
-			if (chan2_lengthCounter != 0)
-				chan2_lengthCounter--;
-			if (chan2_lengthCounter == 0)
-			{
-				NR52 &= 0b11111101;	//clear channel 2 enabled bit
-			}
-		}
-
-		bool chan3_lengthEnabled = (m_channels[2].r[4] >> 6) & 0b1;
-		if (chan3_lengthEnabled)
-		{
-			if (chan3_lengthCounter != 0)
-				chan3_lengthCounter--;
-			if (chan3_lengthCounter == 0)
-			{
-				NR52 &= 0b11111011;	//clear chan 3 bit
-			}
-		}
-	}
+		clockLengthCounters();
 
 	if (frameSeq_count % 8 == 7 && frameSeq_clockIsNew)	//envelope function
-	{
-		//chan 1:
-		bool chan1_enabled = NR52 & 0b1;
-		if (chan1_enabled)
-		{
-			if (chan1_envelopePeriod != 0)
-			{
-				chan1_envelopeTimer--;
-				if (chan1_envelopeTimer == 0)
-				{
-					chan1_envelopeTimer = chan1_envelopePeriod;
-					if (chan1_envelopeAdd && chan1_volume < 15)
-						chan1_volume++;
-					if (!chan1_envelopeAdd && chan1_volume > 0)
-						chan1_volume--;
-				}
-			}
-		}
-		//chan 2:
-		bool chan2_enabled = (NR52 >> 1) & 0b1;
-		if (chan2_enabled)
-		{
-			if (chan2_envelopePeriod != 0)
-			{
-				chan2_envelopeTimer--;
-				if (chan2_envelopeTimer == 0)
-				{
-					chan2_envelopeTimer = chan2_envelopePeriod;
-					if (chan2_envelopeAdd && chan2_volume < 15)
-						chan2_volume++;
-					if (!chan2_envelopeAdd && chan2_volume > 0)
-						chan2_volume--;
-				}
-			}
-		}
-	}
+		clockEnvelope();
+
 	frameSeq_clockIsNew = false;
 	//have to clock other components (see nightshade)
 	//sweep: 128 hz
@@ -269,6 +201,81 @@ uint8_t APU::readIORegister(uint16_t address)
 	return 0xFF;
 }
 
+void APU::clockLengthCounters()
+{
+	//clock length counters
+	bool chan1_lengthEnabled = (m_channels[0].r[4] >> 6) & 0b1;
+	if (chan1_lengthEnabled)
+	{
+		if (chan1_lengthCounter != 0)
+			chan1_lengthCounter--;
+		if (chan1_lengthCounter == 0)
+		{
+			NR52 &= 0b11111110;	//clear channel 2 enabled bit
+		}
+	}
+
+	bool chan2_lengthEnabled = (m_channels[1].r[4] >> 6) & 0b1;
+	if (chan2_lengthEnabled)
+	{
+		if (chan2_lengthCounter != 0)
+			chan2_lengthCounter--;
+		if (chan2_lengthCounter == 0)
+		{
+			NR52 &= 0b11111101;	//clear channel 2 enabled bit
+		}
+	}
+
+	bool chan3_lengthEnabled = (m_channels[2].r[4] >> 6) & 0b1;
+	if (chan3_lengthEnabled)
+	{
+		if (chan3_lengthCounter != 0)
+			chan3_lengthCounter--;
+		if (chan3_lengthCounter == 0)
+		{
+			NR52 &= 0b11111011;	//clear chan 3 bit
+		}
+	}
+}
+
+void APU::clockEnvelope()
+{
+	//chan 1:
+	bool chan1_enabled = NR52 & 0b1;
+	if (chan1_enabled)
+	{
+		if (chan1_envelopePeriod != 0)
+		{
+			chan1_envelopeTimer--;
+			if (chan1_envelopeTimer == 0)
+			{
+				chan1_envelopeTimer = chan1_envelopePeriod;
+				if (chan1_envelopeAdd && chan1_volume < 15)
+					chan1_volume++;
+				if (!chan1_envelopeAdd && chan1_volume > 0)
+					chan1_volume--;
+			}
+		}
+	}
+	//chan 2:
+	bool chan2_enabled = (NR52 >> 1) & 0b1;
+	if (chan2_enabled)
+	{
+		if (chan2_envelopePeriod != 0)
+		{
+			chan2_envelopeTimer--;
+			if (chan2_envelopeTimer == 0)
+			{
+				chan2_envelopeTimer = chan2_envelopePeriod;
+				if (chan2_envelopeAdd && chan2_volume < 15)
+					chan2_volume++;
+				if (!chan2_envelopeAdd && chan2_volume > 0)
+					chan2_volume--;
+			}
+		}
+	}
+}
+
 float APU::chan2_getOutput()
 {
 	bool chan2_enabled = (NR52 >> 1) & 0b1;
@@ -303,7 +310,7 @@ float APU::highPass(float in, bool dacsEnabled)
 	if (dacsEnabled)
 	{
 		out = in - capacitor;
-		capacitor = in - out * 0.996;
+		capacitor = in - out * 0.996336;
 	}
 	return out;
 }

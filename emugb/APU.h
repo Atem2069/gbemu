@@ -37,6 +37,9 @@ private:
 		0b11111100				//75%
 	};
 
+	void clockLengthCounters();
+	void clockEnvelope();
+
 	//channel 1
 	float chan1_getOutput();
 	int chan1_freqTimer = 0;
