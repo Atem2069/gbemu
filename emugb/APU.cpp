@@ -12,11 +12,11 @@ APU::APU()
 	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_AudioSpec desiredSpec = {}, obtainedSpec = {};
-	desiredSpec.freq = 44100;
-	desiredSpec.format = AUDIO_S8;
+	desiredSpec.freq = 48000;
+	desiredSpec.format = AUDIO_F32;
 	desiredSpec.channels = 1;	//the game boy is stereo but we're just outputting mono channel 2 for now (completely wrong lol)
 	desiredSpec.silence = 0;
-	desiredSpec.samples = 1024;	//one frame's worth of samples if we sample at 44100hz.
+	desiredSpec.samples = 800;
 	mixer_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
 	SDL_PauseAudioDevice(mixer_audioDevice, 0);
 
@@ -86,30 +86,20 @@ void APU::step(unsigned long cycleCount)
 
 	//after doing all timing and stuff, get amplitudes
 	//Channel 2:
-	bool chan2_enabled = (NR52 >> 1) & 0b1;
-	if (chan2_enabled)
-	{
-		int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
-		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> (chan2_waveDutyPosition)) & 0b1;
-	}
-	else
-		chan2_amplitude = 0;
+
 
 
 	//mixing
-	mixer_cycleDiff += (cycleDiff*44100);
+	mixer_cycleDiff += (cycleDiff*48000);
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
-		if (chan2_amplitude == 1)				//dumb hack lol, fix
-			samples[sampleIndex] = 0x10;
-		else
-			samples[sampleIndex] = 0x00;
+		samples[sampleIndex] = highPass(chan2_getOutput(),(NR52 >> 1) & 0b1) * 0.01f;
 		sampleIndex += 1;
-		if (sampleIndex == 1023)
+		if (sampleIndex == 799)
 		{
 			sampleIndex = 0;
-			memcpy((void*)curPlayingSamples, (void*)samples, 1024);
+			memcpy((void*)curPlayingSamples, (void*)samples, 800*4);
 			playSamples();
 		}
 	}
@@ -117,7 +107,7 @@ void APU::step(unsigned long cycleCount)
 
 void APU::playSamples()
 {
-	SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 1024);
+	SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 800*4);
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)
@@ -128,6 +118,11 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 	{
 		if (address - 0xFF15 == 1)
 			chan2_lengthCounter = 64 - (value & 0b00111111);
+		if (address - 0xFF15 == 2)
+		{
+			chan2_volume = ((value >> 4) & 0xF);
+			//todo: envelope, envelope add mode/period etc.
+		}
 		if (address - 0xFF15 == 4)
 		{
 			if ((value >> 7) & 0b1)
@@ -176,4 +171,30 @@ uint8_t APU::readIORegister(uint16_t address)
 	if (address == 0xFF26)
 		return NR52;	//HACK: when length counters are properly implemented this is no longer necessary.
 	return 0xFF;
+}
+
+float APU::chan2_getOutput()
+{
+	bool chan2_enabled = (NR52 >> 1) & 0b1;
+	if (chan2_enabled)
+	{
+		int chan2_dutyIdx = (m_channels[1].r[1] & 0b11000000) >> 6;
+		chan2_amplitude = (m_dutyTable[chan2_dutyIdx] >> (chan2_waveDutyPosition)) & 0b1;
+		//set DAC output of channel 2 (amplitude * volume)
+		float dac_input = chan2_amplitude * chan2_volume;
+		return (dac_input / 7.5) - 1.0;
+	}
+	return 0.0f;
+}
+
+float APU::capacitor = 0.0f;
+float APU::highPass(float in, bool dacsEnabled)
+{
+	float out = 0.0f;
+	if (dacsEnabled)
+	{
+		out = in - capacitor;
+		capacitor = in - out * 0.996;
+	}
+	return out;
 }

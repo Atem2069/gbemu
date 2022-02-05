@@ -37,11 +37,13 @@ private:
 		0b11111100				//75%
 	};
 
-	//some other misc channel 2 stuff
+	//channel 2
+	float chan2_getOutput();
 	int chan2_freqTimer = 0;
 	uint8_t chan2_waveDutyPosition = 0;
 	int chan2_amplitude = 0;
 	uint8_t chan2_lengthCounter = 0;
+	uint8_t chan2_volume = 0;
 
 	//chan 3:
 	uint8_t chan3_lengthCounter = 0;
@@ -52,8 +54,12 @@ private:
 
 	//mixing/sampling
 	unsigned long mixer_cycleDiff = 0;
-	uint8_t samples[1024] = {};
-	uint8_t curPlayingSamples[1024] = {};
+	float samples[800] = {};
+	float curPlayingSamples[800] = {};
 	int sampleIndex = 0;
 	SDL_AudioDeviceID mixer_audioDevice = {};
+
+	//high-pass filter for mixing
+	static float capacitor;
+	float highPass(float in, bool dacsEnabled);
 };
