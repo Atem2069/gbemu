@@ -60,20 +60,7 @@ void GameBoy::run()
 		m_cyclesSinceLastVblank += (m_cpu->getCycleCount() - lastCycleCount);
 		if ((!m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 17556) || (m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 35112))
 		{
-			//m_apu->playSamples();
-			//wait
-			auto curTime = std::chrono::high_resolution_clock::now();
-
-			double waitTime = 16.7427062988;
-
-			double diffms = 0;
-			while (diffms <= waitTime)
-			{
-				curTime = std::chrono::high_resolution_clock::now();
-				diffms = std::chrono::duration<double, std::milli>(curTime - m_lastTime).count();
-			}
-
-			m_lastTime = curTime;
+			m_apu->playSamples();	//apu waits for samples to go down to 0 before replaying
 			m_cyclesSinceLastVblank = 0;
 
 		}

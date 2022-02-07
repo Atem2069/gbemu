@@ -108,13 +108,14 @@ void APU::step(unsigned long cycleCount)
 		{
 			sampleIndex = 0;
 			memcpy((void*)curPlayingSamples, (void*)samples, 800*4);
-			playSamples();
 		}
 	}
 }
 
 void APU::playSamples()
 {
+	while (SDL_GetQueuedAudioSize(mixer_audioDevice) > 0)
+		(void)0;
 	SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 800*4);
 }
 
