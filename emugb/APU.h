@@ -10,6 +10,13 @@ struct Channel
 	uint8_t r[5];
 };
 
+struct SampleBuffer
+{
+	float c1[512];
+	float c2[512];
+	float c3[512];
+};
+
 class APU
 {
 public:
@@ -78,8 +85,10 @@ private:
 
 	//mixing/sampling
 	unsigned long mixer_cycleDiff = 0;
-	float samples[800] = {};
-	float curPlayingSamples[800] = {};
+	//float samples[512] = {};
+	//float curPlayingSamples[512] = {};
+	SampleBuffer samples = {};
+	SampleBuffer curPlayingSamples = {};
 	int sampleIndex = 0;
 	SDL_AudioDeviceID mixer_audioDevice = {};
 

@@ -16,7 +16,7 @@ APU::APU()
 	desiredSpec.format = AUDIO_F32;
 	desiredSpec.channels = 1;	//the game boy is stereo but we're just outputting mono channel 2 for now (completely wrong lol)
 	desiredSpec.silence = 0;
-	desiredSpec.samples = 800;
+	desiredSpec.samples = 512;
 	mixer_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
 	SDL_PauseAudioDevice(mixer_audioDevice, 0);
 
@@ -30,8 +30,6 @@ APU::~APU()
 
 void APU::step(unsigned long cycleCount)
 {
-	if(!((NR52 >> 7) & 0b1))
-		return;
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 	m_lastCycleCount = cycleCount;
 	//sort out duty position
@@ -97,26 +95,44 @@ void APU::step(unsigned long cycleCount)
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
-		float chan1Out = chan1_getOutput();
-		float chan2Out = chan2_getOutput();
-		float chan3Out = chan3_getOutput();
-		bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
-		float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
-		samples[sampleIndex] = res * 0.025f;
+		float chan1Out = highPass(chan1_getOutput(), (NR52 & 0b1));
+		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1); 
+		float chan3Out = highPass(chan3_getOutput(), (NR52 >> 2) & 0b1);
+		//bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
+		//float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
+		//samples[sampleIndex] = res * 0.025f;
+		samples.c1[sampleIndex] = chan1Out;
+		samples.c2[sampleIndex] = chan2Out;
+		samples.c3[sampleIndex] = chan3Out;
 		sampleIndex += 1;
-		if (sampleIndex == 799)
+		if (sampleIndex == 511)
 		{
 			sampleIndex = 0;
-			memcpy((void*)curPlayingSamples, (void*)samples, 800*4);
+			//memcpy((void*)curPlayingSamples, (void*)samples, 512*sizeof(Sample));
+			memcpy((void*)curPlayingSamples.c1, (void*)samples.c1, 512 * 4);
+			memcpy((void*)curPlayingSamples.c2, (void*)samples.c2, 512 * 4);
+			memcpy((void*)curPlayingSamples.c3, (void*)samples.c3, 512 * 4);
+			playSamples();
 		}
 	}
 }
 
 void APU::playSamples()
 {
-	while (SDL_GetQueuedAudioSize(mixer_audioDevice) > 0)
+	while (SDL_GetQueuedAudioSize(mixer_audioDevice) > 512*4)
 		(void)0;
-	SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 800*4);
+
+	//mix samples
+	float finalSamples[512] = {};
+
+	if ((NR52 >> 7) & 0b1)	//only mix audio if the apu is actually enabled. still just play silent samples bc the apu always runs for audio sync
+	{
+		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c1, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
+		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c2, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
+		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c3, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
+	}
+	//SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 512*4);
+	SDL_QueueAudio(mixer_audioDevice, (void*)finalSamples, 512 * 4);
 }
 
 void APU::writeIORegister(uint16_t address, uint8_t value)

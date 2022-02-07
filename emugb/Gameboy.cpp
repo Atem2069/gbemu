@@ -60,7 +60,7 @@ void GameBoy::run()
 		m_cyclesSinceLastVblank += (m_cpu->getCycleCount() - lastCycleCount);
 		if ((!m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 17556) || (m_cpu->getInDoubleSpeedMode() && m_cyclesSinceLastVblank >= 35112))
 		{
-			m_apu->playSamples();	//apu waits for samples to go down to 0 before replaying
+			//m_apu->playSamples();	//apu waits for samples to go down to 0 before replaying
 			m_cyclesSinceLastVblank = 0;
 
 		}
