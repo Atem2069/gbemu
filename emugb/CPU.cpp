@@ -639,7 +639,7 @@ void CPU::m_setDebugInfo()
 	Config::GB.cpuState = curCPUState;
 }
 
-unsigned long CPU::getCycleCount() { return m_cycleCount; }
+uint64_t CPU::getCycleCount() { return m_cycleCount; }
 bool CPU::getInDoubleSpeedMode() {return m_isInDoubleSpeedMode;}
 
 bool CPU::m_getZeroFlag() { return (AF.low & 0b10000000) >> 7; }

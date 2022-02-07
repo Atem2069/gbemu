@@ -23,14 +23,15 @@ public:
 	APU();
 	~APU();
 
-	void step(unsigned long cycleCount);
+	void step(uint64_t cycleCount);
 	void playSamples();
 
 	void writeIORegister(uint16_t address, uint8_t value);
 	uint8_t readIORegister(uint16_t address);
 
 private:
-	unsigned long m_lastCycleCount = 0;
+	void m_cycleStep();
+	uint64_t m_lastCycleCount = 0;
 	Channel m_channels[4];
 	uint8_t NR50 = 0;
 	uint8_t NR51 = 0;

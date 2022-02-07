@@ -28,7 +28,7 @@ public:
 
 	void step();
 
-	unsigned long getCycleCount();
+	uint64_t getCycleCount();
 
 	bool getInDoubleSpeedMode();
 
@@ -58,7 +58,7 @@ private:
 
 	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;
-	unsigned long m_cycleCount = 0;
+	uint64_t m_cycleCount = 0;
 
 	Register AF, BC, DE, HL, SP;	//General purpose registers, flags, and stack pointer
 	uint16_t PC = 0;		//PC (Program Counter) - can be implemented as single uint16.

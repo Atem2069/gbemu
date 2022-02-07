@@ -28,12 +28,26 @@ APU::~APU()
 	SDL_Quit();
 }
 
-void APU::step(unsigned long cycleCount)
+void APU::step(uint64_t cycleCount)
 {
-	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
+	uint64_t cycleDiff = cycleCount - m_lastCycleCount;
+
+	if (m_lastCycleCount > cycleCount)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Warn, "(APU) last cycle count exceeds current. This is due to poorly implemented doublespeed support!");
+		m_lastCycleCount /= 2;
+		cycleDiff = cycleCount - m_lastCycleCount;
+	}
 	m_lastCycleCount = cycleCount;
-	//sort out duty position
-	chan2_freqTimer -= (cycleDiff * 4);	//cycle diff is measured in m-cycles, but frequency timer decrements per t-cycle.
+
+	for (int i = 0; i < cycleDiff; i++)	//step the diff number of cycles
+		m_cycleStep();
+}
+
+void APU::m_cycleStep()
+{
+	//steps a single m-cycle
+	chan2_freqTimer -= 4;	//cycle diff is measured in m-cycles, but frequency timer decrements per t-cycle.
 	if (chan2_freqTimer <= 0)			//todo: account for when the timer goes negative (subtract difference)
 	{
 		uint8_t freqLow = m_channels[1].r[3];
@@ -45,7 +59,7 @@ void APU::step(unsigned long cycleCount)
 			chan2_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
 	}
 
-	chan1_freqTimer -= (cycleDiff * 4);
+	chan1_freqTimer -= 4;
 	if (chan1_freqTimer <= 0)
 	{
 		uint8_t freqLow = m_channels[0].r[3];
@@ -57,7 +71,7 @@ void APU::step(unsigned long cycleCount)
 			chan1_waveDutyPosition = 0;	//wraps around (only selects bits 0-7)
 	}
 
-	chan3_freqTimer -= (cycleDiff * 4);
+	chan3_freqTimer -= 4;
 	if (chan3_freqTimer <= 0)
 	{
 		uint8_t freqLow = m_channels[2].r[3];
@@ -70,7 +84,7 @@ void APU::step(unsigned long cycleCount)
 	}
 
 	//frame sequencer: 2048 m-cycles.
-	frameSeq_cycleDiff += cycleDiff;
+	frameSeq_cycleDiff += 1;
 	if (frameSeq_cycleDiff >= 2048)
 	{
 		frameSeq_cycleDiff -= 2048;
@@ -91,12 +105,12 @@ void APU::step(unsigned long cycleCount)
 
 
 	//mixing
-	mixer_cycleDiff += (cycleDiff*48000);
+	mixer_cycleDiff += 48000;
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
 		float chan1Out = highPass(chan1_getOutput(), (NR52 & 0b1));
-		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1); 
+		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1);
 		float chan3Out = highPass(chan3_getOutput(), (NR52 >> 2) & 0b1);
 		//bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
 		//float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
@@ -131,7 +145,7 @@ void APU::playSamples()
 		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c2, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
 		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c3, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
 	}
-	//SDL_QueueAudio(mixer_audioDevice, (void*)curPlayingSamples, 512*4);
+
 	SDL_QueueAudio(mixer_audioDevice, (void*)finalSamples, 512 * 4);
 }
 
