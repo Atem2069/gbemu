@@ -12,7 +12,7 @@ APU::APU()
 	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_AudioSpec desiredSpec = {}, obtainedSpec = {};
-	desiredSpec.freq = 48000;
+	desiredSpec.freq = 96000;
 	desiredSpec.format = AUDIO_F32;
 	desiredSpec.channels = 1;	//the game boy is stereo but we're just outputting mono channel 2 for now (completely wrong lol)
 	desiredSpec.silence = 0;
@@ -105,7 +105,7 @@ void APU::m_cycleStep()
 
 
 	//mixing
-	mixer_cycleDiff += 48000;
+	mixer_cycleDiff += 96000;
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
