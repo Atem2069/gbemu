@@ -205,7 +205,7 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 			uint8_t freqLow = m_channels[2].r[3];
 			uint8_t freqHigh = m_channels[2].r[4] & 0b00000111;
 			uint16_t newFreq = (freqHigh << 8) | freqLow;
-			chan3_freqTimer = (2048 - newFreq) * 4;
+			chan3_freqTimer = (2048 - newFreq) * 2;
 		}
 		m_channels[2].r[address - 0xFF1A] = value;
 	}
