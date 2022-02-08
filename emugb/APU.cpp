@@ -109,9 +109,9 @@ void APU::m_cycleStep()
 	while (mixer_cycleDiff >= 1048576)
 	{
 		mixer_cycleDiff -= 1048576;
-		float chan1Out = highPass(chan1_getOutput(), (NR52 & 0b1));
-		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1);
-		float chan3Out = highPass(chan3_getOutput(), (NR52 >> 2) & 0b1);
+		float chan1Out = highPass(chan1_getOutput(), (NR52 & 0b1) && (getChannelEnabledLeft(0) || getChannelEnabledRight(0)));
+		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1 && (getChannelEnabledLeft(1) || getChannelEnabledRight(1)));
+		float chan3Out = highPass(chan3_getOutput(), (NR52 >> 2) & 0b1 && (getChannelEnabledLeft(2) || getChannelEnabledRight(2)));
 		//bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
 		//float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
 		//samples[sampleIndex] = res * 0.025f;
@@ -408,6 +408,18 @@ float APU::chan3_getOutput()
 		return (dac_input / 7.5) - 1.0;
 	}
 	return 0.0f;
+}
+
+bool APU::getChannelEnabledLeft(int idx)
+{
+	idx &= 0b11;	//bitmask to ensure index is 0-3
+	return (NR51 >> (idx + 4)) & 0b1;
+}
+
+bool APU::getChannelEnabledRight(int idx)
+{
+	idx &= 0b11;
+	return (NR51 >> idx) & 0b1;
 }
 
 float APU::capacitor = 0.0f;

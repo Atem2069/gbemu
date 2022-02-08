@@ -93,6 +93,9 @@ private:
 	int sampleIndex = 0;
 	SDL_AudioDeviceID mixer_audioDevice = {};
 
+	bool getChannelEnabledLeft(int idx);
+	bool getChannelEnabledRight(int idx);
+
 	//high-pass filter for mixing
 	static float capacitor;
 	float highPass(float in, bool dacsEnabled);
