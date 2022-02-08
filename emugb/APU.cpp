@@ -83,6 +83,20 @@ void APU::m_cycleStep()
 			chan3_samplePosition = 0;
 	}
 
+	chan4_freqTimer -= 4;
+	if (chan4_freqTimer <= 0)
+	{
+		int divisor = chan4_divisorMapping[chan4_divisorCode];
+		chan4_freqTimer = divisor << chan4_shiftAmount;
+		int xorRes = (chan4_LFSR & 0b1) ^ ((chan4_LFSR >> 1) & 0b1);
+		chan4_LFSR = (chan4_LFSR >> 1) | (xorRes << 14);
+		if (chan4_widthMode)
+		{
+			chan4_LFSR &= 0b1111111110111111;
+			chan4_LFSR |= xorRes << 6;
+		}
+	}
+
 	//frame sequencer: 2048 m-cycles.
 	frameSeq_cycleDiff += 1;
 	if (frameSeq_cycleDiff >= 2048)
@@ -112,12 +126,11 @@ void APU::m_cycleStep()
 		float chan1Out = highPass(chan1_getOutput(), (NR52 & 0b1) && (getChannelEnabledLeft(0) || getChannelEnabledRight(0)));
 		float chan2Out = highPass(chan2_getOutput(), (NR52 >> 1) & 0b1 && (getChannelEnabledLeft(1) || getChannelEnabledRight(1)));
 		float chan3Out = highPass(chan3_getOutput(), (NR52 >> 2) & 0b1 && (getChannelEnabledLeft(2) || getChannelEnabledRight(2)));
-		//bool DACEnabled = (((NR52 >> 2) & 0b1) | ((NR52 >> 1) & 0b1) | (NR52 & 0b1));
-		//float res = highPass((chan1Out + chan2Out + chan3Out) / 3.0f, DACEnabled);
-		//samples[sampleIndex] = res * 0.025f;
+		float chan4Out = highPass(chan4_getOutput(), (NR52 >> 3) & 0b1 && (getChannelEnabledLeft(3) || getChannelEnabledRight(3)));
 		samples.c1[sampleIndex] = chan1Out;
 		samples.c2[sampleIndex] = chan2Out;
 		samples.c3[sampleIndex] = chan3Out;
+		samples.c4[sampleIndex] = chan4Out;
 		sampleIndex += 1;
 		if (sampleIndex == 511)
 		{
@@ -126,6 +139,7 @@ void APU::m_cycleStep()
 			memcpy((void*)curPlayingSamples.c1, (void*)samples.c1, 512 * 4);
 			memcpy((void*)curPlayingSamples.c2, (void*)samples.c2, 512 * 4);
 			memcpy((void*)curPlayingSamples.c3, (void*)samples.c3, 512 * 4);
+			memcpy((void*)curPlayingSamples.c4, (void*)samples.c4, 512 * 4);
 			playSamples();
 		}
 	}
@@ -144,6 +158,7 @@ void APU::playSamples()
 		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c1, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
 		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c2, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
 		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c3, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
+		SDL_MixAudioFormat((uint8_t*)finalSamples, (uint8_t*)curPlayingSamples.c4, AUDIO_F32, 512 * 4, SDL_MIX_MAXVOLUME / 32);
 	}
 
 	SDL_QueueAudio(mixer_audioDevice, (void*)finalSamples, 512 * 4);
@@ -240,7 +255,36 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		m_channels[2].r[address - 0xFF1A] = value;
 	}
 	if (address >= 0xFF1F && address <= 0xFF23)
+	{
+		if (address - 0xFF1F == 1)
+		{
+			chan4_lengthCounter = 64 - (value & 0b00111111);
+		}
+		if (address - 0xFF1F == 2)
+		{
+			chan4_volume = ((value >> 4) & 0xF);
+			chan4_envelopePeriod = value & 0b111;
+			chan4_envelopeTimer = chan4_envelopePeriod;
+			chan4_envelopeAdd = ((value >> 3) & 0b1);
+		}
+		if (address - 0xFF1F == 3)
+		{
+			chan4_shiftAmount = ((value >> 4) & 0xF);
+			chan4_divisorCode = value & 0b111;
+			chan4_widthMode = ((value >> 3) & 0b1);
+		}
+		if (address - 0xFF1F == 4)
+		{
+			NR52 |= 0b00001000;
+			chan4_LFSR = 0xFFFF;
+			if (chan4_lengthCounter == 0)
+				chan4_lengthCounter = 64;
+			//load frequency timer
+			int divisor = chan4_divisorMapping[chan4_divisorCode];
+			chan4_freqTimer = divisor << chan4_shiftAmount;
+		}
 		m_channels[3].r[address - 0xFF1F] = value;
+	}
 	if (address == 0xFF24)
 		NR50 = value;
 	if (address == 0xFF25)
@@ -307,6 +351,17 @@ void APU::clockLengthCounters()
 			NR52 &= 0b11111011;	//clear chan 3 bit
 		}
 	}
+
+	bool chan4_lengthEnabled = (m_channels[3].r[4] >> 6) & 0b1;
+	if (chan4_lengthEnabled)
+	{
+		if (chan4_lengthCounter != 0)
+			chan4_lengthCounter--;
+		if (chan4_lengthCounter == 0)
+		{
+			NR52 &= 0b11110111;	//clear chan 3 bit
+		}
+	}
 }
 
 void APU::clockEnvelope()
@@ -342,6 +397,23 @@ void APU::clockEnvelope()
 					chan2_volume++;
 				if (!chan2_envelopeAdd && chan2_volume > 0)
 					chan2_volume--;
+			}
+		}
+	}
+	//chan 4:
+	bool chan4_enabled = (NR52 >> 3) & 0b1;
+	if (chan4_enabled)
+	{
+		if (chan4_envelopePeriod != 0)
+		{
+			chan4_envelopeTimer--;
+			if (chan4_envelopeTimer == 0)
+			{
+				chan4_envelopeTimer = chan4_envelopePeriod;
+				if (chan4_envelopeAdd && chan4_volume < 15)
+					chan4_volume++;
+				if (!chan4_envelopeAdd && chan4_volume > 0)
+					chan4_volume--;
 			}
 		}
 	}
@@ -405,6 +477,18 @@ float APU::chan3_getOutput()
 		}
 
 		float dac_input = sample * 1.f;//hack, use volume
+		return (dac_input / 7.5) - 1.0;
+	}
+	return 0.0f;
+}
+
+float APU::chan4_getOutput()
+{
+	bool chan4_enabled = (NR52 >> 3) & 0b1;
+	if (chan4_enabled)
+	{
+		uint8_t chan4_amplitude = ~chan4_LFSR & 0b1;
+		float dac_input = chan4_amplitude * chan4_volume;
 		return (dac_input / 7.5) - 1.0;
 	}
 	return 0.0f;

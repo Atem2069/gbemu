@@ -15,6 +15,7 @@ struct SampleBuffer
 	float c1[512];
 	float c2[512];
 	float c3[512];
+	float c4[512];
 };
 
 class APU
@@ -78,6 +79,20 @@ private:
 	uint8_t chan3_samplePosition = 0;
 	uint16_t chan3_lengthCounter = 0;
 	uint8_t chan3_volume = 0;
+
+	//channel 4
+	uint8_t chan4_divisorMapping[8] = { 8,16,32,48,64,80,96,112 };
+	float chan4_getOutput();
+	int chan4_freqTimer = 0;
+	uint8_t chan4_shiftAmount = 0;
+	uint8_t chan4_divisorCode = 0;
+	uint16_t chan4_LFSR = 0x0;
+	bool chan4_widthMode = false;
+	uint16_t chan4_lengthCounter = 0;
+	uint8_t chan4_volume = 0;
+	bool chan4_envelopeAdd = false;
+	uint8_t chan4_envelopePeriod = 0;
+	uint8_t chan4_envelopeTimer = 0;
 
 	//frame sequencer
 	unsigned long frameSeq_cycleDiff = 0;
