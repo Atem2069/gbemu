@@ -41,6 +41,8 @@ void GameBoy::run()
 		{
 			//do nothing until unpaused..
 			Sleep(1);
+			if (!m_shouldRun)
+				break;
 		}
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		uint64_t lastCycleCount = m_cpu->getCycleCount();
