@@ -3,11 +3,7 @@
 APU::APU()
 {
 	Logger::getInstance()->msg(LoggerSeverity::Info, "Init APU..");
-	for (int i = 0; i < 4; i++)
-	{
-		for(int j = 0; j < 5; j++)
-			m_channels[i].r[j] = {};
-	}
+	m_clearRegisters();
 
 	SDL_Init(SDL_INIT_AUDIO);
 
@@ -166,6 +162,9 @@ void APU::playSamples()
 
 void APU::writeIORegister(uint16_t address, uint8_t value)
 {
+	//this is horrible: check if apu disabled - and only allow writes to wavetable or NR52
+	if (!((NR52 >> 7) & 0b1) && address < 0xFF30 && address != 0xFF26)
+		return;
 	if (address >= 0xFF10 && address <= 0xFF14)
 	{
 		if (address - 0xFF10 == 1)
@@ -290,7 +289,11 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 	if (address == 0xFF25)
 		NR51 = value;
 	if (address == 0xFF26)
-		NR52 = value;
+	{
+		NR52 = value & 0b10000000;
+		if (!((NR52 >> 7) & 0b1))
+			m_clearRegisters();
+	}
 	if (address >= 0xFF30 && address <= 0xFF3F)
 		m_waveRAM[address - 0xFF30] = value;
 }
@@ -298,22 +301,34 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 uint8_t APU::readIORegister(uint16_t address)
 {
 	if (address >= 0xFF10 && address <= 0xFF14)
-		return m_channels[0].r[address - 0xFF10];
+		return m_channels[0].r[address - 0xFF10] | m_NR1XMasks[address - 0xFF10];
 	if (address >= 0xFF15 && address <= 0xFF19)
-		return m_channels[1].r[address - 0xFF15];
+		return m_channels[1].r[address - 0xFF15] | m_NR2XMasks[address - 0xFF15];
 	if (address >= 0xFF1A && address <= 0xFF1E)
-		return m_channels[2].r[address - 0xFF1A];
+		return m_channels[2].r[address - 0xFF1A] | m_NR3XMasks[address - 0xFF1A];
 	if (address >= 0xFF1F && address <= 0xFF23)
-		return m_channels[3].r[address - 0xFF1F];
+		return m_channels[3].r[address - 0xFF1F] | m_NR4XMasks[address - 0xFF1F];
 	if (address == 0xFF24)
 		return NR50;
 	if (address == 0xFF25)
 		return NR51;
 	if (address == 0xFF26)
-		return NR52;	
+		return NR52 | m_NR52Mask;
 	if (address >= 0xFF30 && address <= 0xFF3F)
 		return m_waveRAM[address - 0xFF30];
-	return 0xFF;
+	return 0xFF;	//unused registers return ff
+}
+
+void APU::m_clearRegisters()
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 5; j++)
+			m_channels[i].r[j] = {};
+	}
+	NR50 = 0;
+	NR51 = 0;
+	NR52 = 0;
 }
 
 void APU::clockLengthCounters()

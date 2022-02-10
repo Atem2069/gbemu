@@ -48,6 +48,15 @@ private:
 		0b11111100				//75%
 	};
 
+	//bitmasks for register reads
+	uint8_t m_NR1XMasks[5] = { 0x80,0x3F,0x00,0xFF,0xBF };
+	uint8_t m_NR2XMasks[5] = { 0xFF,0x3F,0x00,0xFF,0xBF };
+	uint8_t m_NR3XMasks[5] = { 0x7F,0xFF,0x9F,0xFF,0xBF };
+	uint8_t m_NR4XMasks[5] = { 0xFF,0xFF,0x00,0x00,0xBF };
+	uint8_t m_NR52Mask = 0x70;
+
+	void m_clearRegisters();
+
 	void clockLengthCounters();
 	void clockEnvelope();
 
