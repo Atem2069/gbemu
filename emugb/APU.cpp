@@ -108,11 +108,46 @@ void APU::m_cycleStep()
 	if (frameSeq_count % 8 == 7 && frameSeq_clockIsNew)	//envelope function
 		clockEnvelope();
 
+	if (frameSeq_count % 4 == 2 && frameSeq_clockIsNew)
+	{
+		if (chan1_sweepPeriod != 0)
+		{
+			if (chan1_sweepTimer > 0)
+				chan1_sweepTimer--;
+
+			if (chan1_sweepTimer == 0)
+			{
+				chan1_sweepTimer = chan1_sweepPeriod;
+				if (chan1_sweepPeriod == 0)
+					chan1_sweepTimer = 8;
+				bool chan1_sweepEnabled = true;	//hmm..
+				if (chan1_sweepEnabled && chan1_sweepPeriod > 0)
+				{
+					//calc new frequency
+					int oldFreq = ((m_channels[0].r[4] & 0b111) << 8) | m_channels[0].r[3];
+					int newFreq = oldFreq >> chan1_sweepShift;
+					if (chan1_sweepNegate)
+						newFreq = oldFreq - newFreq;
+					else
+						newFreq = oldFreq + newFreq;
+
+					if (newFreq > 2047)	//overflow: disable channel
+						NR52 &= 0b11111110;	
+
+					if (newFreq <= 2047 && chan1_sweepShift > 0)
+					{
+						//chan1_freqTimer = newFreq;
+						m_channels[0].r[3] = newFreq & 0b11111111;
+						m_channels[0].r[4] &= 0b11111000;
+						m_channels[0].r[4] |= ((newFreq >> 8) & 0b111);
+						//todo: overflow check again?
+					}
+				}
+			}
+		}
+	}
+
 	frameSeq_clockIsNew = false;
-	//have to clock other components (see nightshade)
-	//sweep: 128 hz
-
-
 
 	//mixing
 	mixer_cycleDiff += 96000;
@@ -167,6 +202,12 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		return;
 	if (address >= 0xFF10 && address <= 0xFF14)
 	{
+		if (address - 0xFF10 == 0)
+		{
+			chan1_sweepPeriod = (value >> 4) & 0b111;
+			chan1_sweepShift = value & 0b111;
+			chan1_sweepNegate = (value >> 3) & 0b1;
+		}
 		if (address - 0xFF10 == 1)
 			chan1_lengthCounter = 64 - (value & 0b00111111);
 		if (address - 0xFF10 == 2)
@@ -272,7 +313,7 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 			chan4_divisorCode = value & 0b111;
 			chan4_widthMode = ((value >> 3) & 0b1);
 		}
-		if (address - 0xFF1F == 4)
+		if (address - 0xFF1F == 4 && ((value >> 7) & 0b1))
 		{
 			NR52 |= 0b00001000;
 			chan4_LFSR = 0xFFFF;
@@ -341,7 +382,7 @@ void APU::clockLengthCounters()
 			chan1_lengthCounter--;
 		if (chan1_lengthCounter == 0)
 		{
-			NR52 &= 0b11111110;	//clear channel 2 enabled bit
+			NR52 &= 0b11111110;	//clear channel 1 enabled bit
 		}
 	}
 
@@ -374,7 +415,7 @@ void APU::clockLengthCounters()
 			chan4_lengthCounter--;
 		if (chan4_lengthCounter == 0)
 		{
-			NR52 &= 0b11110111;	//clear chan 3 bit
+			NR52 &= 0b11110111;	//clear chan 4 bit
 		}
 	}
 }

@@ -70,6 +70,11 @@ private:
 	bool chan1_envelopeAdd = false;
 	uint8_t chan1_envelopePeriod = 0;
 	uint8_t chan1_envelopeTimer = 0;
+	uint8_t chan1_sweepPeriod = 0;
+	uint8_t chan1_sweepTimer = 0;
+	uint8_t chan1_sweepShift = 0;
+	uint16_t chan1_shadowFrequency = 0;
+	bool chan1_sweepNegate = false;
 
 	//channel 2
 	float chan2_getOutput();
