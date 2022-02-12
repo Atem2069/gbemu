@@ -331,7 +331,8 @@ void APU::writeIORegister(uint16_t address, uint8_t value)
 		NR51 = value;
 	if (address == 0xFF26)
 	{
-		NR52 = value & 0b10000000;
+		NR52 &= 0b01111111;
+		NR52 |= (value & 0b10000000);
 		if (!((NR52 >> 7) & 0b1))
 			m_clearRegisters();
 	}
@@ -357,6 +358,8 @@ uint8_t APU::readIORegister(uint16_t address)
 		return NR52 | m_NR52Mask;
 	if (address >= 0xFF30 && address <= 0xFF3F)
 		return m_waveRAM[address - 0xFF30];
+	
+	Logger::getInstance()->msg(LoggerSeverity::Warn, std::format("Invalid read from APU IO register. IO port=0x{:x}", (int)address));
 	return 0xFF;	//unused registers return ff
 }
 

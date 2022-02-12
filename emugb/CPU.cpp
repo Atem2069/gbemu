@@ -625,7 +625,6 @@ void CPU::m_initIO()
 	m_bus->write(REG_SCY, 0x00);
 	m_bus->write(REG_LY, 0x00);
 	m_bus->write(REG_LYC, 0x00);
-	m_bus->write(REG_DMA, 0xFF);
 	m_bus->write(REG_WX, 0x07);
 	m_bus->write(REG_WY, 0x00);
 	m_bus->write(REG_IE, 0x00);

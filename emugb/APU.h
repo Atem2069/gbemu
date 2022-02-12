@@ -1,6 +1,7 @@
 #pragma once
 
 #include<iostream>
+#include<format>
 #include<SDL.h>
 #undef main		//sdl sucks
 #include"Logger.h"
