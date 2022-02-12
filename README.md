@@ -1,5 +1,5 @@
 # gbemu
-Reasonably accurate Game Boy (DMG) and Game Boy Color (CGB) emulator, runs most commercial games with no major issues. Developed for NEA project.
+Reasonably (in)accurate Game Boy (DMG) and Game Boy Color (CGB) emulator, runs most commercial games with no major issues. Developed for NEA project.
 
 ### Features
 - Accurate DMG and CGB emulation (scanline renderer, pixel FIFO is WIP)
@@ -7,6 +7,7 @@ Reasonably accurate Game Boy (DMG) and Game Boy Color (CGB) emulator, runs most 
 - Currently supports MBC1,MBC3, and MBC5 mappers, with save-states for battery backed cartridges
 - Passes blargg cpu_instrs and instr_timing
 - Passes dmg-acid2 (both in DMG and CGB mode), and cgb-acid2
+- APU emulation of all audio channels (kind of HLE, doesn't pass timing torture tests)
 
 ### Example screenshots
 
