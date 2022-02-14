@@ -514,7 +514,7 @@ float APU::chan3_getOutput()
 		int waveTblIdx = chan3_samplePosition / 2;
 		uint8_t sample = 0;
 		uint8_t waveTblEntry = m_waveRAM[waveTblIdx];
-		if (waveTblIdx % 2 == 0)
+		if (chan3_samplePosition % 2 == 0)
 		{
 			sample = (waveTblEntry >> 4) & 0xF;
 		}
