@@ -46,15 +46,11 @@ void GameBoy::run()
 		}
 		auto lastTime = std::chrono::high_resolution_clock::now();
 		uint64_t lastCycleCount = m_cpu->getCycleCount();
-
-		uint64_t ppuSteps = m_cpu->getCycleCount();
-		if (m_cpu->getInDoubleSpeedMode())	//ppu runs at same speed in doublespeed mode
-			ppuSteps /= 2;
-
 		//step CPU
 		m_cpu->step();
-		m_ppu->step(ppuSteps);
-		m_apu->step(ppuSteps);	//apu steps at same freq as ppu so maybe ppuSteps is a bad name?
+		uint64_t steps = m_cpu->getCycleCount();
+		m_ppu->step(steps);
+		m_apu->step(steps, m_bus->getInDoubleSpeedMode());
 		m_inputManager->tick(m_inputState);
 		m_timer->tick(m_cpu->getCycleCount() - lastCycleCount);
 

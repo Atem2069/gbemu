@@ -33,6 +33,8 @@ public:
 	void HDMATransfer();
 
 	bool getInCompatibilityMode();
+	bool getInDoubleSpeedMode();
+	void toggleDoubleSpeedMode();
 private:
 	std::shared_ptr<MMU> m_mbc;
 	std::shared_ptr<APU> m_apu;
@@ -61,4 +63,5 @@ private:
 	uint8_t m_VRAMBank = 0;
 
 	bool m_isInCompatibilityMode = false;
+	bool m_isInDoubleSpeedMode = false;
 };

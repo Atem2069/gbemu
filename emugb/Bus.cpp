@@ -236,6 +236,16 @@ bool Bus::getInCompatibilityMode()
 	return m_isInCompatibilityMode;
 }
 
+bool Bus::getInDoubleSpeedMode()
+{
+	return m_isInDoubleSpeedMode;
+}
+
+void Bus::toggleDoubleSpeedMode()
+{
+	m_isInDoubleSpeedMode = !m_isInDoubleSpeedMode;
+}
+
 void Bus::m_DMATransfer(uint8_t base)
 {
 	uint16_t newAddr = ((unsigned int)base << 8);

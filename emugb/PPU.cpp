@@ -74,12 +74,11 @@ void PPU::step(unsigned long cycleCount)
 
 	unsigned long cycleDiff = cycleCount - m_lastCycleCount;
 
-	if (m_lastCycleCount > cycleCount)
-	{
-		Logger::getInstance()->msg(LoggerSeverity::Warn, "(PPU) last cycle count exceeds current. This is due to poorly implemented doublespeed support!");
-		m_lastCycleCount /= 2;
-		cycleDiff = cycleCount - m_lastCycleCount;
-	}
+	if (m_bus->getInDoubleSpeedMode())
+		cycleDiff *= 2;
+	else
+		cycleDiff *= 4;
+
 	if (cycleDiff < m_ppuCycleDiffs[m_displayMode])
 		return;
 

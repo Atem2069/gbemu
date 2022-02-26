@@ -25,7 +25,7 @@ public:
 
 	uint32_t* getDisplay(bool& isNew);
 private:
-	uint8_t m_ppuCycleDiffs[4] = { 51, 114, 20, 43 };
+	int m_ppuCycleDiffs[4] = { 204, 456, 80, 172 };
 	int m_displayMode = 0;
 	std::shared_ptr<Bus> m_bus;
 	std::shared_ptr<InterruptManager> m_interruptManager;

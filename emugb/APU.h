@@ -25,7 +25,7 @@ public:
 	APU();
 	~APU();
 
-	void step(uint64_t cycleCount);
+	void step(uint64_t cycleCount, bool inDoubleSpeed);
 	void playSamples();
 
 	void writeIORegister(uint16_t address, uint8_t value);

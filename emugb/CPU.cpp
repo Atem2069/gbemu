@@ -1459,6 +1459,7 @@ void CPU::_stop()
 		speedSwitchState ^= 0b10000001;	//flip current mode bit, and clear switch bit
 		Logger::getInstance()->msg(LoggerSeverity::Info, "CPU speed switched");
 		m_bus->write(REG_KEY1, speedSwitchState);
+		m_bus->toggleDoubleSpeedMode();
 	}
 	else
 		Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP instruction should never be called in DMG mode.");
