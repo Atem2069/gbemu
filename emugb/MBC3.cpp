@@ -109,10 +109,12 @@ void MBC3::write(uint16_t address, uint8_t value)
 {
 	if (address >= 0x0000 && address <= 0x1fff)
 	{
+		value &= 0x0F;
 		if (value == 0x0A)
 			m_SRAMEnabled = true;
-		else if (value == 0x00)
+		else
 			m_SRAMEnabled = false;
+		return;
 	}
 
 	if (address >= 0x4000 && address <= 0x5fff)
