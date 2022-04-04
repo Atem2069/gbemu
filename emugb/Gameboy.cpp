@@ -114,7 +114,6 @@ void GameBoy::m_initialise()
 
 	if (!m_loadCartridge(cart, m_bus))
 	{
-		MessageBoxA(NULL, "An error occurred loading the ROM file specified - it is of an unsupported type, or invalid.", "Error", MB_OK | MB_ICONERROR | MB_TOPMOST);
 		Config::GB.System.RomName = "";
 		return;
 	}
@@ -164,6 +163,21 @@ bool GameBoy::m_loadCartridge(std::string name, std::shared_ptr<Bus>& bus)
 	}
 
 	std::string title = "";
+
+	//check nintendo logo
+	bool cartValid = true;
+	for (int i = 0; i < 47; i++)
+	{
+		if (cartData[0x104 + i] != m_headerChecksumData[i])
+			cartValid = false;
+	}
+
+	if (!cartValid)
+	{
+		Logger::getInstance()->msg(LoggerSeverity::Warn, "Checksum failed on input file!!");
+		MessageBoxA(NULL, "Header checksum failed on file (Nintendo Logo bytes are incorrect).\nThis file would not run on a real Game Boy.", "Warning", MB_OK | MB_ICONWARNING);
+	}
+
 	uint8_t i = 0;
 	while(cartData[CART_TITLE + i] && i<16)					//read until zero terminated
 		title += (char)cartData[CART_TITLE + i++];
