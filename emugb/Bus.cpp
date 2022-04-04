@@ -13,24 +13,14 @@ Bus::Bus(std::vector<uint8_t> bootRom, std::vector<uint8_t> ROM, std::shared_ptr
 	else if (ROMType >= 0x19 && ROMType <= 0x1E)
 		m_mbc = std::make_shared<MBC5>(ROM);
 	else
+	{
+		if (ROMType != 0)
+		{
+			MessageBoxA(NULL, "Cartridge header was invalid (or cartridge unsupported)\nThis file would not work on a real Game Boy", "Warning", MB_OK | MB_ICONWARNING);
+			Logger::getInstance()->msg(LoggerSeverity::Warn, "Invalid file being passed - treating it as unmapped cartridge.");
+		}
 		m_mbc = std::make_shared<MMU>(ROM);
-
-	for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 8192; j++)
-			m_VRAM[i][j] = 0xFF;
 	}
-	for (int i = 0; i < 8; i++)
-	{
-		for (int j = 0; j < 8192; j++)
-			m_workRAM[i][j] = 0xFF;
-	}
-	for (int i = 0; i < 128; i++)
-		m_IORegisters[i] = 0xFF;
-	for (int i = 0; i < 128; i++)
-		m_HRAM[i] = 0xFF;
-	for (int i = 0; i < 160; i++)
-		m_OAM[i] = 0xFF;
 
 }
 

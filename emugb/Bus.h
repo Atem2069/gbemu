@@ -4,6 +4,8 @@
 #include<vector>
 #include<array>
 #include<chrono>
+#define NOMINMAX
+#include<Windows.h>
 
 #include"MMU.h"
 #include"APU.h"
