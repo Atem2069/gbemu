@@ -18,6 +18,7 @@ struct SystemConfig
 	bool useBootRom;
 	bool reset;
 	bool pause;
+	bool exit;
 	bool DmgMode;
 };
 

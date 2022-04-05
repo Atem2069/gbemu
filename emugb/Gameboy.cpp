@@ -81,6 +81,10 @@ void GameBoy::displayWorker()
 
 	while (!m_disp.shouldClose() && m_disp.getInitialized())
 	{
+		//check if exit button pressed
+		if (Config::GB.System.exit)
+			break;
+
 		m_bufAccessLock.lock();
 		if (m_ppu.get())
 		{

@@ -28,7 +28,7 @@ void GuiRenderer::render()
 			{
 				m_menuItemSelected = true;
 				ImGui::MenuItem("Open...", nullptr, &m_openFileDialog);
-				ImGui::MenuItem("Exit", nullptr, nullptr);
+				ImGui::MenuItem("Exit", nullptr, &Config::GB.System.exit);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("System"))
