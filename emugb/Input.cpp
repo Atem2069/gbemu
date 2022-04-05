@@ -33,10 +33,7 @@ void InputManager::tick(InputState curInputState)
 		joypad |= (curInputState.down ? 0b00001000 : 0b0);
 
 	}
-	//joypad = ~joypad;	//flip bits (high=off, low=on for some reason)
-	joypad ^= 0b00001111;
-	//if (joypad != m_bus->read(REG_JOYPAD))
-	//	m_interruptManager->requestInterrupt(InterruptType::Joypad);
+	joypad ^= 0b00001111;	//flip bits (1=not pressed, 0=pressed)
 
 	m_bus->write(REG_JOYPAD, joypad);
 }

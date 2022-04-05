@@ -38,12 +38,8 @@ void CPU::step()
 void CPU::m_executeInstruction()
 {
 	uint8_t opcode = m_fetch();
-
-	//Logger::getInstance()->msg(LoggerSeverity::Info, "Decode opcode " + std::to_string((int)opcode));
-
-	//std::stringstream sstrm;
-	//sstrm << "PC=" << std::hex << (int)PC-1 << " Opcode: " << std::hex << (int)opcode;
-	//Logger::getInstance()->msg(LoggerSeverity::Info, sstrm.str());
+	
+	//unrolled jump table (better performance than decoding opcodes)
 
 	switch (opcode)
 	{
@@ -1450,8 +1446,6 @@ void CPU::_enableInterrupts()
 
 void CPU::_stop()
 {
-	//Logger::getInstance()->msg(LoggerSeverity::Warn, "STOP Instruction is not implemented, interpreting as no operation");
-	//_halt();
 	uint8_t speedSwitchState = m_bus->read(REG_KEY1);
 	if (speedSwitchState & 0b1)
 	{

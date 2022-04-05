@@ -2,15 +2,15 @@
 
 MMU::MMU(std::vector<uint8_t> m_ROM)
 {
-	/*m_BIOS = m_firmware;
-	std::copy(m_ROM.begin(), m_ROM.begin() + 32768, m_memory.begin());
-	for (int i = 32768; i < 65536; i++)
-	{
-		m_memory[i] = 0xFF;
-	}
-	m_isInBIOS = true;*/
+	if (m_ROM.size()-1 != 32768)
+		Logger::getInstance()->msg(LoggerSeverity::Warn, "ROM size invalid: expected 32768 bytes, got " + std::to_string(m_ROM.size()));
 
-	std::copy(m_ROM.begin(), m_ROM.begin() + 32768, m_memory.begin());
+	//max to copy is 32768 - but if file is smaller then copy smaller amount
+	int copyOffset = 32768;
+	if (m_ROM.size() < 32768)
+		copyOffset = m_ROM.size();
+
+	std::copy(m_ROM.begin(), m_ROM.begin()+copyOffset, m_memory.begin());
 }
 
 MMU::~MMU()
@@ -25,5 +25,7 @@ uint8_t MMU::read(uint16_t address)
 
 void MMU::write(uint16_t address, uint8_t value)
 {
-	//Logger::getInstance()->msg(LoggerSeverity::Warn, "Write to cartridge space on unmapped ROM! Potential game bug.");
+	Logger::getInstance()->msg(LoggerSeverity::Warn, "Write to cartridge space on unmapped ROM! Potential game bug.");
+	std::string addrDebug = std::format("Addr={:#x} Value={:#x}", address, value);
+	Logger::getInstance()->msg(LoggerSeverity::Warn, addrDebug);
 }
